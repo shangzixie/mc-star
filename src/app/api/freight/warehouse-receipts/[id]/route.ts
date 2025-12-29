@@ -2,7 +2,10 @@ import { getDb } from '@/db/index';
 import { warehouseReceipts } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
-import { createWarehouseReceiptSchema, uuidSchema } from '@/lib/freight/schemas';
+import {
+  createWarehouseReceiptSchema,
+  uuidSchema,
+} from '@/lib/freight/schemas';
 import { eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -76,5 +79,3 @@ export async function PATCH(
     return jsonError(error as Error);
   }
 }
-
-

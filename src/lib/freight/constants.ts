@@ -25,8 +25,13 @@ export const ALLOCATION_STATUSES = [
 ] as const;
 export type AllocationStatus = (typeof ALLOCATION_STATUSES)[number];
 
-export const RESERVED_ALLOCATION_STATUSES = ['ALLOCATED', 'PICKED', 'LOADED'] as const;
-export type ReservedAllocationStatus = (typeof RESERVED_ALLOCATION_STATUSES)[number];
+export const RESERVED_ALLOCATION_STATUSES = [
+  'ALLOCATED',
+  'PICKED',
+  'LOADED',
+] as const;
+export type ReservedAllocationStatus =
+  (typeof RESERVED_ALLOCATION_STATUSES)[number];
 
 export const MOVEMENT_REF_TYPES = [
   'RECEIPT',
@@ -37,5 +42,3 @@ export const MOVEMENT_REF_TYPES = [
   'ADJUST',
 ] as const;
 export type MovementRefType = (typeof MOVEMENT_REF_TYPES)[number];
-
-

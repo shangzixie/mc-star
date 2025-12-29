@@ -19,5 +19,3 @@ export async function requireUser(request: Request): Promise<User> {
 
   return session.user as User;
 }
-
-

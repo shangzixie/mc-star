@@ -5,8 +5,10 @@ import {
   inventoryItems,
   inventoryMovements,
 } from '@/db/schema';
+import { ApiError } from '@/lib/api/http';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
+  type AllocationRow,
   assertCanAllocate,
   assertCanCancel,
   assertCanLoad,
@@ -15,18 +17,18 @@ import {
   assertCanSplit,
   nextStatusAfterLoad,
   nextStatusAfterPick,
-  type AllocationRow,
 } from '../allocation-state';
-import { ApiError } from '@/lib/api/http';
 import { RESERVED_ALLOCATION_STATUSES } from '../constants';
 
-type Tx = Parameters<Awaited<ReturnType<typeof getDb>>['transaction']>[0] extends (
-  tx: infer T
-) => unknown
+type Tx = Parameters<
+  Awaited<ReturnType<typeof getDb>>['transaction']
+>[0] extends (tx: infer T) => unknown
   ? T
   : never;
 
-function mapAllocationRow(row: typeof inventoryAllocations.$inferSelect): AllocationRow {
+function mapAllocationRow(
+  row: typeof inventoryAllocations.$inferSelect
+): AllocationRow {
   return {
     id: row.id,
     allocatedQty: row.allocatedQty,
@@ -40,10 +42,7 @@ function mapAllocationRow(row: typeof inventoryAllocations.$inferSelect): Alloca
   };
 }
 
-async function lockInventoryItem(
-  tx: Tx,
-  inventoryItemId: string
-) {
+async function lockInventoryItem(tx: Tx, inventoryItemId: string) {
   const rows = await tx.execute<{ id: string; current_qty: number }>(
     sql`select id, current_qty from inventory_items where id = ${inventoryItemId} for update`
   );
@@ -60,10 +59,7 @@ async function lockInventoryItem(
   return row;
 }
 
-async function lockAllocation(
-  tx: Tx,
-  allocationId: string
-) {
+async function lockAllocation(tx: Tx, allocationId: string) {
   const rows = await tx.execute<{
     id: string;
     inventory_item_id: string;
@@ -78,17 +74,19 @@ async function lockAllocation(
     sql`select id, inventory_item_id, shipment_id, container_id, allocated_qty, picked_qty, loaded_qty, shipped_qty, status from inventory_allocations where id = ${allocationId} for update`
   );
 
-  const row = (rows as Array<{
-    id: string;
-    inventory_item_id: string;
-    shipment_id: string;
-    container_id: string | null;
-    allocated_qty: number;
-    picked_qty: number;
-    loaded_qty: number;
-    shipped_qty: number;
-    status: string;
-  }>)[0];
+  const row = (
+    rows as Array<{
+      id: string;
+      inventory_item_id: string;
+      shipment_id: string;
+      container_id: string | null;
+      allocated_qty: number;
+      picked_qty: number;
+      loaded_qty: number;
+      shipped_qty: number;
+      status: string;
+    }>
+  )[0];
   if (!row) {
     throw new ApiError({
       status: 404,
@@ -131,7 +129,9 @@ export async function createAllocation(input: {
       .where(
         and(
           eq(inventoryAllocations.inventoryItemId, input.inventoryItemId),
-          inArray(inventoryAllocations.status, [...RESERVED_ALLOCATION_STATUSES])
+          inArray(inventoryAllocations.status, [
+            ...RESERVED_ALLOCATION_STATUSES,
+          ])
         )
       );
 
@@ -352,7 +352,7 @@ export async function splitAllocation(input: {
     const allocation = await lockAllocation(tx, input.allocationId);
     assertCanSplit(allocation, input.splitQty);
 
-    let newContainerId: string | null = input.newContainerId ?? null;
+    const newContainerId: string | null = input.newContainerId ?? null;
     if (newContainerId) {
       const [container] = await tx
         .select({ id: containers.id, shipmentId: containers.shipmentId })
@@ -410,5 +410,3 @@ export async function splitAllocation(input: {
     };
   });
 }
-
-

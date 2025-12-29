@@ -75,5 +75,3 @@ export async function PATCH(
     return jsonError(error as Error);
   }
 }
-
-

@@ -30,7 +30,8 @@ export async function POST(
           currentQty: body.initialQty,
           unit: body.unit,
           binLocation: body.binLocation,
-          weightTotal: body.weightTotal != null ? `${body.weightTotal}` : undefined,
+          weightTotal:
+            body.weightTotal != null ? `${body.weightTotal}` : undefined,
           lengthCm: body.lengthCm != null ? `${body.lengthCm}` : undefined,
           widthCm: body.widthCm != null ? `${body.widthCm}` : undefined,
           heightCm: body.heightCm != null ? `${body.heightCm}` : undefined,
@@ -52,5 +53,3 @@ export async function POST(
     return jsonError(error as Error);
   }
 }
-
-

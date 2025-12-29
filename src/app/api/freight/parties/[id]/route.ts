@@ -19,7 +19,10 @@ export async function GET(
     const partyId = uuidSchema.parse(id);
 
     const db = await getDb();
-    const [row] = await db.select().from(parties).where(eq(parties.id, partyId));
+    const [row] = await db
+      .select()
+      .from(parties)
+      .where(eq(parties.id, partyId));
     if (!row) {
       throw new ApiError({
         status: 404,
@@ -74,5 +77,3 @@ export async function PATCH(
     return jsonError(error as Error);
   }
 }
-
-

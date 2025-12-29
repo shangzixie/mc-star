@@ -19,5 +19,3 @@ export async function DELETE(
     return jsonError(error as Error);
   }
 }
-
-

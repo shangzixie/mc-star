@@ -1,7 +1,7 @@
-import dotenv from 'dotenv';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
+import dotenv from 'dotenv';
 import { getDb } from '../src/db/index.js';
 
 dotenv.config();
@@ -110,7 +110,9 @@ async function main() {
   }
 
   if (!password) {
-    console.error('Missing password. Provide --password or env CREATE_USER_PASSWORD.');
+    console.error(
+      'Missing password. Provide --password or env CREATE_USER_PASSWORD.'
+    );
     usage();
     process.exit(1);
   }
@@ -181,7 +183,8 @@ async function main() {
     });
   } else {
     const updates: Record<string, unknown> = {};
-    if (emailVerified && user.emailVerified !== true) updates.emailVerified = true;
+    if (emailVerified && user.emailVerified !== true)
+      updates.emailVerified = true;
     if (role && user.role !== role) updates.role = role;
     if (Object.keys(updates).length > 0) {
       user = await ctx.internalAdapter.updateUser(user.id, updates);
@@ -233,5 +236,3 @@ main().catch((err) => {
   console.error('create-user failed:', err);
   process.exit(1);
 });
-
-

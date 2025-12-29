@@ -15,11 +15,12 @@ export async function POST(
     const allocationId = uuidSchema.parse(id);
     const body = await parseJson(request, shipAllocationSchema);
 
-    const updated = await shipAllocation({ allocationId, shippedQty: body.shippedQty });
+    const updated = await shipAllocation({
+      allocationId,
+      shippedQty: body.shippedQty,
+    });
     return jsonOk({ data: updated });
   } catch (error) {
     return jsonError(error as Error);
   }
 }
-
-

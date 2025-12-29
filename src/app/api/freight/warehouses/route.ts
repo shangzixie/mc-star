@@ -51,5 +51,3 @@ export async function POST(request: Request) {
     return jsonError(error as Error);
   }
 }
-
-

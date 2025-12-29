@@ -16,7 +16,9 @@ export async function GET(request: Request) {
 
     const db = await getDb();
     const conditions = [
-      receiptId ? eq(inventoryItems.receiptId, uuidSchema.parse(receiptId)) : undefined,
+      receiptId
+        ? eq(inventoryItems.receiptId, uuidSchema.parse(receiptId))
+        : undefined,
       q && q.length > 0
         ? or(
             ilike(inventoryItems.commodityName, `%${q}%`),
@@ -39,5 +41,3 @@ export async function GET(request: Request) {
     return jsonError(error as Error);
   }
 }
-
-

@@ -60,5 +60,3 @@ export async function POST(
     return jsonError(error as Error);
   }
 }
-
-

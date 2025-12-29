@@ -7,7 +7,9 @@ import { eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
-const updateShipmentSchema = createShipmentSchema.partial().omit({ jobNo: true });
+const updateShipmentSchema = createShipmentSchema
+  .partial()
+  .omit({ jobNo: true });
 
 export async function GET(
   request: Request,
@@ -84,5 +86,3 @@ export async function PATCH(
     return jsonError(error as Error);
   }
 }
-
-

@@ -12,6 +12,8 @@ import {
   LockKeyholeIcon,
   Settings2Icon,
   SettingsIcon,
+  ShipIcon,
+  TruckIcon,
   UsersRoundIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -89,6 +91,18 @@ export function useSidebarLinks(): NestedMenuItem[] {
           title: t('settings.notification.title'),
           icon: <BellIcon className="size-4 shrink-0" />,
           href: Routes.SettingsNotifications,
+          external: false,
+        },
+      ],
+    },
+    {
+      title: t('freight.title'),
+      icon: <TruckIcon className="size-4 shrink-0" />,
+      items: [
+        {
+          title: t('freight.shipments.title'),
+          icon: <ShipIcon className="size-4 shrink-0" />,
+          href: Routes.FreightShipments,
           external: false,
         },
       ],

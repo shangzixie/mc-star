@@ -86,8 +86,12 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    new RegExp(`^${route}$`).test(pathnameWithoutLocale)
+  // Treat protected routes as prefixes so nested pages (e.g. /freight/shipments/123)
+  // stay protected without needing to list every sub-route.
+  const isProtectedRoute = protectedRoutes.some(
+    (route) =>
+      pathnameWithoutLocale === route ||
+      pathnameWithoutLocale.startsWith(`${route}/`)
   );
   // console.log('middleware, isProtectedRoute', isProtectedRoute);
 

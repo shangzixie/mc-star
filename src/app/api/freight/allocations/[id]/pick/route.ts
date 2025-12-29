@@ -15,11 +15,12 @@ export async function POST(
     const allocationId = uuidSchema.parse(id);
     const body = await parseJson(request, pickAllocationSchema);
 
-    const updated = await pickAllocation({ allocationId, pickedQty: body.pickedQty });
+    const updated = await pickAllocation({
+      allocationId,
+      pickedQty: body.pickedQty,
+    });
     return jsonOk({ data: updated });
   } catch (error) {
     return jsonError(error as Error);
   }
 }
-
-

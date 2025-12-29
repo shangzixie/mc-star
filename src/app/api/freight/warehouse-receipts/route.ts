@@ -2,7 +2,10 @@ import { getDb } from '@/db/index';
 import { warehouseReceipts } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk, parseJson } from '@/lib/api/http';
-import { createWarehouseReceiptSchema, uuidSchema } from '@/lib/freight/schemas';
+import {
+  createWarehouseReceiptSchema,
+  uuidSchema,
+} from '@/lib/freight/schemas';
 import { and, eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -17,8 +20,12 @@ export async function GET(request: Request) {
     const db = await getDb();
     const baseQuery = db.select().from(warehouseReceipts);
     const conditions = [
-      warehouseId ? eq(warehouseReceipts.warehouseId, uuidSchema.parse(warehouseId)) : undefined,
-      customerId ? eq(warehouseReceipts.customerId, uuidSchema.parse(customerId)) : undefined,
+      warehouseId
+        ? eq(warehouseReceipts.warehouseId, uuidSchema.parse(warehouseId))
+        : undefined,
+      customerId
+        ? eq(warehouseReceipts.customerId, uuidSchema.parse(customerId))
+        : undefined,
     ].filter(Boolean);
 
     const rows =
@@ -55,5 +62,3 @@ export async function POST(request: Request) {
     return jsonError(error as Error);
   }
 }
-
-

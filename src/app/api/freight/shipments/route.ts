@@ -29,7 +29,9 @@ export async function GET(request: Request) {
 
     const rows =
       conditions.length > 0
-        ? await query.where(and(...conditions)).orderBy(desc(shipments.createdAt))
+        ? await query
+            .where(and(...conditions))
+            .orderBy(desc(shipments.createdAt))
         : await query.orderBy(desc(shipments.createdAt));
 
     return jsonOk({ data: rows });
@@ -71,5 +73,3 @@ export async function POST(request: Request) {
     return jsonError(error as Error);
   }
 }
-
-

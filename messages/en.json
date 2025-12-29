@@ -558,6 +558,126 @@
         "close": "Close"
       }
     },
+    "freight": {
+      "title": "Freight",
+      "shipments": {
+        "title": "Shipments",
+        "new": "New shipment",
+        "newDescription": "Create a shipment record (you can fill more details later).",
+        "create": "Create",
+        "creating": "Creating...",
+        "cancel": "Cancel",
+        "created": "Shipment created",
+        "createFailed": "Failed to create shipment",
+        "searchPlaceholder": "Search job / MBL / HBL...",
+        "statusAll": "All statuses",
+        "empty": "No shipments",
+        "fields": {
+          "jobNo": "Job No",
+          "transportMode": "Transport mode",
+          "status": "Status"
+        },
+        "columns": {
+          "jobNo": "Job No",
+          "status": "Status",
+          "transportMode": "Mode",
+          "etd": "ETD",
+          "eta": "ETA",
+          "createdAt": "Created"
+        },
+        "detail": {
+          "errorTitle": "Failed to load shipment",
+          "tabs": {
+            "containers": "Containers",
+            "allocations": "Allocations",
+            "attachments": "Attachments"
+          },
+          "fields": {
+            "transportMode": "Mode",
+            "mblNo": "MBL",
+            "hblNo": "HBL",
+            "etdEta": "ETD → ETA"
+          },
+          "common": {
+            "create": "Create",
+            "save": "Save",
+            "saving": "Saving...",
+            "cancel": "Cancel"
+          },
+          "containers": {
+            "description": "Containers for this shipment",
+            "new": "New container",
+            "created": "Container created",
+            "createFailed": "Failed to create container",
+            "empty": "No containers",
+            "fields": {
+              "containerNo": "Container No",
+              "containerType": "Type",
+              "sealNo": "Seal No"
+            },
+            "columns": {
+              "containerNo": "Container No",
+              "type": "Type",
+              "seal": "Seal",
+              "createdAt": "Created"
+            }
+          },
+          "allocations": {
+            "description": "4-stage workflow: ALLOCATED → PICKED → LOADED → SHIPPED",
+            "new": "New allocation",
+            "created": "Allocation created",
+            "createFailed": "Failed to create allocation",
+            "updated": "Updated",
+            "updateFailed": "Update failed",
+            "empty": "No allocations",
+            "inventoryEmpty": "No inventory items",
+            "qtyHint": "Allowed range: {min} - {max}",
+            "fields": {
+              "inventorySearch": "Find inventory item",
+              "inventorySearchPlaceholder": "Search SKU / commodity / bin...",
+              "inventoryItemId": "Inventory item ID",
+              "inventoryItemIdHint": "Tip: click an item above to populate the ID field.",
+              "allocatedQty": "Allocated qty",
+              "pickedQty": "Picked qty",
+              "loadedQty": "Loaded qty",
+              "shippedQty": "Shipped qty",
+              "splitQty": "Split qty",
+              "containerId": "Container",
+              "newContainerId": "New container (optional)",
+              "containerUnassigned": "Unassigned"
+            },
+            "columns": {
+              "inventoryItemId": "Inventory item",
+              "status": "Status",
+              "qty": "Qty (alloc → pick → load → ship)",
+              "createdAt": "Created",
+              "actions": "Actions"
+            },
+            "actions": {
+              "pick": "Pick",
+              "load": "Load",
+              "ship": "Ship",
+              "split": "Split",
+              "cancel": "Cancel"
+            }
+          },
+          "attachments": {
+            "description": "Upload and manage shipment documents",
+            "upload": "Upload",
+            "uploading": "Uploading...",
+            "uploaded": "Uploaded",
+            "uploadFailed": "Upload failed",
+            "empty": "No attachments",
+            "columns": {
+              "file": "File",
+              "type": "Type",
+              "size": "Size",
+              "createdAt": "Created"
+            }
+          }
+        }
+      }
+    },
     "settings": {
       "title": "Settings",
       "profile": {

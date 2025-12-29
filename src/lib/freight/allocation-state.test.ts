@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  type AllocationRow,
   assertCanAllocate,
   assertCanCancel,
   assertCanLoad,
@@ -9,12 +10,9 @@ import {
   assertCanSplit,
   nextStatusAfterLoad,
   nextStatusAfterPick,
-  type AllocationRow,
 } from './allocation-state';
 
-function baseAllocation(
-  overrides: Partial<AllocationRow> = {}
-): AllocationRow {
+function baseAllocation(overrides: Partial<AllocationRow> = {}): AllocationRow {
   return {
     id: '00000000-0000-0000-0000-000000000001',
     inventoryItemId: '00000000-0000-0000-0000-000000000010',
@@ -50,29 +48,53 @@ test('assertCanAllocate: accepts when available is enough', () => {
 });
 
 test('pick: cannot exceed allocated and must be monotonic', () => {
-  const a = baseAllocation({ status: 'ALLOCATED', allocatedQty: 10, pickedQty: 3 });
+  const a = baseAllocation({
+    status: 'ALLOCATED',
+    allocatedQty: 10,
+    pickedQty: 3,
+  });
   assert.throws(() => assertCanPick(a, 11));
   assert.throws(() => assertCanPick(a, 2));
   assert.doesNotThrow(() => assertCanPick(a, 10));
 });
 
 test('pick: next status moves to PICKED when qty>0', () => {
-  assert.equal(nextStatusAfterPick({ currentStatus: 'ALLOCATED', newPickedQty: 0 }), 'ALLOCATED');
-  assert.equal(nextStatusAfterPick({ currentStatus: 'ALLOCATED', newPickedQty: 1 }), 'PICKED');
+  assert.equal(
+    nextStatusAfterPick({ currentStatus: 'ALLOCATED', newPickedQty: 0 }),
+    'ALLOCATED'
+  );
+  assert.equal(
+    nextStatusAfterPick({ currentStatus: 'ALLOCATED', newPickedQty: 1 }),
+    'PICKED'
+  );
 });
 
 test('load: requires containerId and cannot exceed picked', () => {
-  const a = baseAllocation({ status: 'PICKED', pickedQty: 5, containerId: null });
+  const a = baseAllocation({
+    status: 'PICKED',
+    pickedQty: 5,
+    containerId: null,
+  });
   assert.throws(() => assertCanLoad(a, 1));
 
-  const b = baseAllocation({ status: 'PICKED', pickedQty: 5, containerId: 'c' });
+  const b = baseAllocation({
+    status: 'PICKED',
+    pickedQty: 5,
+    containerId: 'c',
+  });
   assert.throws(() => assertCanLoad(b, 6));
   assert.doesNotThrow(() => assertCanLoad(b, 5));
 });
 
 test('load: next status moves to LOADED when qty>0', () => {
-  assert.equal(nextStatusAfterLoad({ currentStatus: 'PICKED', newLoadedQty: 0 }), 'PICKED');
-  assert.equal(nextStatusAfterLoad({ currentStatus: 'PICKED', newLoadedQty: 1 }), 'LOADED');
+  assert.equal(
+    nextStatusAfterLoad({ currentStatus: 'PICKED', newLoadedQty: 0 }),
+    'PICKED'
+  );
+  assert.equal(
+    nextStatusAfterLoad({ currentStatus: 'PICKED', newLoadedQty: 1 }),
+    'LOADED'
+  );
 });
 
 test('ship: only allowed from LOADED and cannot exceed loaded', () => {
@@ -100,5 +122,3 @@ test('split: only ALLOCATED with no progress, splitQty must be < allocatedQty', 
   const c = baseAllocation({ status: 'ALLOCATED', pickedQty: 1 });
   assert.throws(() => assertCanSplit(c, 1));
 });
-
-

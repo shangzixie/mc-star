@@ -558,6 +558,126 @@
         "close": "关闭"
       }
     },
+    "freight": {
+      "title": "货代",
+      "shipments": {
+        "title": "运单",
+        "new": "新建运单",
+        "newDescription": "创建一个运单记录（更多信息可稍后补充）。",
+        "create": "创建",
+        "creating": "创建中...",
+        "cancel": "取消",
+        "created": "运单已创建",
+        "createFailed": "创建运单失败",
+        "searchPlaceholder": "搜索 Job / 主单号 / 分单号...",
+        "statusAll": "全部状态",
+        "empty": "暂无运单",
+        "fields": {
+          "jobNo": "工作号",
+          "transportMode": "运输方式",
+          "status": "状态"
+        },
+        "columns": {
+          "jobNo": "工作号",
+          "status": "状态",
+          "transportMode": "方式",
+          "etd": "预计开航",
+          "eta": "预计到港",
+          "createdAt": "创建时间"
+        },
+        "detail": {
+          "errorTitle": "运单加载失败",
+          "tabs": {
+            "containers": "箱柜",
+            "allocations": "分配",
+            "attachments": "附件"
+          },
+          "fields": {
+            "transportMode": "方式",
+            "mblNo": "主单号",
+            "hblNo": "分单号",
+            "etdEta": "ETD → ETA"
+          },
+          "common": {
+            "create": "创建",
+            "save": "保存",
+            "saving": "保存中...",
+            "cancel": "取消"
+          },
+          "containers": {
+            "description": "该运单的箱柜信息",
+            "new": "新建箱柜",
+            "created": "箱柜已创建",
+            "createFailed": "创建箱柜失败",
+            "empty": "暂无箱柜",
+            "fields": {
+              "containerNo": "箱号",
+              "containerType": "箱型",
+              "sealNo": "封号"
+            },
+            "columns": {
+              "containerNo": "箱号",
+              "type": "箱型",
+              "seal": "封号",
+              "createdAt": "创建时间"
+            }
+          },
+          "allocations": {
+            "description": "四阶段流程：ALLOCATED → PICKED → LOADED → SHIPPED",
+            "new": "新建分配",
+            "created": "分配已创建",
+            "createFailed": "创建分配失败",
+            "updated": "已更新",
+            "updateFailed": "更新失败",
+            "empty": "暂无分配",
+            "inventoryEmpty": "暂无库存条目",
+            "qtyHint": "允许范围：{min} - {max}",
+            "fields": {
+              "inventorySearch": "查找库存条目",
+              "inventorySearchPlaceholder": "搜索 SKU / 品名 / 库位...",
+              "inventoryItemId": "库存条目ID",
+              "inventoryItemIdHint": "提示：点击上方条目可自动填入 ID。",
+              "allocatedQty": "分配数量",
+              "pickedQty": "拣货数量",
+              "loadedQty": "装柜数量",
+              "shippedQty": "出库数量",
+              "splitQty": "拆分数量",
+              "containerId": "箱柜",
+              "newContainerId": "新箱柜（可选）",
+              "containerUnassigned": "未指定"
+            },
+            "columns": {
+              "inventoryItemId": "库存条目",
+              "status": "状态",
+              "qty": "数量（分配→拣货→装柜→出库）",
+              "createdAt": "创建时间",
+              "actions": "操作"
+            },
+            "actions": {
+              "pick": "拣货",
+              "load": "装柜",
+              "ship": "出库",
+              "split": "拆分",
+              "cancel": "取消"
+            }
+          },
+          "attachments": {
+            "description": "上传与管理运单文件",
+            "upload": "上传",
+            "uploading": "上传中...",
+            "uploaded": "已上传",
+            "uploadFailed": "上传失败",
+            "empty": "暂无附件",
+            "columns": {
+              "file": "文件",
+              "type": "类型",
+              "size": "大小",
+              "createdAt": "创建时间"
+            }
+          }
+        }
+      }
+    },
     "settings": {
       "title": "设置",
       "profile": {

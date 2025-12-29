@@ -157,7 +157,10 @@ export function nextStatusAfterLoad(params: {
   return params.currentStatus;
 }
 
-export function assertCanShip(allocation: AllocationRow, newShippedQty: number) {
+export function assertCanShip(
+  allocation: AllocationRow,
+  newShippedQty: number
+) {
   assertNonNegativeInt(newShippedQty, 'shippedQty');
 
   if (allocation.status !== 'LOADED') {
@@ -230,7 +233,11 @@ export function assertCanSplit(allocation: AllocationRow, splitQty: number) {
     });
   }
 
-  if (allocation.pickedQty !== 0 || allocation.loadedQty !== 0 || allocation.shippedQty !== 0) {
+  if (
+    allocation.pickedQty !== 0 ||
+    allocation.loadedQty !== 0 ||
+    allocation.shippedQty !== 0
+  ) {
     throw new ApiError({
       status: 409,
       code: 'CANNOT_SPLIT_AFTER_PROGRESS',
@@ -258,5 +265,3 @@ export function assertCanSplit(allocation: AllocationRow, splitQty: number) {
     });
   }
 }
-
-

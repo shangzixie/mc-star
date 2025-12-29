@@ -27,7 +27,10 @@ export async function GET(request: Request) {
         ? eq(inventoryAllocations.containerId, uuidSchema.parse(containerId))
         : undefined,
       inventoryItemId
-        ? eq(inventoryAllocations.inventoryItemId, uuidSchema.parse(inventoryItemId))
+        ? eq(
+            inventoryAllocations.inventoryItemId,
+            uuidSchema.parse(inventoryItemId)
+          )
         : undefined,
     ].filter(Boolean);
 
@@ -55,5 +58,3 @@ export async function POST(request: Request) {
     return jsonError(error as Error);
   }
 }
-
-
