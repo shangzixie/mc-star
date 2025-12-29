@@ -62,10 +62,10 @@ export const createCheckoutAction = userActionClient
 
       // Create the checkout session with localized URLs
       const successUrl = getUrlWithLocale(
-        `${Routes.Payment}?session_id={CHECKOUT_SESSION_ID}&callback=${Routes.SettingsBilling}`,
+        `${Routes.Payment}?session_id={CHECKOUT_SESSION_ID}&callback=${Routes.Dashboard}&kind=billing`,
         locale
       );
-      const cancelUrl = getUrlWithLocale(Routes.SettingsBilling, locale);
+      const cancelUrl = getUrlWithLocale(Routes.Pricing, locale);
       const params: CreateCheckoutParams = {
         planId,
         priceId,

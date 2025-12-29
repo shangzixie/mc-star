@@ -129,8 +129,8 @@ export function ErrorDisplay({
         window.open('https://www.google.com', '_blank');
         break;
       case 'purchase_credits':
-        // Navigate to credits purchase page
-        window.location.href = '/settings/billing';
+        // Credits/billing settings pages are disabled; send users to pricing instead.
+        window.location.href = '/pricing';
         break;
       case 'check_balance':
         // Navigate to dashboard

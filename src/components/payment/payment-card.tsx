@@ -9,7 +9,6 @@ import {
 import { usePaymentCompletion } from '@/hooks/use-payment-completion';
 import { useLocaleRouter } from '@/i18n/navigation';
 import { PAYMENT_MAX_POLL_TIME, PAYMENT_POLL_INTERVAL } from '@/lib/constants';
-import { Routes } from '@/routes';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircleIcon,
@@ -38,6 +37,7 @@ export function PaymentCard() {
   // Get URL parameters
   const callback = searchParams.get('callback');
   const sessionId = searchParams.get('session_id');
+  const kind = searchParams.get('kind');
 
   // Check payment completion using the existing hook
   const { data: paymentCheck } = usePaymentCompletion(
@@ -88,7 +88,7 @@ export function PaymentCard() {
       // Async function to handle cache invalidation and redirect
       const handleRedirect = async () => {
         // Invalidate relevant cache based on callback destination
-        if (callback === Routes.SettingsCredits) {
+        if (kind === 'credits') {
           // Invalidate and refetch credits related queries
           await queryClient.invalidateQueries({
             queryKey: ['credits'],
@@ -98,7 +98,7 @@ export function PaymentCard() {
             queryKey: ['credits'],
           });
           console.log('Refetched credits cache for credits page');
-        } else if (callback === Routes.SettingsBilling) {
+        } else if (kind === 'billing') {
           // Invalidate and refetch payment/subscription related queries
           await queryClient.invalidateQueries({
             queryKey: ['payment'],
@@ -116,7 +116,7 @@ export function PaymentCard() {
 
       handleRedirect();
     }
-  }, [status, localeRouter, callback, queryClient]);
+  }, [status, localeRouter, callback, queryClient, kind]);
 
   // Cleanup on unmount, clear timeout
   useEffect(() => {

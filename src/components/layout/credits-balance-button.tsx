@@ -19,7 +19,8 @@ export function CreditsBalanceButton() {
   const { data: balance = 0, isLoading } = useCreditBalance();
 
   const handleClick = () => {
-    router.push(Routes.SettingsCredits);
+    // Credits settings page is disabled; keep the balance visible but route somewhere safe.
+    router.push(Routes.Dashboard);
   };
 
   return (
