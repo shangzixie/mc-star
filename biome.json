@@ -1,0 +1,85 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "ignore": [
+      ".next/**",
+      ".open-next/**",
+      ".wrangler/**",
+      ".cursor/**",
+      ".claude/**",
+      ".kiro/**",
+      ".conductor/**",
+      ".vscode/**",
+      ".source/**",
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "src/db/**",
+      "tailwind.config.ts",
+      "src/components/ui/*.tsx",
+      "src/components/magicui/*.tsx",
+      "src/components/diceui/*.tsx",
+      "src/components/animate-ui/*.tsx",
+      "src/components/tailark/*.tsx",
+      "src/components/ai-elements/*.tsx",
+      "src/components/data-table/**",
+      "src/app/[[]locale]/preview/**",
+      "src/payment/types.ts",
+      "src/credits/types.ts",
+      "src/types/index.d.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "formatWithErrors": true,
+    "useEditorconfig": true
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noSparseArray": "off",
+        "noArrayIndexKey": "off",
+        "noExplicitAny": "off",
+        "noShadowRestrictedNames": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off"
+      },
+      "style": {
+        "useTemplate": "off",
+        "noNonNullAssertion": "off",
+        "useShorthandArrayType": "off",
+        "useNodejsImportProtocol": "off"
+      },
+      "a11y": {
+        "useValidAnchor": "off",
+        "noSvgWithoutTitle": "off",
+        "useKeyWithClickEvents": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "es5",
+      "semicolons": "always"
+    }
+  }
+}

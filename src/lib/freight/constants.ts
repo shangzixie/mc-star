@@ -1,0 +1,41 @@
+export const LOCATION_TYPES = ['SEA', 'AIR', 'RAIL', 'ROAD'] as const;
+export type LocationType = (typeof LOCATION_TYPES)[number];
+
+export const TRANSPORT_MODES = ['SEA', 'AIR', 'RAIL'] as const;
+export type TransportMode = (typeof TRANSPORT_MODES)[number];
+
+export const SHIPMENT_STATUSES = [
+  'DRAFT',
+  'BOOKED',
+  'SHIPPED',
+  'ARRIVED',
+  'CLOSED',
+] as const;
+export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number];
+
+export const RECEIPT_STATUSES = ['RECEIVED', 'SHIPPED', 'PARTIAL'] as const;
+export type ReceiptStatus = (typeof RECEIPT_STATUSES)[number];
+
+export const ALLOCATION_STATUSES = [
+  'ALLOCATED',
+  'PICKED',
+  'LOADED',
+  'SHIPPED',
+  'CANCELLED',
+] as const;
+export type AllocationStatus = (typeof ALLOCATION_STATUSES)[number];
+
+export const RESERVED_ALLOCATION_STATUSES = ['ALLOCATED', 'PICKED', 'LOADED'] as const;
+export type ReservedAllocationStatus = (typeof RESERVED_ALLOCATION_STATUSES)[number];
+
+export const MOVEMENT_REF_TYPES = [
+  'RECEIPT',
+  'ALLOCATION',
+  'PICK',
+  'LOAD',
+  'SHIP',
+  'ADJUST',
+] as const;
+export type MovementRefType = (typeof MOVEMENT_REF_TYPES)[number];
+
+
