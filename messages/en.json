@@ -239,6 +239,10 @@
     "register": {
       "title": "Register",
       "createAccount": "Create an account",
+      "registrationDisabledTitle": "Registration is closed",
+      "registrationDisabledDescription": "New account registration is currently disabled. If you need access, please join the waitlist.",
+      "backToLogin": "Back to login",
+      "joinWaitlist": "Join waitlist",
       "name": "Name",
       "email": "Email",
       "password": "Password",

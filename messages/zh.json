@@ -239,6 +239,10 @@
     "register": {
       "title": "注册",
       "createAccount": "创建账号",
+      "registrationDisabledTitle": "暂不开放注册",
+      "registrationDisabledDescription": "当前已关闭新用户注册。如需访问，请先加入等候名单。",
+      "backToLogin": "返回登录",
+      "joinWaitlist": "加入等候名单",
       "name": "姓名",
       "email": "邮箱",
       "password": "密码",

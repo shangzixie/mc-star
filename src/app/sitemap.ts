@@ -23,7 +23,6 @@ const staticRoutes = [
   '/terms',
   '/cookie',
   '/auth/login',
-  '/auth/register',
   ...(websiteConfig.blog.enable ? ['/blog'] : []),
   ...(websiteConfig.docs.enable ? ['/docs'] : []),
 ];

@@ -9,7 +9,6 @@ import { LOCALE_COOKIE_NAME, routing } from '@/i18n/routing';
 import { sendEmail } from '@/mail';
 import { subscribe } from '@/newsletter';
 import { type User, betterAuth } from 'better-auth';
-import { APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { parse as parseCookies } from 'cookie';
@@ -29,7 +28,7 @@ export const auth = betterAuth({
   appName: defaultMessages.Metadata.name,
   // Disable public sign-up endpoints. This project is intended to be invite/admin-only.
   // Docs: https://www.better-auth.com/docs/reference/options#disabledpaths
-  disabledPaths: ['/sign-up/email'],
+  disabledPaths: ['/sign-up', '/sign-up/email'],
   database: drizzleAdapter(await getDb(), {
     provider: 'pg', // or "mysql", "sqlite"
   }),
@@ -126,11 +125,6 @@ export const auth = betterAuth({
     // https://www.better-auth.com/docs/concepts/database#database-hooks
     user: {
       create: {
-        before: async () => {
-          // Hard-stop any attempt to create users through public auth flows.
-          // Admin/invite tooling should provision users explicitly.
-          throw new APIError('BAD_REQUEST', { message: 'Signup is disabled' });
-        },
         after: async (user) => {
           await onCreateUser(user);
         },
