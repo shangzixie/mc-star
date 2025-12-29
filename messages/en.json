@@ -560,6 +560,162 @@
     },
     "freight": {
       "title": "Freight",
+      "inbound": {
+        "title": "Inbound",
+        "receipt": {
+          "title": "Warehouse receipt",
+          "description": "Create a receipt (header) first, then add inbound items.",
+          "create": "Create receipt",
+          "creating": "Creating...",
+          "created": "Receipt created",
+          "createFailed": "Failed to create receipt",
+          "fields": {
+            "receiptNo": "Receipt No",
+            "warehouse": "Warehouse",
+            "warehousePlaceholder": "Select warehouse (optional)",
+            "customer": "Customer",
+            "customerPlaceholder": "Select customer (optional)",
+            "remarks": "Remarks"
+          }
+        },
+        "items": {
+          "title": "Inbound items",
+          "description": "Add inbound item lines. A RECEIPT movement will be created automatically.",
+          "create": "Add item",
+          "creating": "Adding...",
+          "created": "Item added",
+          "createFailed": "Failed to add item",
+          "noReceipt": "Please select or create a receipt first",
+          "searchPlaceholder": "Search commodity / SKU...",
+          "fields": {
+            "receiptId": "Receipt ID",
+            "receiptIdPlaceholder": "Paste an existing receipt ID, or create one on the left",
+            "commodityName": "Commodity",
+            "skuCode": "SKU",
+            "initialQty": "Qty",
+            "unit": "Unit",
+            "binLocation": "Bin location",
+            "weightTotal": "Weight total",
+            "lengthCm": "Length (cm)",
+            "widthCm": "Width (cm)",
+            "heightCm": "Height (cm)"
+          },
+          "columns": {
+            "commodity": "Commodity",
+            "sku": "SKU",
+            "qty": "Qty",
+            "location": "Location"
+          },
+          "empty": "No items"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "tabs": {
+          "warehouses": "Warehouses",
+          "customers": "Customers"
+        },
+        "warehouses": {
+          "searchPlaceholder": "Search warehouse name...",
+          "new": "New warehouse",
+          "newDescription": "Create a warehouse record for inbound/outbound flows.",
+          "create": "Create",
+          "creating": "Creating...",
+          "edit": "Edit warehouse",
+          "editDescription": "Update warehouse information.",
+          "update": "Update",
+          "updating": "Updating...",
+          "updated": "Warehouse updated",
+          "updateFailed": "Failed to update warehouse",
+          "cancel": "Cancel",
+          "created": "Warehouse created",
+          "createFailed": "Failed to create warehouse",
+          "fields": {
+            "name": "Name",
+            "address": "Address",
+            "contactPerson": "Contact person",
+            "phone": "Phone",
+            "remarks": "Remarks"
+          },
+          "columns": {
+            "name": "Name",
+            "contact": "Contact",
+            "address": "Address",
+            "remarks": "Remarks"
+          },
+          "actions": {
+            "menu": "Actions",
+            "edit": "Edit",
+            "delete": "Delete",
+            "deleteTitle": "Delete warehouse?",
+            "deleteDescription": "This will soft-delete the warehouse (it can be restored later in DB).",
+            "cancel": "Cancel",
+            "confirmDelete": "Delete",
+            "deleted": "Warehouse deleted",
+            "deleteFailed": "Failed to delete warehouse"
+          },
+          "empty": "No warehouses"
+        },
+        "customers": {
+          "searchPlaceholder": "Search name / phone / email...",
+          "new": "New customer",
+          "newDescription": "Create a customer (party) for warehouse receipts.",
+          "create": "Create",
+          "creating": "Creating...",
+          "edit": "Edit customer",
+          "editDescription": "Update customer information.",
+          "update": "Update",
+          "updating": "Updating...",
+          "updated": "Customer updated",
+          "updateFailed": "Failed to update customer",
+          "cancel": "Cancel",
+          "created": "Customer created",
+          "createFailed": "Failed to create customer",
+          "groups": {
+            "customers": "Customers",
+            "freight": "Freight-related parties"
+          },
+          "fields": {
+            "nameCn": "Name (CN)",
+            "nameEn": "Name (EN)",
+            "roles": "Roles",
+            "phone": "Phone",
+            "email": "Email",
+            "address": "Address",
+            "remarks": "Remarks"
+          },
+          "roleGroups": {
+            "customer": "Customer roles",
+            "freight": "Freight roles"
+          },
+          "roleLabels": {
+            "CUSTOMER": "Customer",
+            "SHIPPER": "Shipper",
+            "CONSIGNEE": "Consignee",
+            "CARRIER": "Carrier",
+            "AGENT": "Agent"
+          },
+          "columns": {
+            "name": "Name",
+            "contact": "Contact",
+            "roles": "Roles",
+            "remarks": "Remarks"
+          },
+          "actions": {
+            "menu": "Actions",
+            "edit": "Edit",
+            "delete": "Delete",
+            "deleteTitle": "Delete customer?",
+            "deleteDescription": "This will soft-delete the customer (it can be restored later in DB).",
+            "cancel": "Cancel",
+            "confirmDelete": "Delete",
+            "deleted": "Customer deleted",
+            "deleteFailed": "Failed to delete customer"
+          },
+          "emptyCustomers": "No customers",
+          "emptyFreight": "No freight-related parties"
+        }
+      },
       "shipments": {
         "title": "Shipments",
         "new": "New shipment",

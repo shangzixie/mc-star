@@ -7,13 +7,14 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- 合作伙伴表 (客户、船司、代理、供应商)
 CREATE TABLE parties (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(50) UNIQUE,           -- 企业内部代码
+    code VARCHAR(50) UNIQUE,           -- 企业内部代码（当前前端暂不填写，预留）
     name_cn TEXT NOT NULL,
     name_en TEXT,
-    roles VARCHAR(20)[] NOT NULL,      -- 使用数组存储角色: {SHIPPER, CONSIGNEE, CARRIER, AGENT}
-    tax_no VARCHAR(50),
+    roles VARCHAR(20)[] NOT NULL,      -- 使用数组存储角色: {CUSTOMER, SHIPPER, CONSIGNEE, CARRIER, AGENT}
+    tax_no VARCHAR(50),                -- 税号（当前前端暂不填写，预留）
     contact_info JSONB DEFAULT '{}',   -- 存储多个联系人、电话、邮箱
     address TEXT,
+    remarks TEXT,                      -- 备注
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -42,7 +43,9 @@ CREATE TABLE warehouses (
     -- 可以存储仓库平面图或经纬度
     metadata JSONB DEFAULT '{}',
     remarks TEXT,  -- 备注
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE warehouse_receipts (

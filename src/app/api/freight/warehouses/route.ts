@@ -3,7 +3,7 @@ import { warehouses } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import { createWarehouseSchema } from '@/lib/freight/schemas';
-import { ilike } from 'drizzle-orm';
+import { and, eq, ilike } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -12,15 +12,16 @@ export async function GET(request: Request) {
     await requireUser(request);
     const url = new URL(request.url);
     const q = url.searchParams.get('q')?.trim();
+    const includeInactive = url.searchParams.get('includeInactive') === '1';
 
     const db = await getDb();
+    const base = db.select().from(warehouses);
+    const activeClause = includeInactive ? undefined : eq(warehouses.isActive, true);
+    const searchClause =
+      q && q.length > 0 ? ilike(warehouses.name, `%${q}%`) : undefined;
+    const conditions = [activeClause, searchClause].filter(Boolean);
     const rows =
-      q && q.length > 0
-        ? await db
-            .select()
-            .from(warehouses)
-            .where(ilike(warehouses.name, `%${q}%`))
-        : await db.select().from(warehouses);
+      conditions.length > 0 ? await base.where(and(...conditions)) : await base;
 
     return jsonOk({ data: rows });
   } catch (error) {
@@ -43,6 +44,8 @@ export async function POST(request: Request) {
         phone: body.phone,
         metadata: body.metadata ?? {},
         remarks: body.remarks,
+        isActive: true,
+        updatedAt: new Date(),
       })
       .returning();
 

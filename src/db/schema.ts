@@ -151,6 +151,7 @@ export const parties = pgTable(
     taxNo: varchar('tax_no', { length: 50 }),
     contactInfo: jsonb('contact_info').notNull().default({}),
     address: text('address'),
+    remarks: text('remarks'),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -190,7 +191,9 @@ export const warehouses = pgTable('warehouses', {
   phone: varchar('phone', { length: 50 }),
   metadata: jsonb('metadata').notNull().default({}),
   remarks: text('remarks'),
+  isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export const warehouseReceipts = pgTable(

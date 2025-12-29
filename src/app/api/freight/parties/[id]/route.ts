@@ -51,14 +51,46 @@ export async function PATCH(
     const [updated] = await db
       .update(parties)
       .set({
-        code: body.code,
         nameCn: body.nameCn,
         nameEn: body.nameEn,
         roles: body.roles,
-        taxNo: body.taxNo,
         contactInfo: body.contactInfo as any,
         address: body.address,
+        remarks: body.remarks,
         isActive: body.isActive,
+        updatedAt: new Date(),
+      })
+      .where(eq(parties.id, partyId))
+      .returning();
+
+    if (!updated) {
+      throw new ApiError({
+        status: 404,
+        code: 'PARTY_NOT_FOUND',
+        message: 'Party not found',
+      });
+    }
+
+    return jsonOk({ data: updated });
+  } catch (error) {
+    return jsonError(error as Error);
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireUser(request);
+    const { id } = await context.params;
+    const partyId = uuidSchema.parse(id);
+
+    const db = await getDb();
+    const [updated] = await db
+      .update(parties)
+      .set({
+        isActive: false,
         updatedAt: new Date(),
       })
       .where(eq(parties.id, partyId))

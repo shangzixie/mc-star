@@ -108,6 +108,57 @@ export const freightInventoryItemSchema = z
 
 export type FreightInventoryItem = z.infer<typeof freightInventoryItemSchema>;
 
+export const freightPartySchema = z
+  .object({
+    id: uuidSchema,
+    code: z.string().nullable(),
+    nameCn: z.string(),
+    nameEn: z.string().nullable(),
+    roles: z.array(z.string()),
+    taxNo: z.string().nullable(),
+    contactInfo: z.unknown(),
+    address: z.string().nullable(),
+    remarks: z.string().nullable(),
+    isActive: z.boolean(),
+    createdAt: isoDateTimeSchema.nullable(),
+    updatedAt: isoDateTimeSchema.nullable(),
+  })
+  .passthrough();
+
+export type FreightParty = z.infer<typeof freightPartySchema>;
+
+export const freightWarehouseSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string(),
+    address: z.string().nullable(),
+    contactPerson: z.string().nullable(),
+    phone: z.string().nullable(),
+    metadata: z.unknown(),
+    remarks: z.string().nullable(),
+    isActive: z.boolean().optional(),
+    createdAt: isoDateTimeSchema.nullable(),
+    updatedAt: isoDateTimeSchema.nullable().optional(),
+  })
+  .passthrough();
+
+export type FreightWarehouse = z.infer<typeof freightWarehouseSchema>;
+
+export const freightWarehouseReceiptSchema = z
+  .object({
+    id: uuidSchema,
+    receiptNo: z.string(),
+    warehouseId: uuidSchema.nullable(),
+    customerId: uuidSchema.nullable(),
+    status: z.string(),
+    inboundTime: isoDateTimeSchema.nullable(),
+    remarks: z.string().nullable(),
+    createdAt: isoDateTimeSchema.nullable(),
+  })
+  .passthrough();
+
+export type FreightWarehouseReceipt = z.infer<typeof freightWarehouseReceiptSchema>;
+
 export const freightAttachmentSchema = z
   .object({
     id: uuidSchema,

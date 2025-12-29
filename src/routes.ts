@@ -39,6 +39,8 @@ export enum Routes {
   // freight (internal)
   Freight = '/freight',
   FreightShipments = '/freight/shipments',
+  FreightInbound = '/freight/inbound',
+  FreightSettings = '/freight/settings',
 
   // payment processing
   Payment = '/payment',

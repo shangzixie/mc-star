@@ -17,13 +17,15 @@ export async function GET(
     await requireUser(request);
     const { id } = await context.params;
     const warehouseId = uuidSchema.parse(id);
+    const url = new URL(request.url);
+    const includeInactive = url.searchParams.get('includeInactive') === '1';
 
     const db = await getDb();
     const [row] = await db
       .select()
       .from(warehouses)
       .where(eq(warehouses.id, warehouseId));
-    if (!row) {
+    if (!row || (!includeInactive && row.isActive === false)) {
       throw new ApiError({
         status: 404,
         code: 'WAREHOUSE_NOT_FOUND',
@@ -57,6 +59,40 @@ export async function PATCH(
         phone: body.phone,
         metadata: body.metadata as any,
         remarks: body.remarks,
+        updatedAt: new Date(),
+      })
+      .where(eq(warehouses.id, warehouseId))
+      .returning();
+
+    if (!updated) {
+      throw new ApiError({
+        status: 404,
+        code: 'WAREHOUSE_NOT_FOUND',
+        message: 'Warehouse not found',
+      });
+    }
+
+    return jsonOk({ data: updated });
+  } catch (error) {
+    return jsonError(error as Error);
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireUser(request);
+    const { id } = await context.params;
+    const warehouseId = uuidSchema.parse(id);
+
+    const db = await getDb();
+    const [updated] = await db
+      .update(warehouses)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
       })
       .where(eq(warehouses.id, warehouseId))
       .returning();

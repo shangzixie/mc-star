@@ -6,8 +6,10 @@ import type { NestedMenuItem } from '@/types';
 import {
   BellIcon,
   CircleUserRoundIcon,
+  ClipboardListIcon,
   LayoutDashboardIcon,
   LockKeyholeIcon,
+  PackagePlusIcon,
   Settings2Icon,
   SettingsIcon,
   ShipIcon,
@@ -53,6 +55,30 @@ export function useSidebarLinks(): NestedMenuItem[] {
       ],
     },
     {
+      title: t('freight.title'),
+      icon: <TruckIcon className="size-4 shrink-0" />,
+      items: [
+        {
+          title: t('freight.inbound.title'),
+          icon: <PackagePlusIcon className="size-4 shrink-0" />,
+          href: Routes.FreightInbound,
+          external: false,
+        },
+        {
+          title: t('freight.shipments.title'),
+          icon: <ShipIcon className="size-4 shrink-0" />,
+          href: Routes.FreightShipments,
+          external: false,
+        },
+        {
+          title: t('freight.settings.title'),
+          icon: <ClipboardListIcon className="size-4 shrink-0" />,
+          href: Routes.FreightSettings,
+          external: false,
+        },
+      ],
+    },
+    {
       title: t('settings.title'),
       icon: <Settings2Icon className="size-4 shrink-0" />,
       items: [
@@ -72,18 +98,6 @@ export function useSidebarLinks(): NestedMenuItem[] {
           title: t('settings.notification.title'),
           icon: <BellIcon className="size-4 shrink-0" />,
           href: Routes.SettingsNotifications,
-          external: false,
-        },
-      ],
-    },
-    {
-      title: t('freight.title'),
-      icon: <TruckIcon className="size-4 shrink-0" />,
-      items: [
-        {
-          title: t('freight.shipments.title'),
-          icon: <ShipIcon className="size-4 shrink-0" />,
-          href: Routes.FreightShipments,
           external: false,
         },
       ],

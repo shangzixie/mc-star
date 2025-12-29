@@ -1,6 +1,18 @@
 export const freightKeys = {
   all: ['freight'] as const,
 
+  parties: () => [...freightKeys.all, 'parties'] as const,
+  partiesList: (params: { q: string }) =>
+    [...freightKeys.parties(), 'list', params] as const,
+
+  warehouses: () => [...freightKeys.all, 'warehouses'] as const,
+  warehousesList: (params: { q: string }) =>
+    [...freightKeys.warehouses(), 'list', params] as const,
+
+  warehouseReceipts: () => [...freightKeys.all, 'warehouse-receipts'] as const,
+  warehouseReceiptsList: (params: { warehouseId?: string; customerId?: string }) =>
+    [...freightKeys.warehouseReceipts(), 'list', params] as const,
+
   shipments: () => [...freightKeys.all, 'shipments'] as const,
   shipmentsList: (params: { q: string; status: string }) =>
     [...freightKeys.shipments(), 'list', params] as const,

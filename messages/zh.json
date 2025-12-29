@@ -560,6 +560,162 @@
     },
     "freight": {
       "title": "货代",
+      "inbound": {
+        "title": "入库",
+        "receipt": {
+          "title": "入库单",
+          "description": "先创建入库单（单头），再新增入库明细。",
+          "create": "创建入库单",
+          "creating": "创建中...",
+          "created": "入库单已创建",
+          "createFailed": "创建入库单失败",
+          "fields": {
+            "receiptNo": "入库单号",
+            "warehouse": "仓库",
+            "warehousePlaceholder": "选择仓库（可选）",
+            "customer": "客户",
+            "customerPlaceholder": "选择客户（可选）",
+            "remarks": "备注"
+          }
+        },
+        "items": {
+          "title": "入库明细",
+          "description": "新增入库明细时会自动写入库存流水（RECEIPT）。",
+          "create": "新增明细",
+          "creating": "新增中...",
+          "created": "明细已新增",
+          "createFailed": "新增明细失败",
+          "noReceipt": "请先选择或创建一个入库单",
+          "searchPlaceholder": "搜索品名 / SKU...",
+          "fields": {
+            "receiptId": "入库单ID",
+            "receiptIdPlaceholder": "粘贴已有入库单ID，或先在左侧创建",
+            "commodityName": "品名",
+            "skuCode": "SKU",
+            "initialQty": "数量",
+            "unit": "单位",
+            "binLocation": "库位",
+            "weightTotal": "总重",
+            "lengthCm": "长(cm)",
+            "widthCm": "宽(cm)",
+            "heightCm": "高(cm)"
+          },
+          "columns": {
+            "commodity": "品名",
+            "sku": "SKU",
+            "qty": "数量",
+            "location": "库位"
+          },
+          "empty": "暂无明细"
+        }
+      },
+      "settings": {
+        "title": "设置",
+        "tabs": {
+          "warehouses": "仓库",
+          "customers": "客户"
+        },
+        "warehouses": {
+          "searchPlaceholder": "搜索仓库名称...",
+          "new": "新建仓库",
+          "newDescription": "创建仓库档案，用于入库/出库流程。",
+          "create": "创建",
+          "creating": "创建中...",
+          "edit": "编辑仓库",
+          "editDescription": "更新仓库信息。",
+          "update": "更新",
+          "updating": "更新中...",
+          "updated": "仓库已更新",
+          "updateFailed": "更新仓库失败",
+          "cancel": "取消",
+          "created": "仓库已创建",
+          "createFailed": "创建仓库失败",
+          "fields": {
+            "name": "名称",
+            "address": "地址",
+            "contactPerson": "联系人",
+            "phone": "电话",
+            "remarks": "备注"
+          },
+          "columns": {
+            "name": "名称",
+            "contact": "联系信息",
+            "address": "地址",
+            "remarks": "备注"
+          },
+          "actions": {
+            "menu": "操作",
+            "edit": "编辑",
+            "delete": "删除",
+            "deleteTitle": "删除仓库？",
+            "deleteDescription": "将对仓库做软删除（is_active=false），后续可在数据库中恢复。",
+            "cancel": "取消",
+            "confirmDelete": "删除",
+            "deleted": "仓库已删除",
+            "deleteFailed": "删除仓库失败"
+          },
+          "empty": "暂无仓库"
+        },
+        "customers": {
+          "searchPlaceholder": "搜索名称 / 手机号 / 邮箱...",
+          "new": "新建客户",
+          "newDescription": "创建客户（Party），用于入库单。",
+          "create": "创建",
+          "creating": "创建中...",
+          "edit": "编辑客户",
+          "editDescription": "更新客户信息。",
+          "update": "更新",
+          "updating": "更新中...",
+          "updated": "客户已更新",
+          "updateFailed": "更新客户失败",
+          "cancel": "取消",
+          "created": "客户已创建",
+          "createFailed": "创建客户失败",
+          "groups": {
+            "customers": "客户",
+            "freight": "货代相关"
+          },
+          "fields": {
+            "nameCn": "中文名",
+            "nameEn": "英文名",
+            "roles": "角色",
+            "phone": "手机号",
+            "email": "邮箱",
+            "address": "地址",
+            "remarks": "备注"
+          },
+          "roleGroups": {
+            "customer": "客户角色",
+            "freight": "货代角色"
+          },
+          "roleLabels": {
+            "CUSTOMER": "客户",
+            "SHIPPER": "发货人",
+            "CONSIGNEE": "收货人",
+            "CARRIER": "承运人",
+            "AGENT": "代理"
+          },
+          "columns": {
+            "name": "名称",
+            "contact": "联系方式",
+            "roles": "角色",
+            "remarks": "备注"
+          },
+          "actions": {
+            "menu": "操作",
+            "edit": "编辑",
+            "delete": "删除",
+            "deleteTitle": "删除客户？",
+            "deleteDescription": "将对客户做软删除（is_active=false），后续可在数据库中恢复。",
+            "cancel": "取消",
+            "confirmDelete": "删除",
+            "deleted": "客户已删除",
+            "deleteFailed": "删除客户失败"
+          },
+          "emptyCustomers": "暂无客户",
+          "emptyFreight": "暂无货代相关主体"
+        }
+      },
       "shipments": {
         "title": "运单",
         "new": "新建运单",

@@ -9,14 +9,20 @@ import {
 
 export const uuidSchema = z.string().uuid();
 
+export const partyContactInfoSchema = z
+  .object({
+    phone: z.string().max(50).optional(),
+    email: z.string().email().max(255).optional(),
+  })
+  .passthrough();
+
 export const createPartySchema = z.object({
-  code: z.string().max(50).optional(),
   nameCn: z.string().min(1),
   nameEn: z.string().optional(),
   roles: z.array(z.string().min(1).max(20)).min(1),
-  taxNo: z.string().max(50).optional(),
-  contactInfo: z.unknown().optional(),
+  contactInfo: partyContactInfoSchema.optional(),
   address: z.string().optional(),
+  remarks: z.string().optional(),
   isActive: z.boolean().optional(),
 });
 

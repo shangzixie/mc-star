@@ -14,6 +14,7 @@ export function useFreightInventoryItems(params: {
 }) {
   return useQuery({
     queryKey: freightKeys.inventoryItemsList(params),
+    enabled: params.receiptId.length > 0,
     queryFn: async () =>
       freightFetch(
         `/api/freight/inventory-items${freightQueryString(params)}`,
