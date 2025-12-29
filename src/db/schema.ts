@@ -161,8 +161,8 @@ export const parties = pgTable(
   })
 );
 
-export const locations = pgTable(
-  'locations',
+export const transportNodes = pgTable(
+  'transport_nodes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     unLocode: char('un_locode', { length: 5 }).unique(),
@@ -173,8 +173,10 @@ export const locations = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    locationsUnLocodeIdx: index('idx_locations_un_locode').on(table.unLocode),
-    locationsCountryCodeIdx: index('idx_locations_country_code').on(
+    transportNodesUnLocodeIdx: index('idx_transport_nodes_un_locode').on(
+      table.unLocode
+    ),
+    transportNodesCountryCodeIdx: index('idx_transport_nodes_country_code').on(
       table.countryCode
     ),
   })
@@ -251,8 +253,8 @@ export const shipments = pgTable(
     consigneeId: uuid('consignee_id').references(() => parties.id),
     agentId: uuid('agent_id').references(() => parties.id),
     carrierId: uuid('carrier_id').references(() => parties.id),
-    polId: uuid('pol_id').references(() => locations.id),
-    podId: uuid('pod_id').references(() => locations.id),
+    polId: uuid('pol_id').references(() => transportNodes.id),
+    podId: uuid('pod_id').references(() => transportNodes.id),
     transportMode: varchar('transport_mode', { length: 10 })
       .notNull()
       .default('SEA'),

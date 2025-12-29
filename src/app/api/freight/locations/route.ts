@@ -1,5 +1,5 @@
 import { getDb } from '@/db/index';
-import { locations } from '@/db/schema';
+import { transportNodes } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import { createLocationSchema } from '@/lib/freight/schemas';
@@ -18,15 +18,15 @@ export async function GET(request: Request) {
       q && q.length > 0
         ? await db
             .select()
-            .from(locations)
+            .from(transportNodes)
             .where(
               or(
-                ilike(locations.nameCn, `%${q}%`),
-                ilike(locations.nameEn, `%${q}%`),
-                ilike(locations.unLocode, `%${q}%`)
+                ilike(transportNodes.nameCn, `%${q}%`),
+                ilike(transportNodes.nameEn, `%${q}%`),
+                ilike(transportNodes.unLocode, `%${q}%`)
               )
             )
-        : await db.select().from(locations);
+        : await db.select().from(transportNodes);
 
     return jsonOk({ data: rows });
   } catch (error) {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const db = await getDb();
     const [created] = await db
-      .insert(locations)
+      .insert(transportNodes)
       .values({
         unLocode: body.unLocode,
         nameCn: body.nameCn,

@@ -19,8 +19,8 @@ CREATE TABLE parties (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 地点/港口表
-CREATE TABLE locations (
+-- 运输节点表（用于 POL/POD：港口/机场/铁路站/口岸等）
+CREATE TABLE transport_nodes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     un_locode CHAR(5) UNIQUE,          -- 国际标准代码: CNSHA, USLAX
     name_cn TEXT NOT NULL,
@@ -102,8 +102,8 @@ CREATE TABLE shipments (
     carrier_id UUID REFERENCES parties(id), -- 船公司/航司
 
     -- 路由信息
-    pol_id UUID REFERENCES locations(id),   -- 起运港
-    pod_id UUID REFERENCES locations(id),   -- 目的港
+    pol_id UUID REFERENCES transport_nodes(id),   -- 起运港
+    pod_id UUID REFERENCES transport_nodes(id),   -- 目的港
 
     transport_mode VARCHAR(10) DEFAULT 'SEA', -- SEA/AIR/RAIL
     status VARCHAR(20) DEFAULT 'DRAFT',       -- DRAFT, BOOKED, SHIPPED, ARRIVED, CLOSED

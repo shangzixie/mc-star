@@ -113,7 +113,7 @@ Base path: `/api/freight`
 - `GET /parties/:id`
 - `PATCH /parties/:id`
 
-- `GET /locations?q=...`
+- `GET /locations?q=...` (backed by DB table `transport_nodes`)
 - `POST /locations`
 - `GET /locations/:id`
 - `PATCH /locations/:id`

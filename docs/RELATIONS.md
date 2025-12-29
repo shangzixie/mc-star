@@ -4,7 +4,7 @@
 
 ### 概览：核心业务对象怎么串起来
 
-- **主数据**：`parties`（合作方）、`locations`（地点/港口）、`warehouses`（仓库）
+- **主数据**：`parties`（合作方）、`transport_nodes`（运输节点：POL/POD）、`warehouses`（仓库）
 - **仓库入库与库存**：`warehouse_receipts`（入库单）→ `inventory_items`（入库批次/库存台账）
 - **业务单与装柜**：`shipments`（业务主单）→ `containers`（柜）→ `cargo_items`（柜内货物描述/单证口径）
 - **仓库出货装柜关键补充**：`inventory_allocations`（库存分配/拣货/装柜/出库明细）与 `inventory_movements`（库存流水）
@@ -20,9 +20,9 @@
   - `contact_info JSONB`：多联系人/电话/邮箱等扩展信息。
 - **常见关联**：`shipments.client_id/shipper_id/consignee_id/agent_id/carrier_id`，`warehouse_receipts.customer_id`。
 
-#### `locations`：地点/港口档案
+#### `transport_nodes`：运输节点（POL/POD：港口/机场/铁路站/口岸等）
 
-- **目的**：统一管理起运港/目的港等地点。
+- **目的**：统一管理起运港/目的港等运输节点（UN/LOCODE）。
 - **关键字段**：`un_locode`、`country_code`、`type`（SEA/AIR/RAIL/ROAD）。
 - **常见关联**：`shipments.pol_id`、`shipments.pod_id`。
 
@@ -119,7 +119,7 @@
 
 #### 前置条件（业务单与柜）
 
-- **创建/维护**：`parties`（客户、shipper/consignee、carrier/agent）、`locations`（POL/POD）
+- **创建/维护**：`parties`（客户、shipper/consignee、carrier/agent）、`transport_nodes`（POL/POD）
 - **步骤 0：创建业务主单**
   - **写入**：`shipments`（得到 `shipment_id`）
 - **步骤 1：创建柜（可选：先有柜再装；或装货阶段再补柜信息）**

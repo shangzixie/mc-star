@@ -1,5 +1,5 @@
 import { getDb } from '@/db/index';
-import { locations } from '@/db/schema';
+import { transportNodes } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import { createLocationSchema, uuidSchema } from '@/lib/freight/schemas';
@@ -21,8 +21,8 @@ export async function GET(
     const db = await getDb();
     const [row] = await db
       .select()
-      .from(locations)
-      .where(eq(locations.id, locationId));
+      .from(transportNodes)
+      .where(eq(transportNodes.id, locationId));
     if (!row) {
       throw new ApiError({
         status: 404,
@@ -49,7 +49,7 @@ export async function PATCH(
 
     const db = await getDb();
     const [updated] = await db
-      .update(locations)
+      .update(transportNodes)
       .set({
         unLocode: body.unLocode,
         nameCn: body.nameCn,
@@ -57,7 +57,7 @@ export async function PATCH(
         countryCode: body.countryCode,
         type: body.type,
       })
-      .where(eq(locations.id, locationId))
+      .where(eq(transportNodes.id, locationId))
       .returning();
 
     if (!updated) {
