@@ -55,6 +55,7 @@ import type {
   FreightWarehouseReceipt,
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
+import { RECEIPT_STATUSES } from '@/lib/freight/constants';
 import {
   addInventoryItemSchema,
   createWarehouseReceiptSchema,
@@ -132,6 +133,24 @@ const addItemFormSchema = z.object({
 type AddItemFormInput = z.input<typeof addItemFormSchema>;
 type AddItemFormOutput = z.output<typeof addItemFormSchema>;
 
+// Receipt Status Badge Component
+function ReceiptStatusBadge({ status }: { status: string }) {
+  return (
+    <Badge
+      className={cn(
+        status === 'RECEIVED' &&
+          'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+        status === 'PARTIAL' &&
+          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
+        status === 'SHIPPED' &&
+          'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+      )}
+    >
+      {status}
+    </Badge>
+  );
+}
+
 // Floating Action Button Component
 function FloatingActionButton({
   onClick,
@@ -162,8 +181,12 @@ function ReceiptListView({
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [searchQ, setSearchQ] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const receiptsQuery = useFreightWarehouseReceipts({ q: searchQ });
+  const receiptsQuery = useFreightWarehouseReceipts({
+    q: searchQ,
+    status: statusFilter,
+  });
 
   return (
     <div className="space-y-4">
@@ -177,17 +200,36 @@ function ReceiptListView({
             {t('receiptList.description')}
           </p>
         </div>
+        <Button onClick={onCreateReceipt}>
+          <Plus className="mr-2 size-4" />
+          {t('receipt.create')}
+        </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={searchQ}
-          onChange={(e) => setSearchQ(e.target.value)}
-          placeholder={t('receiptList.searchPlaceholder')}
-          className="pl-9"
-        />
+      {/* Search Bar + Status Filter */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            placeholder={t('receiptList.searchPlaceholder')}
+            className="pl-9"
+          />
+        </div>
+
+        <select
+          className="h-9 rounded-md border bg-background px-3 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">{t('receiptList.statusAll')}</option>
+          {RECEIPT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
@@ -284,7 +326,7 @@ function ReceiptListView({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{receipt.status}</Badge>
+                    <ReceiptStatusBadge status={receipt.status} />
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {receipt.createdAt
@@ -312,10 +354,22 @@ function ReceiptDetailView({
   receipt,
   onBack,
   onAddItem,
+  onEdit,
+  onDelete,
+  onChangeStatus,
+  onEditItem,
+  onDeleteItem,
+  onViewMovements,
 }: {
   receipt: FreightWarehouseReceiptWithRelations;
   onBack: () => void;
   onAddItem: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onChangeStatus: () => void;
+  onEditItem: (item: FreightInventoryItem) => void;
+  onDeleteItem: (item: FreightInventoryItem) => void;
+  onViewMovements: (item: FreightInventoryItem) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [searchQ, setSearchQ] = useState('');
@@ -342,7 +396,7 @@ function ReceiptDetailView({
             <h1 className="text-2xl font-bold tracking-tight">
               {receipt.receiptNo}
             </h1>
-            <Badge>{receipt.status}</Badge>
+            <ReceiptStatusBadge status={receipt.status} />
           </div>
           {receipt.remarks && (
             <p className="text-muted-foreground text-sm mt-1">
@@ -350,6 +404,30 @@ function ReceiptDetailView({
             </p>
           )}
         </div>
+
+        {/* Actions Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onEdit}>
+              <Edit className="mr-2 size-4" />
+              {t('receiptActions.edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onChangeStatus}>
+              <FileText className="mr-2 size-4" />
+              {t('receiptActions.changeStatus')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete} className="text-destructive">
+              <Trash2 className="mr-2 size-4" />
+              {t('receiptActions.delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Receipt Info Card */}
@@ -389,6 +467,10 @@ function ReceiptDetailView({
             <Package className="size-5" />
             {t('itemsList.title')}
           </h2>
+          <Button onClick={onAddItem} size="sm">
+            <Plus className="mr-2 size-4" />
+            {t('items.create')}
+          </Button>
         </div>
 
         {/* Search Bar */}
@@ -410,7 +492,13 @@ function ReceiptDetailView({
                 <TableHead>{t('items.columns.commodity')}</TableHead>
                 <TableHead>{t('items.columns.sku')}</TableHead>
                 <TableHead className="text-right">
-                  {t('items.columns.qty')}
+                  {t('items.columns.initialQty')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('items.columns.currentQty')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('items.columns.shipped')}
                 </TableHead>
                 <TableHead>{t('items.columns.unit')}</TableHead>
                 <TableHead>{t('items.columns.location')}</TableHead>
@@ -419,6 +507,9 @@ function ReceiptDetailView({
                 </TableHead>
                 <TableHead className="text-right">
                   {t('items.columns.dimensions')}
+                </TableHead>
+                <TableHead className="w-[80px]">
+                  {t('items.columns.actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -436,6 +527,12 @@ function ReceiptDetailView({
                       <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
                       <Skeleton className="h-4 w-12" />
                     </TableCell>
                     <TableCell>
@@ -447,11 +544,14 @@ function ReceiptDetailView({
                     <TableCell>
                       <Skeleton className="h-4 w-24" />
                     </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : itemsQuery.error ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={10} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('items.error')}</EmptyTitle>
@@ -464,7 +564,7 @@ function ReceiptDetailView({
                 </TableRow>
               ) : (itemsQuery.data ?? []).length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={10} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('items.empty')}</EmptyTitle>
@@ -476,33 +576,86 @@ function ReceiptDetailView({
                   </TableCell>
                 </TableRow>
               ) : (
-                (itemsQuery.data ?? []).map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {item.commodityName ?? '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.skuCode ?? '-'}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {item.initialQty}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.unit ?? '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.binLocation ?? '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-right">
-                      {item.weightTotal ? `${item.weightTotal} kg` : '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-right">
-                      {item.lengthCm && item.widthCm && item.heightCm
-                        ? `${item.lengthCm}×${item.widthCm}×${item.heightCm} cm`
-                        : '-'}
-                    </TableCell>
-                  </TableRow>
-                ))
+                (itemsQuery.data ?? []).map((item) => {
+                  const shipped = item.initialQty - item.currentQty;
+                  const isFullyShipped = item.currentQty === 0;
+                  const isPartiallyShipped = shipped > 0 && !isFullyShipped;
+
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">
+                        {item.commodityName ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.skuCode ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {item.initialQty}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        <span
+                          className={cn(
+                            isFullyShipped && 'text-muted-foreground',
+                            isPartiallyShipped &&
+                              'text-yellow-600 dark:text-yellow-400'
+                          )}
+                        >
+                          {item.currentQty}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {shipped > 0 ? shipped : '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.unit ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.binLocation ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-right">
+                        {item.weightTotal ? `${item.weightTotal} kg` : '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-right">
+                        {item.lengthCm && item.widthCm && item.heightCm
+                          ? `${item.lengthCm}×${item.widthCm}×${item.heightCm} cm`
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                            >
+                              <MoreHorizontal className="size-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEditItem(item)}>
+                              <Edit className="mr-2 size-4" />
+                              {t('itemActions.edit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onViewMovements(item)}
+                            >
+                              <History className="mr-2 size-4" />
+                              {t('itemActions.viewMovements')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDeleteItem(item)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              {t('itemActions.delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -848,6 +1001,113 @@ function AddItemDialog({
   );
 }
 
+// Change Status Dialog
+function ChangeStatusDialog({
+  open,
+  onOpenChange,
+  receipt,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  receipt: FreightWarehouseReceiptWithRelations;
+}) {
+  const t = useTranslations('Dashboard.freight.inbound');
+  const [newStatus, setNewStatus] = useState(receipt.status);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const receiptsQuery = useFreightWarehouseReceipts({ q: '' });
+
+  const onSubmit = async () => {
+    if (newStatus === receipt.status) {
+      toast.info(t('receiptActions.statusUnchanged'));
+      onOpenChange(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(
+        `/api/freight/warehouse-receipts/${receipt.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Failed to update status');
+      }
+
+      toast.success(t('receiptActions.statusUpdated'));
+      receiptsQuery.refetch();
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('receiptActions.updateFailed')
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>{t('receiptActions.changeStatusTitle')}</DialogTitle>
+          <DialogDescription>
+            {t('receiptActions.changeStatusDescription')}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentStatus">
+              {t('receiptActions.currentStatus')}
+            </Label>
+            <Input id="currentStatus" value={receipt.status} disabled />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newStatus">{t('receiptActions.newStatus')}</Label>
+            <select
+              id="newStatus"
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+            >
+              {RECEIPT_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            {t('receiptActions.cancel')}
+          </Button>
+          <Button onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting
+              ? t('receiptActions.updating')
+              : t('receiptActions.confirm')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Main Component
 export function FreightInboundPageClient() {
   const [view, setView] = useState<'list' | 'detail'>('list');
@@ -863,6 +1123,7 @@ export function FreightInboundPageClient() {
   const [deleteReceiptOpen, setDeleteReceiptOpen] = useState(false);
   const [deleteItemOpen, setDeleteItemOpen] = useState(false);
   const [movementsOpen, setMovementsOpen] = useState(false);
+  const [changeStatusOpen, setChangeStatusOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FreightInventoryItem | null>(
     null
   );
@@ -904,6 +1165,21 @@ export function FreightInboundPageClient() {
           receipt={selectedReceipt}
           onBack={handleBack}
           onAddItem={() => setAddItemDialogOpen(true)}
+          onEdit={() => setEditReceiptOpen(true)}
+          onDelete={() => setDeleteReceiptOpen(true)}
+          onChangeStatus={() => setChangeStatusOpen(true)}
+          onEditItem={(item) => {
+            setSelectedItem(item);
+            setEditItemOpen(true);
+          }}
+          onDeleteItem={(item) => {
+            setSelectedItem(item);
+            setDeleteItemOpen(true);
+          }}
+          onViewMovements={(item) => {
+            setSelectedItem(item);
+            setMovementsOpen(true);
+          }}
         />
       ) : null}
 
@@ -1024,6 +1300,15 @@ export function FreightInboundPageClient() {
           itemName={
             selectedItem.commodityName || selectedItem.skuCode || undefined
           }
+        />
+      )}
+
+      {/* Change Status Dialog */}
+      {selectedReceipt && (
+        <ChangeStatusDialog
+          open={changeStatusOpen}
+          onOpenChange={setChangeStatusOpen}
+          receipt={selectedReceipt}
         />
       )}
     </div>

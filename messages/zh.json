@@ -571,6 +571,7 @@
           "title": "入库单列表",
           "description": "管理所有入库单据，点击查看详情",
           "searchPlaceholder": "搜索入库单号 / 备注...",
+          "statusAll": "全部状态",
           "empty": "暂无入库单",
           "emptyHint": "点击右下角 + 按钮创建新的入库单",
           "error": "加载失败",
@@ -636,10 +637,14 @@
             "commodity": "品名",
             "sku": "SKU",
             "qty": "数量",
+            "initialQty": "入库数量",
+            "currentQty": "剩余库存",
+            "shipped": "已出库",
             "unit": "单位",
             "location": "库位",
             "weight": "重量",
-            "dimensions": "尺寸"
+            "dimensions": "尺寸",
+            "actions": "操作"
           }
         },
         "itemsList": {
@@ -658,14 +663,34 @@
           "shipped": "已出库"
         },
         "receiptActions": {
+          "edit": "编辑入库单",
+          "changeStatus": "修改状态",
+          "delete": "删除入库单",
           "editTitle": "编辑入库单",
           "updateSuccess": "入库单更新成功",
+          "deleteTitle": "删除入库单",
+          "deleteMessage": "确定要删除这个入库单吗？如果已有明细被分配或出库，则无法删除。",
+          "deleteSuccess": "入库单已删除",
+          "cannotDelete": "无法删除入库单",
+          "changeStatusTitle": "修改入库单状态",
+          "changeStatusDescription": "手动修改入库单状态",
+          "currentStatus": "当前状态",
+          "newStatus": "新状态",
+          "statusUpdated": "状态已更新",
+          "statusUnchanged": "状态未改变",
+          "updateFailed": "更新失败",
+          "cancel": "取消",
+          "confirm": "确认",
+          "updating": "更新中...",
           "deleteTitle": "删除入库单",
           "deleteMessage": "确定要删除这个入库单吗？此操作不可撤销。",
           "deleteSuccess": "入库单删除成功",
           "cannotDelete": "无法删除：部分商品已被分配或出库"
         },
         "itemActions": {
+          "edit": "编辑",
+          "viewMovements": "查看流水",
+          "delete": "删除",
           "editTitle": "编辑商品",
           "updateSuccess": "商品更新成功",
           "deleteTitle": "删除商品",

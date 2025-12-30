@@ -22,6 +22,7 @@ export function useFreightWarehouseReceipts(params: {
   warehouseId?: string;
   customerId?: string;
   q?: string;
+  status?: string;
 }) {
   return useQuery({
     queryKey: freightKeys.warehouseReceiptsList(params),
@@ -31,6 +32,7 @@ export function useFreightWarehouseReceipts(params: {
           warehouseId: params.warehouseId,
           customerId: params.customerId,
           q: params.q,
+          status: params.status,
         })}`,
         { schema: receiptsArraySchema }
       ),
