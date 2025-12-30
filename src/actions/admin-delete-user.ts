@@ -2,6 +2,7 @@
 
 import { getDb } from '@/db';
 import { user } from '@/db/schema';
+import type { User } from '@/lib/auth-types';
 import { adminActionClient } from '@/lib/safe-action';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -20,7 +21,7 @@ export const adminDeleteUserAction = adminActionClient
   .action(async ({ parsedInput, ctx }) => {
     try {
       const { userId } = parsedInput;
-      const adminUser = ctx.user;
+      const adminUser = (ctx as { user: User }).user;
 
       // Prevent admin from deleting themselves
       if (userId === adminUser.id) {
@@ -68,9 +69,7 @@ export const adminDeleteUserAction = adminActionClient
       console.error('admin delete user error:', error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Failed to delete user',
+        error: error instanceof Error ? error.message : 'Failed to delete user',
       };
     }
   });
-

@@ -53,5 +53,5 @@ export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
     };
   }
 
-  return next({ ctx });
+  return next({ ctx: { user } });
 });

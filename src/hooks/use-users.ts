@@ -24,6 +24,7 @@ export const usersKeys = {
     search: string;
     sorting: SortingState;
     filters: SimpleFilter[];
+    refreshKey?: number;
   }) => [...usersKeys.lists(), params] as const,
 };
 

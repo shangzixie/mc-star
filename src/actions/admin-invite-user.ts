@@ -2,6 +2,7 @@
 
 import { getDb } from '@/db';
 import { invitation, user } from '@/db/schema';
+import type { User } from '@/lib/auth-types';
 import { adminActionClient } from '@/lib/safe-action';
 import { getBaseUrl } from '@/lib/urls/urls';
 import { sendEmail } from '@/mail';
@@ -23,7 +24,7 @@ export const adminInviteUserAction = adminActionClient
   .action(async ({ parsedInput, ctx }) => {
     try {
       const { email } = parsedInput;
-      const adminUser = ctx.user;
+      const adminUser = (ctx as { user: User }).user;
 
       const db = await getDb();
 
