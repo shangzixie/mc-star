@@ -94,9 +94,7 @@ export const adminInviteUserAction = adminActionClient
       console.error('admin invite user error:', error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Failed to invite user',
+        error: error instanceof Error ? error.message : 'Failed to invite user',
       };
     }
   });
-

@@ -1,5 +1,10 @@
 'use client';
 
+import { DataTableAdvancedToolbar } from '@/components/data-table/data-table-advanced-toolbar';
+import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
+import { DataTablePagination } from '@/components/data-table/data-table-pagination';
+import { getSortingStateParser } from '@/components/data-table/lib/parsers';
+import type { ExtendedColumnSort } from '@/components/data-table/types/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +29,13 @@ import {
 } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -68,6 +80,16 @@ import {
 } from '@/lib/freight/schemas';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  type ColumnDef,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
   ArrowLeft,
@@ -79,8 +101,15 @@ import {
   Plus,
   Search,
   Trash2,
+  XIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import {
+  parseAsIndex,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+} from 'nuqs';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -139,6 +168,34 @@ const addItemFormSchema = z.object({
 type AddItemFormInput = z.input<typeof addItemFormSchema>;
 type AddItemFormOutput = z.output<typeof addItemFormSchema>;
 
+function ReceiptListRowSkeleton() {
+  return (
+    <TableRow className="h-14">
+      <TableCell className="py-3">
+        <div className="flex items-center gap-2">
+          <Skeleton className="size-4" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-4 w-28" />
+      </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-4 w-28" />
+      </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-4 w-48" />
+      </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-6 w-20" />
+      </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-4 w-32" />
+      </TableCell>
+    </TableRow>
+  );
+}
+
 // Receipt Status Badge Component
 function ReceiptStatusBadge({ status }: { status: string }) {
   return (
@@ -186,17 +243,219 @@ function ReceiptListView({
   onCreateReceipt: () => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
-  const [searchQ, setSearchQ] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const sortableColumnIds = useMemo(
+    () => ['receiptNo', 'warehouse', 'customer', 'status', 'createdAt'],
+    []
+  );
+  const sortableColumnSet = useMemo(
+    () => new Set<string>(sortableColumnIds),
+    [sortableColumnIds]
+  );
+  const defaultSorting = useMemo<
+    ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[]
+  >(() => [{ id: 'createdAt', desc: true }], []);
+
+  const [{ page, size, q, status, sort }, setQueryStates] = useQueryStates({
+    page: parseAsIndex.withDefault(0),
+    size: parseAsInteger.withDefault(10),
+    q: parseAsString.withDefault(''),
+    status: parseAsString.withDefault(''),
+    sort: getSortingStateParser<FreightWarehouseReceiptWithRelations>(
+      sortableColumnIds
+    ).withDefault(defaultSorting),
+  });
+
+  const normalizeSorting = (
+    value: SortingState
+  ): ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[] => {
+    const filtered = value
+      .filter((item) => sortableColumnSet.has(item.id))
+      .map((item) => ({
+        ...item,
+        id: item.id,
+      })) as ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[];
+
+    return filtered.length > 0 ? filtered : defaultSorting;
+  };
+
+  const safeSorting = normalizeSorting(sort);
 
   const receiptsQuery = useFreightWarehouseReceipts({
-    q: searchQ,
-    status: statusFilter,
+    q,
+    status,
+  });
+
+  const data = receiptsQuery.data ?? [];
+
+  const columns = useMemo<
+    ColumnDef<FreightWarehouseReceiptWithRelations>[]
+  >(() => {
+    const cols: ColumnDef<FreightWarehouseReceiptWithRelations>[] = [
+      {
+        id: 'receiptNo',
+        accessorKey: 'receiptNo',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.receiptNo')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <div className="flex items-center gap-2 font-medium">
+              <FileText className="size-4 text-muted-foreground" />
+              {receipt.receiptNo}
+            </div>
+          );
+        },
+        meta: { label: t('receiptList.columns.receiptNo') },
+        minSize: 180,
+        size: 220,
+      },
+      {
+        id: 'warehouse',
+        accessorFn: (r) => r.warehouse?.name ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.warehouse')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <span className="text-muted-foreground">
+              {receipt.warehouse?.name ?? '-'}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.warehouse') },
+        minSize: 140,
+        size: 180,
+      },
+      {
+        id: 'customer',
+        accessorFn: (r) => r.customer?.nameCn ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.customer')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <span className="text-muted-foreground">
+              {receipt.customer?.nameCn ?? '-'}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.customer') },
+        minSize: 140,
+        size: 180,
+      },
+      {
+        id: 'remarks',
+        accessorKey: 'remarks',
+        enableSorting: false,
+        header: () => t('receiptList.columns.remarks'),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <div className="max-w-xs truncate text-muted-foreground">
+              {receipt.remarks || '-'}
+            </div>
+          );
+        },
+        meta: { label: t('receiptList.columns.remarks') },
+        minSize: 180,
+        size: 260,
+      },
+      {
+        id: 'status',
+        accessorKey: 'status',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.status')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return <ReceiptStatusBadge status={receipt.status} />;
+        },
+        meta: { label: t('receiptList.columns.status') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'createdAt',
+        accessorFn: (r) => (r.createdAt ? new Date(r.createdAt).getTime() : 0),
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.createdAt')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <span className="text-muted-foreground text-sm">
+              {receipt.createdAt
+                ? format(new Date(receipt.createdAt), 'yyyy-MM-dd HH:mm')
+                : '-'}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.createdAt') },
+        minSize: 160,
+        size: 200,
+      },
+    ];
+
+    return cols;
+  }, [t]);
+
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting: safeSorting,
+      columnVisibility,
+      pagination: { pageIndex: page, pageSize: size },
+    },
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(safeSorting) : updater;
+      const normalized = normalizeSorting(next);
+      void setQueryStates({ sort: normalized, page: 0 }, { shallow: true });
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page, pageSize: size })
+          : updater;
+      if (next.pageSize !== size) {
+        void setQueryStates(
+          { size: next.pageSize, page: 0 },
+          { shallow: true }
+        );
+      } else if (next.pageIndex !== page) {
+        void setQueryStates({ page: next.pageIndex }, { shallow: true });
+      }
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    enableMultiSort: false,
   });
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
+    <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -212,141 +471,136 @@ function ReceiptListView({
         </Button>
       </div>
 
-      {/* Search Bar + Status Filter */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
-            placeholder={t('receiptList.searchPlaceholder')}
-            className="pl-9"
-          />
+      <div className="px-0">
+        <DataTableAdvancedToolbar table={table}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) =>
+                setQueryStates(
+                  { q: e.target.value, page: 0 },
+                  { shallow: true }
+                )
+              }
+              placeholder={t('receiptList.searchPlaceholder')}
+              className="h-8 w-[260px] pl-9 pr-8"
+            />
+            {q.length > 0 ? (
+              <button
+                type="button"
+                aria-label={t('receiptList.searchPlaceholder')}
+                className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() =>
+                  setQueryStates({ q: '', page: 0 }, { shallow: true })
+                }
+              >
+                <XIcon className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+
+          <Select
+            value={status}
+            onValueChange={(value) =>
+              setQueryStates(
+                { status: value === '__all__' ? '' : value, page: 0 },
+                { shallow: true }
+              )
+            }
+          >
+            <SelectTrigger size="sm" className="h-8">
+              <SelectValue placeholder={t('receiptList.statusAll')} />
+            </SelectTrigger>
+            <SelectContent align="start">
+              <SelectItem value="__all__">
+                {t('receiptList.statusAll')}
+              </SelectItem>
+              {RECEIPT_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </DataTableAdvancedToolbar>
+      </div>
+
+      <div className="relative flex flex-col gap-4 overflow-auto">
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <Table>
+            <TableHeader className="bg-muted sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {receiptsQuery.isLoading ? (
+                Array.from({ length: size }).map((_, idx) => (
+                  <ReceiptListRowSkeleton key={`sk-${idx}`} />
+                ))
+              ) : receiptsQuery.error ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyTitle>{t('receiptList.error')}</EmptyTitle>
+                        <EmptyDescription>
+                          {getFreightApiErrorMessage(receiptsQuery.error)}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyTitle>{t('receiptList.empty')}</EmptyTitle>
+                        <EmptyDescription>
+                          {t('receiptList.emptyHint')}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="h-14 cursor-pointer hover:bg-muted/50"
+                    onClick={() => onSelectReceipt(row.original.id)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
 
-        <select
-          className="h-9 rounded-md border bg-background px-3 text-sm"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">{t('receiptList.statusAll')}</option>
-          {RECEIPT_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <DataTablePagination table={table} className="px-0" />
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">
-                {t('receiptList.columns.receiptNo')}
-              </TableHead>
-              <TableHead>{t('receiptList.columns.warehouse')}</TableHead>
-              <TableHead>{t('receiptList.columns.customer')}</TableHead>
-              <TableHead>{t('receiptList.columns.remarks')}</TableHead>
-              <TableHead className="w-[120px]">
-                {t('receiptList.columns.status')}
-              </TableHead>
-              <TableHead className="w-[180px]">
-                {t('receiptList.columns.createdAt')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {receiptsQuery.isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-48" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : receiptsQuery.error ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyTitle>{t('receiptList.error')}</EmptyTitle>
-                      <EmptyDescription>
-                        {getFreightApiErrorMessage(receiptsQuery.error)}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (receiptsQuery.data ?? []).length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyTitle>{t('receiptList.empty')}</EmptyTitle>
-                      <EmptyDescription>
-                        {t('receiptList.emptyHint')}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              (receiptsQuery.data ?? []).map((receipt) => (
-                <TableRow
-                  key={receipt.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => onSelectReceipt(receipt.id)}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <FileText className="size-4 text-muted-foreground" />
-                      {receipt.receiptNo}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {receipt.warehouse?.name ?? '-'}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {receipt.customer?.nameCn ?? '-'}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <div className="max-w-xs truncate">
-                      {receipt.remarks || '-'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <ReceiptStatusBadge status={receipt.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {receipt.createdAt
-                      ? format(new Date(receipt.createdAt), 'yyyy-MM-dd HH:mm')
-                      : '-'}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Floating Action Button */}
       <FloatingActionButton
         onClick={onCreateReceipt}
         label={t('receipt.create')}
@@ -379,10 +633,350 @@ function ReceiptDetailView({
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [searchQ, setSearchQ] = useState('');
+  const [itemsSorting, setItemsSorting] = useState<SortingState>([
+    { id: 'commodity', desc: false },
+  ]);
+  const [itemsColumnVisibility, setItemsColumnVisibility] =
+    useState<VisibilityState>({});
+  const [itemsPagination, setItemsPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const itemsQuery = useFreightInventoryItems({
     receiptId: receipt.id,
     q: searchQ,
+  });
+
+  const items = itemsQuery.data ?? [];
+
+  const itemsColumns = useMemo<ColumnDef<FreightInventoryItem>[]>(
+    () => [
+      {
+        id: 'commodity',
+        accessorFn: (i) => i.commodityName ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.commodity')}
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="font-medium">
+            {row.original.commodityName ?? '-'}
+          </span>
+        ),
+        meta: { label: t('items.columns.commodity') },
+        minSize: 160,
+        size: 220,
+      },
+      {
+        id: 'sku',
+        accessorFn: (i) => i.skuCode ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.sku')}
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.skuCode ?? '-'}
+          </span>
+        ),
+        meta: { label: t('items.columns.sku') },
+        minSize: 140,
+        size: 180,
+      },
+      {
+        id: 'initialQty',
+        accessorKey: 'initialQty',
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('items.columns.initialQty')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-medium">
+            {row.original.initialQty}
+          </div>
+        ),
+        meta: { label: t('items.columns.initialQty') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'currentQty',
+        accessorKey: 'currentQty',
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('items.columns.currentQty')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const item = row.original;
+          const shipped = item.initialQty - item.currentQty;
+          const isFullyShipped = item.currentQty === 0;
+          const isPartiallyShipped = shipped > 0 && !isFullyShipped;
+          return (
+            <div className="text-right font-medium">
+              <span
+                className={cn(
+                  isFullyShipped && 'text-muted-foreground',
+                  isPartiallyShipped && 'text-yellow-600 dark:text-yellow-400'
+                )}
+              >
+                {item.currentQty}
+              </span>
+            </div>
+          );
+        },
+        meta: { label: t('items.columns.currentQty') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'shipped',
+        accessorFn: (i) => i.initialQty - i.currentQty,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('items.columns.shipped')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const item = row.original;
+          const shipped = item.initialQty - item.currentQty;
+          return (
+            <div className="text-right text-muted-foreground">
+              {shipped > 0 ? shipped : '-'}
+            </div>
+          );
+        },
+        meta: { label: t('items.columns.shipped') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'unit',
+        accessorFn: (i) => i.unit ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.unit')}
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.unit ?? '-'}
+          </span>
+        ),
+        meta: { label: t('items.columns.unit') },
+        minSize: 110,
+        size: 130,
+      },
+      {
+        id: 'location',
+        accessorFn: (i) => i.binLocation ?? '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.location')}
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.binLocation ?? '-'}
+          </span>
+        ),
+        meta: { label: t('items.columns.location') },
+        minSize: 140,
+        size: 180,
+      },
+      {
+        id: 'totalWeight',
+        accessorFn: (item) => {
+          const weightPerUnit =
+            item.weightPerUnit != null ? Number(item.weightPerUnit) : undefined;
+          const totalWeightKg =
+            weightPerUnit != null && Number.isFinite(weightPerUnit)
+              ? weightPerUnit * item.initialQty
+              : 0;
+          return totalWeightKg;
+        },
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('items.columns.totalWeight')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const item = row.original;
+          const weightPerUnit =
+            item.weightPerUnit != null ? Number(item.weightPerUnit) : undefined;
+          const totalWeightKg =
+            weightPerUnit != null && Number.isFinite(weightPerUnit)
+              ? weightPerUnit * item.initialQty
+              : undefined;
+
+          return (
+            <div className="text-right text-muted-foreground">
+              {totalWeightKg != null ? (
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-help underline decoration-dotted underline-offset-2">
+                      {`${formatCeilFixed(totalWeightKg, 2)} kg`}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6}>
+                    {`${item.weightPerUnit ?? String(weightPerUnit)} kg × ${item.initialQty} = ${formatCeilFixed(totalWeightKg, 2)} kg`}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                '-'
+              )}
+            </div>
+          );
+        },
+        meta: { label: t('items.columns.totalWeight') },
+        minSize: 150,
+        size: 170,
+      },
+      {
+        id: 'totalVolume',
+        accessorFn: (item) => {
+          const lengthCm =
+            item.lengthCm != null ? Number(item.lengthCm) : undefined;
+          const widthCm =
+            item.widthCm != null ? Number(item.widthCm) : undefined;
+          const heightCm =
+            item.heightCm != null ? Number(item.heightCm) : undefined;
+          const totalVolumeM3 =
+            lengthCm != null &&
+            widthCm != null &&
+            heightCm != null &&
+            Number.isFinite(lengthCm) &&
+            Number.isFinite(widthCm) &&
+            Number.isFinite(heightCm)
+              ? (lengthCm * widthCm * heightCm * item.initialQty) / 1_000_000
+              : 0;
+          return totalVolumeM3;
+        },
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('items.columns.totalVolume')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const item = row.original;
+          const lengthCm =
+            item.lengthCm != null ? Number(item.lengthCm) : undefined;
+          const widthCm =
+            item.widthCm != null ? Number(item.widthCm) : undefined;
+          const heightCm =
+            item.heightCm != null ? Number(item.heightCm) : undefined;
+          const totalVolumeM3 =
+            lengthCm != null &&
+            widthCm != null &&
+            heightCm != null &&
+            Number.isFinite(lengthCm) &&
+            Number.isFinite(widthCm) &&
+            Number.isFinite(heightCm)
+              ? (lengthCm * widthCm * heightCm * item.initialQty) / 1_000_000
+              : undefined;
+
+          return (
+            <div className="text-right text-muted-foreground">
+              {totalVolumeM3 != null ? (
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-help underline decoration-dotted underline-offset-2">
+                      {`${formatCeilFixed(totalVolumeM3, 2)} m³`}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6}>
+                    {`${item.lengthCm}×${item.widthCm}×${item.heightCm} cm × ${item.initialQty} ÷ 1,000,000 = ${formatCeilFixed(totalVolumeM3, 2)} m³`}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                '-'
+              )}
+            </div>
+          );
+        },
+        meta: { label: t('items.columns.totalVolume') },
+        minSize: 150,
+        size: 170,
+      },
+      {
+        id: 'actions',
+        header: () => null,
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const item = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8">
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEditItem(item)}>
+                  <Edit className="mr-2 size-4" />
+                  {t('itemActions.edit')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onViewMovements(item)}>
+                  <History className="mr-2 size-4" />
+                  {t('itemActions.viewMovements')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDeleteItem(item)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="mr-2 size-4" />
+                  {t('itemActions.delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+        size: 72,
+      },
+    ],
+    [onDeleteItem, onEditItem, onViewMovements, t]
+  );
+
+  const itemsTable = useReactTable({
+    data: items,
+    columns: itemsColumns,
+    state: {
+      sorting: itemsSorting,
+      columnVisibility: itemsColumnVisibility,
+      pagination: itemsPagination,
+    },
+    onSortingChange: setItemsSorting,
+    onColumnVisibilityChange: setItemsColumnVisibility,
+    onPaginationChange: setItemsPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    enableMultiSort: false,
   });
 
   return (
@@ -479,242 +1073,122 @@ function ReceiptDetailView({
           </Button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
-            placeholder={t('items.searchPlaceholder')}
-            className="pl-9"
-          />
-        </div>
+        <DataTableAdvancedToolbar table={itemsTable}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQ}
+              onChange={(e) => {
+                setSearchQ(e.target.value);
+                setItemsPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+              placeholder={t('items.searchPlaceholder')}
+              className="h-8 w-[260px] pl-9 pr-8"
+            />
+            {searchQ.length > 0 ? (
+              <button
+                type="button"
+                aria-label={t('items.searchPlaceholder')}
+                className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => {
+                  setSearchQ('');
+                  setItemsPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                }}
+              >
+                <XIcon className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+        </DataTableAdvancedToolbar>
 
-        {/* Items Table */}
-        <div className="rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('items.columns.commodity')}</TableHead>
-                <TableHead>{t('items.columns.sku')}</TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.initialQty')}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.currentQty')}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.shipped')}
-                </TableHead>
-                <TableHead>{t('items.columns.unit')}</TableHead>
-                <TableHead>{t('items.columns.location')}</TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.totalWeight')}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.totalVolume')}
-                </TableHead>
-                <TableHead className="w-[80px]">
-                  {t('items.columns.actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {itemsQuery.isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <Skeleton className="h-4 w-32" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-12" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-8 w-8" />
+        <div className="relative flex flex-col gap-4 overflow-auto">
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <Table>
+              <TableHeader className="bg-muted sticky top-0 z-10">
+                {itemsTable.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {itemsQuery.isLoading ? (
+                  Array.from({ length: itemsPagination.pageSize }).map(
+                    (_, idx) => (
+                      <TableRow key={`sk-${idx}`} className="h-14">
+                        {Array.from({ length: itemsColumns.length }).map(
+                          (__, cIdx) => (
+                            <TableCell
+                              key={`sk-${idx}-${cIdx}`}
+                              className="py-3"
+                            >
+                              <Skeleton className="h-4 w-24" />
+                            </TableCell>
+                          )
+                        )}
+                      </TableRow>
+                    )
+                  )
+                ) : itemsQuery.error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={itemsColumns.length}
+                      className="h-32 text-center"
+                    >
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle>{t('items.error')}</EmptyTitle>
+                          <EmptyDescription>
+                            {getFreightApiErrorMessage(itemsQuery.error)}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : itemsQuery.error ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="h-32 text-center">
-                    <Empty>
-                      <EmptyHeader>
-                        <EmptyTitle>{t('items.error')}</EmptyTitle>
-                        <EmptyDescription>
-                          {getFreightApiErrorMessage(itemsQuery.error)}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </TableCell>
-                </TableRow>
-              ) : (itemsQuery.data ?? []).length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="h-32 text-center">
-                    <Empty>
-                      <EmptyHeader>
-                        <EmptyTitle>{t('items.empty')}</EmptyTitle>
-                        <EmptyDescription>
-                          {t('items.emptyHint')}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                (itemsQuery.data ?? []).map((item) => {
-                  const shipped = item.initialQty - item.currentQty;
-                  const isFullyShipped = item.currentQty === 0;
-                  const isPartiallyShipped = shipped > 0 && !isFullyShipped;
-
-                  const weightPerUnit =
-                    item.weightPerUnit != null
-                      ? Number(item.weightPerUnit)
-                      : undefined;
-                  const totalWeightKg =
-                    weightPerUnit != null && Number.isFinite(weightPerUnit)
-                      ? weightPerUnit * item.initialQty
-                      : undefined;
-
-                  const lengthCm =
-                    item.lengthCm != null ? Number(item.lengthCm) : undefined;
-                  const widthCm =
-                    item.widthCm != null ? Number(item.widthCm) : undefined;
-                  const heightCm =
-                    item.heightCm != null ? Number(item.heightCm) : undefined;
-                  const totalVolumeM3 =
-                    lengthCm != null &&
-                    widthCm != null &&
-                    heightCm != null &&
-                    Number.isFinite(lengthCm) &&
-                    Number.isFinite(widthCm) &&
-                    Number.isFinite(heightCm)
-                      ? (lengthCm * widthCm * heightCm * item.initialQty) /
-                        1_000_000
-                      : undefined;
-
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.commodityName ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.skuCode ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {item.initialQty}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        <span
-                          className={cn(
-                            isFullyShipped && 'text-muted-foreground',
-                            isPartiallyShipped &&
-                              'text-yellow-600 dark:text-yellow-400'
+                ) : items.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={itemsColumns.length}
+                      className="h-32 text-center"
+                    >
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle>{t('items.empty')}</EmptyTitle>
+                          <EmptyDescription>
+                            {t('items.emptyHint')}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  itemsTable.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="h-14">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="py-3">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
                           )}
-                        >
-                          {item.currentQty}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {shipped > 0 ? shipped : '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.unit ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.binLocation ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-right">
-                        {totalWeightKg != null ? (
-                          <Tooltip delayDuration={100}>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-help underline decoration-dotted underline-offset-2">
-                                {`${formatCeilFixed(totalWeightKg, 2)} kg`}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" sideOffset={6}>
-                              {`${item.weightPerUnit ?? String(weightPerUnit)} kg × ${item.initialQty} = ${formatCeilFixed(totalWeightKg, 2)} kg`}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-right">
-                        {totalVolumeM3 != null ? (
-                          <Tooltip delayDuration={100}>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-help underline decoration-dotted underline-offset-2">
-                                {`${formatCeilFixed(totalVolumeM3, 2)} m³`}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" sideOffset={6}>
-                              {`${item.lengthCm}×${item.widthCm}×${item.heightCm} cm × ${item.initialQty} ÷ 1,000,000 = ${formatCeilFixed(totalVolumeM3, 2)} m³`}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                            >
-                              <MoreHorizontal className="size-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditItem(item)}>
-                              <Edit className="mr-2 size-4" />
-                              {t('itemActions.edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => onViewMovements(item)}
-                            >
-                              <History className="mr-2 size-4" />
-                              {t('itemActions.viewMovements')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => onDeleteItem(item)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 size-4" />
-                              {t('itemActions.delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <DataTablePagination table={itemsTable} className="px-0" />
         </div>
       </div>
 

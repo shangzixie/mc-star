@@ -41,4 +41,3 @@ InviteUser.PreviewProps = {
   inviteUrl: 'https://mksaas.com/auth/register?token=abc123',
   invitedBy: 'Admin',
 };
-

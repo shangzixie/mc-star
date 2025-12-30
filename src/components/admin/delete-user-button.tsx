@@ -71,7 +71,9 @@ export function DeleteUserButton({
           <AlertDialogDescription>{t('description')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>
+            {t('cancel')}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={loading}
@@ -84,4 +86,3 @@ export function DeleteUserButton({
     </AlertDialog>
   );
 }
-

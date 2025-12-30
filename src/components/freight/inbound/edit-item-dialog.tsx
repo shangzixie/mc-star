@@ -70,7 +70,9 @@ export function EditItemDialog({
       skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
       binLocation: item.binLocation ?? undefined,
-      weightPerUnit: item.weightPerUnit ? Number(item.weightPerUnit) : undefined,
+      weightPerUnit: item.weightPerUnit
+        ? Number(item.weightPerUnit)
+        : undefined,
       lengthCm: item.lengthCm ? Number(item.lengthCm) : undefined,
       widthCm: item.widthCm ? Number(item.widthCm) : undefined,
       heightCm: item.heightCm ? Number(item.heightCm) : undefined,
@@ -84,7 +86,9 @@ export function EditItemDialog({
       skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
       binLocation: item.binLocation ?? undefined,
-      weightPerUnit: item.weightPerUnit ? Number(item.weightPerUnit) : undefined,
+      weightPerUnit: item.weightPerUnit
+        ? Number(item.weightPerUnit)
+        : undefined,
       lengthCm: item.lengthCm ? Number(item.lengthCm) : undefined,
       widthCm: item.widthCm ? Number(item.widthCm) : undefined,
       heightCm: item.heightCm ? Number(item.heightCm) : undefined,

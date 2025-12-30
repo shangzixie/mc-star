@@ -1,5 +1,8 @@
 'use client';
 
+import { DataTableAdvancedToolbar } from '@/components/data-table/data-table-advanced-toolbar';
+import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
+import { DataTablePagination } from '@/components/data-table/data-table-pagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +61,16 @@ import {
   createWarehouseSchema,
 } from '@/lib/freight/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  type ColumnDef,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useMemo, useState } from 'react';
@@ -666,108 +679,198 @@ function WarehousesTable({
   const [editing, setEditing] = useState<FreightWarehouse | null>(null);
   const [deleting, setDeleting] = useState<FreightWarehouse | null>(null);
   const deleteMutation = useDeactivateFreightWarehouse(deleting?.id ?? '');
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'name', desc: false },
+  ]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
+  const columns = useMemo<ColumnDef<FreightWarehouse>[]>(
+    () => [
+      {
+        id: 'name',
+        accessorKey: 'name',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label={t('columns.name')} />
+        ),
+        cell: ({ row }) => (
+          <span className="font-medium">{row.original.name}</span>
+        ),
+        meta: { label: t('columns.name') },
+        minSize: 160,
+        size: 220,
+      },
+      {
+        id: 'contact',
+        accessorFn: (w) =>
+          [w.contactPerson, w.phone].filter(Boolean).join(' / '),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label={t('columns.contact')} />
+        ),
+        cell: ({ row }) =>
+          [row.original.contactPerson, row.original.phone]
+            .filter(Boolean)
+            .join(' / ') || '-',
+        meta: { label: t('columns.contact') },
+        minSize: 160,
+        size: 240,
+      },
+      {
+        id: 'address',
+        accessorKey: 'address',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label={t('columns.address')} />
+        ),
+        cell: ({ row }) => row.original.address ?? '-',
+        meta: { label: t('columns.address') },
+        minSize: 220,
+        size: 320,
+      },
+      {
+        id: 'remarks',
+        accessorKey: 'remarks',
+        enableSorting: false,
+        header: () => t('columns.remarks'),
+        cell: ({ row }) => row.original.remarks ?? '-',
+        meta: { label: t('columns.remarks') },
+        minSize: 220,
+        size: 320,
+      },
+      {
+        id: 'actions',
+        header: () => null,
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const w = row.original;
+          return (
+            <div className="flex justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('actions.menu')}
+                  >
+                    <MoreHorizontalIcon className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => setEditing(w)}>
+                    <PencilIcon className="size-4" />
+                    {t('actions.edit')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => setDeleting(w)}
+                  >
+                    <Trash2Icon className="size-4" />
+                    {t('actions.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+        size: 60,
+      },
+    ],
+    [t]
+  );
+
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  const table = useReactTable({
+    data: warehouses,
+    columns,
+    state: {
+      sorting,
+      columnVisibility,
+      pagination,
+    },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    enableMultiSort: false,
+  });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('columns.name')}</TableHead>
-            <TableHead className="hidden md:table-cell">
-              {t('columns.contact')}
-            </TableHead>
-            <TableHead className="hidden lg:table-cell">
-              {t('columns.address')}
-            </TableHead>
-            <TableHead className="hidden xl:table-cell">
-              {t('columns.remarks')}
-            </TableHead>
-            <TableHead className="w-[1%]" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array.from({ length: 6 }).map((_, idx) => (
-              <TableRow key={`sk-${idx}`}>
-                <TableCell>
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Skeleton className="h-4 w-64" />
-                </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  <Skeleton className="h-4 w-64" />
-                </TableCell>
-                <TableCell />
-              </TableRow>
-            ))
-          ) : error ? (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="py-8 text-center text-muted-foreground"
-              >
-                {getFreightApiErrorMessage(error)}
-              </TableCell>
-            </TableRow>
-          ) : warehouses.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="py-8 text-center text-muted-foreground"
-              >
-                {t('empty')}
-              </TableCell>
-            </TableRow>
-          ) : (
-            warehouses.map((w) => (
-              <TableRow key={w.id}>
-                <TableCell className="font-medium">{w.name}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {[w.contactPerson, w.phone].filter(Boolean).join(' / ') ||
-                    '-'}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  {w.address ?? '-'}
-                </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  {w.remarks ?? '-'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t('actions.menu')}
-                      >
-                        <MoreHorizontalIcon className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => setEditing(w)}>
-                        <PencilIcon className="size-4" />
-                        {t('actions.edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => setDeleting(w)}
-                      >
-                        <Trash2Icon className="size-4" />
-                        {t('actions.delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+    <div className="w-full space-y-4">
+      <div className="px-0">
+        <DataTableAdvancedToolbar table={table} />
+      </div>
+
+      <div className="relative flex flex-col gap-4 overflow-auto">
+        <div className="overflow-hidden rounded-lg border">
+          <Table>
+            <TableHeader className="bg-muted sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: pagination.pageSize }).map((_, idx) => (
+                  <TableRow key={`sk-${idx}`} className="h-14">
+                    {Array.from({ length: columns.length }).map((__, cIdx) => (
+                      <TableCell key={`sk-${idx}-${cIdx}`} className="py-3">
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : error ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    {getFreightApiErrorMessage(error)}
+                  </TableCell>
+                </TableRow>
+              ) : warehouses.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    {t('empty')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="h-14">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <DataTablePagination table={table} className="px-0" />
+      </div>
 
       {editing ? (
         <WarehouseUpsertDialog
@@ -833,124 +936,210 @@ function PartiesTable({
   const [deleting, setDeleting] = useState<FreightParty | null>(null);
   const deleteMutation = useDeactivateFreightParty(deleting?.id ?? '');
   const roleLabel = (role: string) => t(`roleLabels.${role}` as any);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'name', desc: false },
+  ]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  const columns = useMemo<ColumnDef<FreightParty>[]>(
+    () => [
+      {
+        id: 'name',
+        accessorFn: (p) => `${p.nameCn ?? ''} ${p.nameEn ?? ''}`.trim(),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label={t('columns.name')} />
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.original.nameCn}
+            {row.original.nameEn ? (
+              <span className="ml-2 text-muted-foreground text-xs">
+                {row.original.nameEn}
+              </span>
+            ) : null}
+          </div>
+        ),
+        meta: { label: t('columns.name') },
+        minSize: 200,
+        size: 260,
+      },
+      {
+        id: 'contact',
+        accessorFn: (p) =>
+          [getPartyPhone(p), getPartyEmail(p)].filter(Boolean).join(' / '),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label={t('columns.contact')} />
+        ),
+        cell: ({ row }) =>
+          [getPartyPhone(row.original), getPartyEmail(row.original)]
+            .filter(Boolean)
+            .join(' / ') || '-',
+        meta: { label: t('columns.contact') },
+        minSize: 200,
+        size: 280,
+      },
+      {
+        id: 'roles',
+        accessorFn: (p) => p.roles.join(','),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label={t('columns.roles')} />
+        ),
+        cell: ({ row }) => (
+          <div className="flex flex-wrap">
+            {row.original.roles.map((r) => (
+              <RoleBadge
+                key={`${row.original.id}-${r}`}
+                role={r}
+                label={roleLabel(r)}
+              />
+            ))}
+          </div>
+        ),
+        meta: { label: t('columns.roles') },
+        minSize: 200,
+        size: 320,
+      },
+      {
+        id: 'remarks',
+        accessorKey: 'remarks',
+        enableSorting: false,
+        header: () => t('columns.remarks'),
+        cell: ({ row }) => row.original.remarks ?? '-',
+        meta: { label: t('columns.remarks') },
+        minSize: 200,
+        size: 320,
+      },
+      {
+        id: 'actions',
+        header: () => null,
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const c = row.original;
+          return (
+            <div className="flex justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('actions.menu')}
+                  >
+                    <MoreHorizontalIcon className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => setEditing(c)}>
+                    <PencilIcon className="size-4" />
+                    {t('actions.edit')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => setDeleting(c)}
+                  >
+                    <Trash2Icon className="size-4" />
+                    {t('actions.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+        size: 60,
+      },
+    ],
+    [roleLabel, t]
+  );
+
+  const table = useReactTable({
+    data: parties,
+    columns,
+    state: { sorting, columnVisibility, pagination },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    enableMultiSort: false,
+  });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('columns.name')}</TableHead>
-            <TableHead className="hidden md:table-cell">
-              {t('columns.contact')}
-            </TableHead>
-            <TableHead className="hidden lg:table-cell">
-              {t('columns.roles')}
-            </TableHead>
-            <TableHead className="hidden xl:table-cell">
-              {t('columns.remarks')}
-            </TableHead>
-            <TableHead className="w-[1%]" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array.from({ length: 6 }).map((_, idx) => (
-              <TableRow key={`sk-${idx}`}>
-                <TableCell>
-                  <Skeleton className="h-4 w-56" />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  <Skeleton className="h-4 w-64" />
-                </TableCell>
-                <TableCell />
-              </TableRow>
-            ))
-          ) : error ? (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="py-8 text-center text-muted-foreground"
-              >
-                {getFreightApiErrorMessage(error)}
-              </TableCell>
-            </TableRow>
-          ) : parties.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="py-8 text-center text-muted-foreground"
-              >
-                {emptyText}
-              </TableCell>
-            </TableRow>
-          ) : (
-            parties.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell className="font-medium">
-                  {c.nameCn}
-                  {c.nameEn ? (
-                    <span className="ml-2 text-muted-foreground text-xs">
-                      {c.nameEn}
-                    </span>
-                  ) : null}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {[getPartyPhone(c), getPartyEmail(c)]
-                    .filter(Boolean)
-                    .join(' / ') || '-'}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <div className="flex flex-wrap">
-                    {c.roles.map((r) => (
-                      <RoleBadge
-                        key={`${c.id}-${r}`}
-                        role={r}
-                        label={roleLabel(r)}
-                      />
+    <div className="w-full space-y-4">
+      <div className="px-0">
+        <DataTableAdvancedToolbar table={table} />
+      </div>
+
+      <div className="relative flex flex-col gap-4 overflow-auto">
+        <div className="overflow-hidden rounded-lg border">
+          <Table>
+            <TableHeader className="bg-muted sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: pagination.pageSize }).map((_, idx) => (
+                  <TableRow key={`sk-${idx}`} className="h-14">
+                    {Array.from({ length: columns.length }).map((__, cIdx) => (
+                      <TableCell key={`sk-${idx}-${cIdx}`} className="py-3">
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
                     ))}
-                  </div>
-                </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  {c.remarks ?? '-'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t('actions.menu')}
-                      >
-                        <MoreHorizontalIcon className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => setEditing(c)}>
-                        <PencilIcon className="size-4" />
-                        {t('actions.edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => setDeleting(c)}
-                      >
-                        <Trash2Icon className="size-4" />
-                        {t('actions.delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+                  </TableRow>
+                ))
+              ) : error ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    {getFreightApiErrorMessage(error)}
+                  </TableCell>
+                </TableRow>
+              ) : parties.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    {emptyText}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="h-14">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <DataTablePagination table={table} className="px-0" />
+      </div>
 
       {editing ? (
         <CustomerUpsertDialog

@@ -61,4 +61,3 @@ export function AdminSection() {
     </div>
   );
 }
-

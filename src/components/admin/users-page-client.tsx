@@ -134,43 +134,43 @@ export function UsersPageClient() {
         <InviteUserDialog onInviteSuccess={handleRefresh} />
       </div>
       <UsersTable
-      data={data?.items || []}
-      total={data?.total || 0}
-      pageIndex={page}
-      pageSize={size}
-      search={search}
-      sorting={safeSorting}
-      filters={filters.clientFilters}
-      loading={isLoading}
-      onSearch={(newSearch) => setQueryStates({ search: newSearch, page: 0 })}
-      onPageChange={(newPageIndex) => setQueryStates({ page: newPageIndex })}
-      onPageSizeChange={(newPageSize) =>
-        setQueryStates({ size: newPageSize, page: 0 })
-      }
-      onSortingChange={(newSorting) => {
-        const nextSorting = normalizeSorting(newSorting);
-        setQueryStates({ sort: nextSorting, page: 0 });
-      }}
-      onFiltersChange={(nextFilters) => {
-        const roleFilter = nextFilters.find((filter) => filter.id === 'role');
-        const statusFilter = nextFilters.find(
-          (filter) => filter.id === 'status'
-        );
-        const nextRole =
-          roleFilter && Array.isArray(roleFilter.value)
-            ? ((roleFilter.value[0] as string) ?? '')
-            : '';
-        const nextStatus =
-          statusFilter && Array.isArray(statusFilter.value)
-            ? ((statusFilter.value[0] as string) ?? '')
-            : '';
-        setQueryStates(
-          { role: nextRole, status: nextStatus, page: 0 },
-          { history: 'replace', shallow: true }
-        );
-      }}
-      onUserDeleted={handleRefresh}
-    />
+        data={data?.items || []}
+        total={data?.total || 0}
+        pageIndex={page}
+        pageSize={size}
+        search={search}
+        sorting={safeSorting}
+        filters={filters.clientFilters}
+        loading={isLoading}
+        onSearch={(newSearch) => setQueryStates({ search: newSearch, page: 0 })}
+        onPageChange={(newPageIndex) => setQueryStates({ page: newPageIndex })}
+        onPageSizeChange={(newPageSize) =>
+          setQueryStates({ size: newPageSize, page: 0 })
+        }
+        onSortingChange={(newSorting) => {
+          const nextSorting = normalizeSorting(newSorting);
+          setQueryStates({ sort: nextSorting, page: 0 });
+        }}
+        onFiltersChange={(nextFilters) => {
+          const roleFilter = nextFilters.find((filter) => filter.id === 'role');
+          const statusFilter = nextFilters.find(
+            (filter) => filter.id === 'status'
+          );
+          const nextRole =
+            roleFilter && Array.isArray(roleFilter.value)
+              ? ((roleFilter.value[0] as string) ?? '')
+              : '';
+          const nextStatus =
+            statusFilter && Array.isArray(statusFilter.value)
+              ? ((statusFilter.value[0] as string) ?? '')
+              : '';
+          setQueryStates(
+            { role: nextRole, status: nextStatus, page: 0 },
+            { history: 'replace', shallow: true }
+          );
+        }}
+        onUserDeleted={handleRefresh}
+      />
     </div>
   );
 }
