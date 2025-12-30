@@ -2,12 +2,15 @@
 
 import { freightFetch, freightQueryString } from '@/lib/freight/api-client';
 import {
-  freightInventoryItemSchema,
-  freightWarehouseReceiptSchema,
   type FreightInventoryItem,
   type FreightWarehouseReceipt,
+  freightInventoryItemSchema,
+  freightWarehouseReceiptSchema,
 } from '@/lib/freight/api-types';
-import { addInventoryItemSchema, createWarehouseReceiptSchema } from '@/lib/freight/schemas';
+import {
+  addInventoryItemSchema,
+  createWarehouseReceiptSchema,
+} from '@/lib/freight/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { freightKeys } from './query-keys';
@@ -77,14 +80,17 @@ export function useAddFreightInventoryItemToReceipt(receiptId: string) {
     ): Promise<FreightInventoryItem> => {
       const body = addItemToReceiptSchema.parse(input);
 
-      return freightFetch(`/api/freight/warehouse-receipts/${receiptId}/items`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-        schema: freightInventoryItemSchema,
-      });
+      return freightFetch(
+        `/api/freight/warehouse-receipts/${receiptId}/items`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+          schema: freightInventoryItemSchema,
+        }
+      );
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -93,5 +99,3 @@ export function useAddFreightInventoryItemToReceipt(receiptId: string) {
     },
   });
 }
-
-

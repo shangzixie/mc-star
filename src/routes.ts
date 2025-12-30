@@ -76,7 +76,7 @@ export enum Routes {
 /**
  * The routes that can not be accessed by logged in users
  */
-export const routesNotAllowedByLoggedInUsers = [Routes.Login];
+export const routesNotAllowedByLoggedInUsers = [Routes.Root, Routes.Login];
 
 /**
  * The routes that are protected and require authentication
@@ -85,12 +85,9 @@ export const protectedRoutes = [
   Routes.Dashboard,
   Routes.AdminUsers,
   Routes.SettingsProfile,
-  Routes.SettingsBilling,
-  Routes.SettingsCredits,
   Routes.SettingsSecurity,
   Routes.SettingsNotifications,
   Routes.Freight,
-  Routes.Payment,
 ];
 
 /**

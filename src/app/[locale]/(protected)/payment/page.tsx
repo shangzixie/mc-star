@@ -1,5 +1,5 @@
-import { PaymentCard } from '@/components/payment/payment-card';
+import { notFound } from 'next/navigation';
 
 export default function PaymentPage() {
-  return <PaymentCard />;
+  notFound();
 }

@@ -16,7 +16,9 @@ export async function GET(request: Request) {
 
     const db = await getDb();
     const base = db.select().from(parties);
-    const activeClause = includeInactive ? undefined : eq(parties.isActive, true);
+    const activeClause = includeInactive
+      ? undefined
+      : eq(parties.isActive, true);
     const searchClause =
       q && q.length > 0
         ? or(ilike(parties.nameCn, `%${q}%`), ilike(parties.nameEn, `%${q}%`))

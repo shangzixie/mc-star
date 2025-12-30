@@ -157,7 +157,9 @@ export const freightWarehouseReceiptSchema = z
   })
   .passthrough();
 
-export type FreightWarehouseReceipt = z.infer<typeof freightWarehouseReceiptSchema>;
+export type FreightWarehouseReceipt = z.infer<
+  typeof freightWarehouseReceiptSchema
+>;
 
 export const freightAttachmentSchema = z
   .object({

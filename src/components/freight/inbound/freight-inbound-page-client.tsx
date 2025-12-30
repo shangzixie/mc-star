@@ -12,24 +12,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
 import {
-  getFreightApiErrorMessage,
-} from '@/lib/freight/api-client';
+  useFreightParties,
+  useFreightWarehouses,
+} from '@/hooks/freight/use-freight-master-data';
+import {
+  useAddFreightInventoryItemToReceipt,
+  useCreateFreightWarehouseReceipt,
+} from '@/hooks/freight/use-freight-warehouse-receipts';
+import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
   FreightInventoryItem,
   FreightParty,
   FreightWarehouse,
 } from '@/lib/freight/api-types';
-import { addInventoryItemSchema, createWarehouseReceiptSchema } from '@/lib/freight/schemas';
 import {
-  useCreateFreightWarehouseReceipt,
-  useAddFreightInventoryItemToReceipt,
-} from '@/hooks/freight/use-freight-warehouse-receipts';
-import {
-  useFreightParties,
-  useFreightWarehouses,
-} from '@/hooks/freight/use-freight-master-data';
-import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
+  addInventoryItemSchema,
+  createWarehouseReceiptSchema,
+} from '@/lib/freight/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
@@ -39,55 +40,52 @@ import { z } from 'zod';
 
 const receiptFormSchema = z.object({
   receiptNo: z.string().min(1).max(30),
-  warehouseId: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.length > 0 ? v : undefined)),
-  customerId: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.length > 0 ? v : undefined)),
-  remarks: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.trim().length > 0 ? v.trim() : undefined)),
+  warehouseId: z.string().optional(),
+  customerId: z.string().optional(),
+  remarks: z.string().optional(),
 });
 
 type ReceiptFormValues = z.infer<typeof receiptFormSchema>;
 
 const addItemFormSchema = z.object({
-  commodityName: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.trim().length > 0 ? v.trim() : undefined)),
-  skuCode: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.trim().length > 0 ? v.trim() : undefined)),
-  initialQty: z.preprocess((v) => Number(v), z.number().int().positive()),
-  unit: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.trim().length > 0 ? v.trim() : undefined)),
-  binLocation: z
-    .string()
-    .optional()
-    .transform((v) => (v && v.trim().length > 0 ? v.trim() : undefined)),
+  commodityName: z.string().optional(),
+  skuCode: z.string().optional(),
+  initialQty: z
+    .union([z.string(), z.number()])
+    .transform((v) => Number(v))
+    .refine((v) => !Number.isNaN(v) && Number.isInteger(v) && v > 0, {
+      message: 'Must be a positive integer',
+    }),
+  unit: z.string().optional(),
+  binLocation: z.string().optional(),
   weightTotal: z
-    .preprocess((v) => (v === '' || v == null ? undefined : Number(v)), z.number().optional())
-    .optional(),
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((v) => (v === '' || v == null ? undefined : Number(v)))
+    .refine((v) => v === undefined || !Number.isNaN(v), {
+      message: 'Invalid number',
+    }),
   lengthCm: z
-    .preprocess((v) => (v === '' || v == null ? undefined : Number(v)), z.number().optional())
-    .optional(),
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((v) => (v === '' || v == null ? undefined : Number(v)))
+    .refine((v) => v === undefined || !Number.isNaN(v), {
+      message: 'Invalid number',
+    }),
   widthCm: z
-    .preprocess((v) => (v === '' || v == null ? undefined : Number(v)), z.number().optional())
-    .optional(),
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((v) => (v === '' || v == null ? undefined : Number(v)))
+    .refine((v) => v === undefined || !Number.isNaN(v), {
+      message: 'Invalid number',
+    }),
   heightCm: z
-    .preprocess((v) => (v === '' || v == null ? undefined : Number(v)), z.number().optional())
-    .optional(),
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((v) => (v === '' || v == null ? undefined : Number(v)))
+    .refine((v) => v === undefined || !Number.isNaN(v), {
+      message: 'Invalid number',
+    }),
 });
 
-type AddItemFormValues = z.infer<typeof addItemFormSchema>;
+type AddItemFormInput = z.input<typeof addItemFormSchema>;
+type AddItemFormOutput = z.output<typeof addItemFormSchema>;
 
 function InventoryItemsTable({
   items,
@@ -199,9 +197,9 @@ export function FreightInboundPageClient() {
     try {
       const payload = createWarehouseReceiptSchema.parse({
         receiptNo: values.receiptNo.trim(),
-        warehouseId: values.warehouseId,
-        customerId: values.customerId,
-        remarks: values.remarks,
+        warehouseId: values.warehouseId || undefined,
+        customerId: values.customerId || undefined,
+        remarks: values.remarks?.trim() || undefined,
       });
 
       const created = await receiptMutation.mutateAsync(payload);
@@ -209,14 +207,16 @@ export function FreightInboundPageClient() {
       setReceiptId(created.id);
       receiptForm.reset();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('receipt.createFailed'));
+      toast.error(
+        err instanceof Error ? err.message : t('receipt.createFailed')
+      );
     }
   });
 
   const canAddItems = receiptId.trim().length > 0;
   const addItemMutation = useAddFreightInventoryItemToReceipt(receiptId.trim());
 
-  const itemForm = useForm<AddItemFormValues>({
+  const itemForm = useForm<AddItemFormInput, any, AddItemFormOutput>({
     resolver: zodResolver(addItemFormSchema),
     defaultValues: {
       commodityName: '',
@@ -234,9 +234,13 @@ export function FreightInboundPageClient() {
         return;
       }
 
-      const payload = addInventoryItemSchema
-        .omit({ receiptId: true })
-        .parse(values);
+      const payload = addInventoryItemSchema.omit({ receiptId: true }).parse({
+        ...values,
+        commodityName: values.commodityName?.trim() || undefined,
+        skuCode: values.skuCode?.trim() || undefined,
+        unit: values.unit?.trim() || undefined,
+        binLocation: values.binLocation?.trim() || undefined,
+      });
 
       await addItemMutation.mutateAsync(payload);
       toast.success(t('items.created'));
@@ -286,13 +290,17 @@ export function FreightInboundPageClient() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="warehouseId">{t('receipt.fields.warehouse')}</Label>
+                <Label htmlFor="warehouseId">
+                  {t('receipt.fields.warehouse')}
+                </Label>
                 <select
                   id="warehouseId"
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                   {...receiptForm.register('warehouseId')}
                 >
-                  <option value="">{t('receipt.fields.warehousePlaceholder')}</option>
+                  <option value="">
+                    {t('receipt.fields.warehousePlaceholder')}
+                  </option>
                   {(warehousesQuery.data ?? []).map((w: FreightWarehouse) => (
                     <option key={w.id} value={w.id}>
                       {w.name}
@@ -302,13 +310,17 @@ export function FreightInboundPageClient() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customerId">{t('receipt.fields.customer')}</Label>
+                <Label htmlFor="customerId">
+                  {t('receipt.fields.customer')}
+                </Label>
                 <select
                   id="customerId"
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                   {...receiptForm.register('customerId')}
                 >
-                  <option value="">{t('receipt.fields.customerPlaceholder')}</option>
+                  <option value="">
+                    {t('receipt.fields.customerPlaceholder')}
+                  </option>
                   {customers.map((c: FreightParty) => (
                     <option key={c.id} value={c.id}>
                       {c.nameCn}
@@ -319,7 +331,9 @@ export function FreightInboundPageClient() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="receipt-remarks">{t('receipt.fields.remarks')}</Label>
+              <Label htmlFor="receipt-remarks">
+                {t('receipt.fields.remarks')}
+              </Label>
               <Input
                 id="receipt-remarks"
                 autoComplete="off"
@@ -328,12 +342,16 @@ export function FreightInboundPageClient() {
             </div>
 
             <Button type="submit" disabled={receiptMutation.isPending}>
-              {receiptMutation.isPending ? t('receipt.creating') : t('receipt.create')}
+              {receiptMutation.isPending
+                ? t('receipt.creating')
+                : t('receipt.create')}
             </Button>
 
             {warehousesQuery.error || partiesQuery.error ? (
               <p className="text-muted-foreground text-sm">
-                {getFreightApiErrorMessage(warehousesQuery.error || partiesQuery.error)}
+                {getFreightApiErrorMessage(
+                  warehousesQuery.error || partiesQuery.error
+                )}
               </p>
             ) : null}
           </form>
@@ -360,7 +378,9 @@ export function FreightInboundPageClient() {
           <form onSubmit={onAddItem} className="mt-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="commodityName">{t('items.fields.commodityName')}</Label>
+                <Label htmlFor="commodityName">
+                  {t('items.fields.commodityName')}
+                </Label>
                 <Input
                   id="commodityName"
                   autoComplete="off"
@@ -369,13 +389,19 @@ export function FreightInboundPageClient() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="skuCode">{t('items.fields.skuCode')}</Label>
-                <Input id="skuCode" autoComplete="off" {...itemForm.register('skuCode')} />
+                <Input
+                  id="skuCode"
+                  autoComplete="off"
+                  {...itemForm.register('skuCode')}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="initialQty">{t('items.fields.initialQty')}</Label>
+                <Label htmlFor="initialQty">
+                  {t('items.fields.initialQty')}
+                </Label>
                 <Input
                   id="initialQty"
                   type="number"
@@ -390,13 +416,19 @@ export function FreightInboundPageClient() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="unit">{t('items.fields.unit')}</Label>
-                <Input id="unit" autoComplete="off" {...itemForm.register('unit')} />
+                <Input
+                  id="unit"
+                  autoComplete="off"
+                  {...itemForm.register('unit')}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="binLocation">{t('items.fields.binLocation')}</Label>
+                <Label htmlFor="binLocation">
+                  {t('items.fields.binLocation')}
+                </Label>
                 <Input
                   id="binLocation"
                   autoComplete="off"
@@ -404,7 +436,9 @@ export function FreightInboundPageClient() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="weightTotal">{t('items.fields.weightTotal')}</Label>
+                <Label htmlFor="weightTotal">
+                  {t('items.fields.weightTotal')}
+                </Label>
                 <Input
                   id="weightTotal"
                   type="number"
@@ -417,20 +451,40 @@ export function FreightInboundPageClient() {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="lengthCm">{t('items.fields.lengthCm')}</Label>
-                <Input id="lengthCm" type="number" step="0.001" {...itemForm.register('lengthCm')} />
+                <Input
+                  id="lengthCm"
+                  type="number"
+                  step="0.001"
+                  {...itemForm.register('lengthCm')}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="widthCm">{t('items.fields.widthCm')}</Label>
-                <Input id="widthCm" type="number" step="0.001" {...itemForm.register('widthCm')} />
+                <Input
+                  id="widthCm"
+                  type="number"
+                  step="0.001"
+                  {...itemForm.register('widthCm')}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="heightCm">{t('items.fields.heightCm')}</Label>
-                <Input id="heightCm" type="number" step="0.001" {...itemForm.register('heightCm')} />
+                <Input
+                  id="heightCm"
+                  type="number"
+                  step="0.001"
+                  {...itemForm.register('heightCm')}
+                />
               </div>
             </div>
 
-            <Button type="submit" disabled={addItemMutation.isPending || !canAddItems}>
-              {addItemMutation.isPending ? t('items.creating') : t('items.create')}
+            <Button
+              type="submit"
+              disabled={addItemMutation.isPending || !canAddItems}
+            >
+              {addItemMutation.isPending
+                ? t('items.creating')
+                : t('items.create')}
             </Button>
           </form>
         </div>
@@ -457,5 +511,3 @@ export function FreightInboundPageClient() {
     </div>
   );
 }
-
-

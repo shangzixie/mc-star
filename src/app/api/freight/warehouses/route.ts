@@ -16,7 +16,9 @@ export async function GET(request: Request) {
 
     const db = await getDb();
     const base = db.select().from(warehouses);
-    const activeClause = includeInactive ? undefined : eq(warehouses.isActive, true);
+    const activeClause = includeInactive
+      ? undefined
+      : eq(warehouses.isActive, true);
     const searchClause =
       q && q.length > 0 ? ilike(warehouses.name, `%${q}%`) : undefined;
     const conditions = [activeClause, searchClause].filter(Boolean);

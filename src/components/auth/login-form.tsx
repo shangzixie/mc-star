@@ -28,7 +28,6 @@ import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 import { Captcha } from '../shared/captcha';
-import { SocialLoginButton } from './social-login-button';
 
 export interface LoginFormProps {
   className?: string;
@@ -267,12 +266,6 @@ export const LoginForm = ({
           </form>
         </Form>
       )}
-      <div className="mt-4">
-        <SocialLoginButton
-          callbackUrl={callbackUrl}
-          showDivider={credentialLoginEnabled}
-        />
-      </div>
     </AuthCard>
   );
 };

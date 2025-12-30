@@ -10,8 +10,10 @@ export const freightKeys = {
     [...freightKeys.warehouses(), 'list', params] as const,
 
   warehouseReceipts: () => [...freightKeys.all, 'warehouse-receipts'] as const,
-  warehouseReceiptsList: (params: { warehouseId?: string; customerId?: string }) =>
-    [...freightKeys.warehouseReceipts(), 'list', params] as const,
+  warehouseReceiptsList: (params: {
+    warehouseId?: string;
+    customerId?: string;
+  }) => [...freightKeys.warehouseReceipts(), 'list', params] as const,
 
   shipments: () => [...freightKeys.all, 'shipments'] as const,
   shipmentsList: (params: { q: string; status: string }) =>

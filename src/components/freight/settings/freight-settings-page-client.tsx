@@ -1,7 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -41,9 +41,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
-import type { FreightParty, FreightWarehouse } from '@/lib/freight/api-types';
-import { createPartySchema, createWarehouseSchema } from '@/lib/freight/schemas';
 import {
   useCreateFreightParty,
   useCreateFreightWarehouse,
@@ -54,6 +51,12 @@ import {
   useUpdateFreightParty,
   useUpdateFreightWarehouse,
 } from '@/hooks/freight/use-freight-master-data';
+import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
+import type { FreightParty, FreightWarehouse } from '@/lib/freight/api-types';
+import {
+  createPartySchema,
+  createWarehouseSchema,
+} from '@/lib/freight/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -148,9 +151,7 @@ function CustomerUpsertDialog({
         address: values.address?.trim() || undefined,
         remarks: values.remarks?.trim() || undefined,
         roles:
-          values.roles && values.roles.length > 0
-            ? values.roles
-            : ['CUSTOMER'],
+          values.roles && values.roles.length > 0 ? values.roles : ['CUSTOMER'],
         contactInfo:
           values.contactInfo &&
           (values.contactInfo.phone?.trim() || values.contactInfo.email?.trim())
@@ -237,25 +238,29 @@ function CustomerUpsertDialog({
                 <div className="grid grid-cols-2 gap-2">
                   {customerRoles.map((role) => {
                     const checked = selectedRoles.includes(role);
+                    const toggle = () => {
+                      const next = !checked;
+                      const nextRoles = next
+                        ? Array.from(new Set([...selectedRoles, role]))
+                        : selectedRoles.filter((r) => r !== role);
+                      form.setValue('roles', nextRoles, {
+                        shouldDirty: true,
+                      });
+                    };
                     return (
-                      <label
+                      <div
                         key={role}
                         className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                        onClick={toggle}
                       >
                         <Checkbox
                           checked={checked}
-                          onCheckedChange={(next) => {
-                            const willCheck = next === true;
-                            const nextRoles = willCheck
-                              ? Array.from(new Set([...selectedRoles, role]))
-                              : selectedRoles.filter((r) => r !== role);
-                            form.setValue('roles', nextRoles, {
-                              shouldDirty: true,
-                            });
-                          }}
+                          onCheckedChange={toggle}
+                          className="pointer-events-none"
+                          onClick={(e) => e.stopPropagation()}
                         />
                         <span>{roleLabel(role)}</span>
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -268,25 +273,29 @@ function CustomerUpsertDialog({
                 <div className="grid grid-cols-2 gap-2">
                   {freightRoles.map((role) => {
                     const checked = selectedRoles.includes(role);
+                    const toggle = () => {
+                      const next = !checked;
+                      const nextRoles = next
+                        ? Array.from(new Set([...selectedRoles, role]))
+                        : selectedRoles.filter((r) => r !== role);
+                      form.setValue('roles', nextRoles, {
+                        shouldDirty: true,
+                      });
+                    };
                     return (
-                      <label
+                      <div
                         key={role}
                         className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                        onClick={toggle}
                       >
                         <Checkbox
                           checked={checked}
-                          onCheckedChange={(next) => {
-                            const willCheck = next === true;
-                            const nextRoles = willCheck
-                              ? Array.from(new Set([...selectedRoles, role]))
-                              : selectedRoles.filter((r) => r !== role);
-                            form.setValue('roles', nextRoles, {
-                              shouldDirty: true,
-                            });
-                          }}
+                          onCheckedChange={toggle}
+                          className="pointer-events-none"
+                          onClick={(e) => e.stopPropagation()}
                         />
                         <span>{roleLabel(role)}</span>
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -351,7 +360,11 @@ function CustomerUpsertDialog({
             </Button>
             <Button
               type="submit"
-              disabled={mode === 'create' ? createMutation.isPending : updateMutation.isPending}
+              disabled={
+                mode === 'create'
+                  ? createMutation.isPending
+                  : updateMutation.isPending
+              }
             >
               {mode === 'create'
                 ? createMutation.isPending
@@ -437,7 +450,9 @@ function CreateWarehouseDialog() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="wh-contactPerson">{t('fields.contactPerson')}</Label>
+              <Label htmlFor="wh-contactPerson">
+                {t('fields.contactPerson')}
+              </Label>
               <Input
                 id="wh-contactPerson"
                 autoComplete="off"
@@ -446,7 +461,11 @@ function CreateWarehouseDialog() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="wh-phone">{t('fields.phone')}</Label>
-              <Input id="wh-phone" autoComplete="off" {...form.register('phone')} />
+              <Input
+                id="wh-phone"
+                autoComplete="off"
+                {...form.register('phone')}
+              />
             </div>
           </div>
 
@@ -575,7 +594,9 @@ function WarehouseUpsertDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="wh-contactPerson">{t('fields.contactPerson')}</Label>
+              <Label htmlFor="wh-contactPerson">
+                {t('fields.contactPerson')}
+              </Label>
               <Input
                 id="wh-contactPerson"
                 autoComplete="off"
@@ -584,13 +605,21 @@ function WarehouseUpsertDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="wh-phone">{t('fields.phone')}</Label>
-              <Input id="wh-phone" autoComplete="off" {...form.register('phone')} />
+              <Input
+                id="wh-phone"
+                autoComplete="off"
+                {...form.register('phone')}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="wh-remarks">{t('fields.remarks')}</Label>
-            <Input id="wh-remarks" autoComplete="off" {...form.register('remarks')} />
+            <Input
+              id="wh-remarks"
+              autoComplete="off"
+              {...form.register('remarks')}
+            />
           </div>
 
           <DialogFooter className="gap-2">
@@ -603,7 +632,11 @@ function WarehouseUpsertDialog({
             </Button>
             <Button
               type="submit"
-              disabled={mode === 'create' ? createMutation.isPending : updateMutation.isPending}
+              disabled={
+                mode === 'create'
+                  ? createMutation.isPending
+                  : updateMutation.isPending
+              }
             >
               {mode === 'create'
                 ? createMutation.isPending
@@ -694,7 +727,8 @@ function WarehousesTable({
               <TableRow key={w.id}>
                 <TableCell className="font-medium">{w.name}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {[w.contactPerson, w.phone].filter(Boolean).join(' / ') || '-'}
+                  {[w.contactPerson, w.phone].filter(Boolean).join(' / ') ||
+                    '-'}
                 </TableCell>
                 <TableCell className="hidden lg:table-cell">
                   {w.address ?? '-'}
@@ -705,7 +739,11 @@ function WarehousesTable({
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label={t('actions.menu')}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('actions.menu')}
+                      >
                         <MoreHorizontalIcon className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -739,7 +777,10 @@ function WarehousesTable({
         />
       ) : null}
 
-      <AlertDialog open={!!deleting} onOpenChange={(o) => (!o ? setDeleting(null) : null)}>
+      <AlertDialog
+        open={!!deleting}
+        onOpenChange={(o) => (!o ? setDeleting(null) : null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('actions.deleteTitle')}</AlertDialogTitle>
@@ -757,7 +798,11 @@ function WarehousesTable({
                   await deleteMutation.mutateAsync();
                   toast.success(t('actions.deleted'));
                 } catch (err) {
-                  toast.error(err instanceof Error ? err.message : t('actions.deleteFailed'));
+                  toast.error(
+                    err instanceof Error
+                      ? err.message
+                      : t('actions.deleteFailed')
+                  );
                 } finally {
                   setDeleting(null);
                 }
@@ -795,9 +840,15 @@ function PartiesTable({
         <TableHeader>
           <TableRow>
             <TableHead>{t('columns.name')}</TableHead>
-            <TableHead className="hidden md:table-cell">{t('columns.contact')}</TableHead>
-            <TableHead className="hidden lg:table-cell">{t('columns.roles')}</TableHead>
-            <TableHead className="hidden xl:table-cell">{t('columns.remarks')}</TableHead>
+            <TableHead className="hidden md:table-cell">
+              {t('columns.contact')}
+            </TableHead>
+            <TableHead className="hidden lg:table-cell">
+              {t('columns.roles')}
+            </TableHead>
+            <TableHead className="hidden xl:table-cell">
+              {t('columns.remarks')}
+            </TableHead>
             <TableHead className="w-[1%]" />
           </TableRow>
         </TableHeader>
@@ -850,13 +901,18 @@ function PartiesTable({
                   ) : null}
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {[getPartyPhone(c), getPartyEmail(c)].filter(Boolean).join(' / ') ||
-                    '-'}
+                  {[getPartyPhone(c), getPartyEmail(c)]
+                    .filter(Boolean)
+                    .join(' / ') || '-'}
                 </TableCell>
                 <TableCell className="hidden lg:table-cell">
                   <div className="flex flex-wrap">
                     {c.roles.map((r) => (
-                      <RoleBadge key={`${c.id}-${r}`} role={r} label={roleLabel(r)} />
+                      <RoleBadge
+                        key={`${c.id}-${r}`}
+                        role={r}
+                        label={roleLabel(r)}
+                      />
                     ))}
                   </div>
                 </TableCell>
@@ -866,7 +922,11 @@ function PartiesTable({
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label={t('actions.menu')}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('actions.menu')}
+                      >
                         <MoreHorizontalIcon className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -900,7 +960,10 @@ function PartiesTable({
         />
       ) : null}
 
-      <AlertDialog open={!!deleting} onOpenChange={(o) => (!o ? setDeleting(null) : null)}>
+      <AlertDialog
+        open={!!deleting}
+        onOpenChange={(o) => (!o ? setDeleting(null) : null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('actions.deleteTitle')}</AlertDialogTitle>
@@ -918,7 +981,11 @@ function PartiesTable({
                   await deleteMutation.mutateAsync();
                   toast.success(t('actions.deleted'));
                 } catch (err) {
-                  toast.error(err instanceof Error ? err.message : t('actions.deleteFailed'));
+                  toast.error(
+                    err instanceof Error
+                      ? err.message
+                      : t('actions.deleteFailed')
+                  );
                 } finally {
                   setDeleting(null);
                 }
@@ -963,8 +1030,12 @@ export function FreightSettingsPageClient() {
       );
     });
   }, [customerQ, partiesQuery.data]);
-  const customerParties = allParties.filter((p) => p.roles.includes('CUSTOMER'));
-  const freightParties = allParties.filter((p) => !p.roles.includes('CUSTOMER'));
+  const customerParties = allParties.filter((p) =>
+    p.roles.includes('CUSTOMER')
+  );
+  const freightParties = allParties.filter(
+    (p) => !p.roles.includes('CUSTOMER')
+  );
 
   return (
     <div className="px-4 lg:px-6">
@@ -1032,5 +1103,3 @@ export function FreightSettingsPageClient() {
     </div>
   );
 }
-
-

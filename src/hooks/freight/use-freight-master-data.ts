@@ -1,13 +1,20 @@
 'use client';
 
-import { freightFetch, freightFetchVoid, freightQueryString } from '@/lib/freight/api-client';
 import {
-  freightPartySchema,
-  freightWarehouseSchema,
+  freightFetch,
+  freightFetchVoid,
+  freightQueryString,
+} from '@/lib/freight/api-client';
+import {
   type FreightParty,
   type FreightWarehouse,
+  freightPartySchema,
+  freightWarehouseSchema,
 } from '@/lib/freight/api-types';
-import { createPartySchema, createWarehouseSchema } from '@/lib/freight/schemas';
+import {
+  createPartySchema,
+  createWarehouseSchema,
+} from '@/lib/freight/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { freightKeys } from './query-keys';
@@ -136,7 +143,9 @@ export function useUpdateFreightWarehouse(warehouseId: string) {
       });
     },
     onSuccess: async (_updated: FreightWarehouse) => {
-      await queryClient.invalidateQueries({ queryKey: freightKeys.warehouses() });
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouses(),
+      });
     },
   });
 }
@@ -150,9 +159,9 @@ export function useDeactivateFreightWarehouse(warehouseId: string) {
         method: 'DELETE',
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: freightKeys.warehouses() });
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouses(),
+      });
     },
   });
 }
-
-
