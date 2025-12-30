@@ -20,6 +20,7 @@ const receiptsArraySchema = z.array(freightWarehouseReceiptSchema);
 export function useFreightWarehouseReceipts(params: {
   warehouseId?: string;
   customerId?: string;
+  q?: string;
 }) {
   return useQuery({
     queryKey: freightKeys.warehouseReceiptsList(params),
@@ -28,9 +29,21 @@ export function useFreightWarehouseReceipts(params: {
         `/api/freight/warehouse-receipts${freightQueryString({
           warehouseId: params.warehouseId,
           customerId: params.customerId,
+          q: params.q,
         })}`,
         { schema: receiptsArraySchema }
       ),
+  });
+}
+
+export function useFreightWarehouseReceipt(id: string) {
+  return useQuery({
+    queryKey: freightKeys.warehouseReceipt(id),
+    enabled: id.trim().length > 0,
+    queryFn: async () =>
+      freightFetch(`/api/freight/warehouse-receipts/${id}`, {
+        schema: freightWarehouseReceiptSchema,
+      }),
   });
 }
 

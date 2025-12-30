@@ -562,8 +562,19 @@
       "title": "Freight",
       "inbound": {
         "title": "Inbound",
+        "tabs": {
+          "selectReceipt": "Select/Create Receipt",
+          "manageItems": "Manage Items"
+        },
+        "receiptList": {
+          "title": "Receipt List",
+          "searchPlaceholder": "Search receipt no / remarks...",
+          "empty": "No receipts",
+          "emptyHint": "Create a new receipt on the right",
+          "error": "Failed to load"
+        },
         "receipt": {
-          "title": "Warehouse receipt",
+          "title": "Create Receipt",
           "description": "Create a receipt (header) first, then add inbound items.",
           "create": "Create receipt",
           "creating": "Creating...",
@@ -579,7 +590,7 @@
           }
         },
         "items": {
-          "title": "Inbound items",
+          "title": "Add Item",
           "description": "Add inbound item lines. A RECEIPT movement will be created automatically.",
           "create": "Add item",
           "creating": "Adding...",
@@ -607,6 +618,9 @@
             "location": "Location"
           },
           "empty": "No items"
+        },
+        "itemsList": {
+          "title": "Items List"
         }
       },
       "settings": {

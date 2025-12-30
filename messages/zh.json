@@ -562,8 +562,19 @@
       "title": "货代",
       "inbound": {
         "title": "入库",
+        "tabs": {
+          "selectReceipt": "选择/创建入库单",
+          "manageItems": "录入明细"
+        },
+        "receiptList": {
+          "title": "入库单列表",
+          "searchPlaceholder": "搜索入库单号 / 备注...",
+          "empty": "暂无入库单",
+          "emptyHint": "请在右侧创建新的入库单",
+          "error": "加载失败"
+        },
         "receipt": {
-          "title": "入库单",
+          "title": "创建入库单",
           "description": "先创建入库单（单头），再新增入库明细。",
           "create": "创建入库单",
           "creating": "创建中...",
@@ -579,7 +590,7 @@
           }
         },
         "items": {
-          "title": "入库明细",
+          "title": "新增明细",
           "description": "新增入库明细时会自动写入库存流水（RECEIPT）。",
           "create": "新增明细",
           "creating": "新增中...",
@@ -607,6 +618,9 @@
             "location": "库位"
           },
           "empty": "暂无明细"
+        },
+        "itemsList": {
+          "title": "入库明细列表"
         }
       },
       "settings": {

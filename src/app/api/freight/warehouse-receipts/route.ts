@@ -6,7 +6,7 @@ import {
   createWarehouseReceiptSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, ilike, or } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -16,15 +16,25 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const warehouseId = url.searchParams.get('warehouseId');
     const customerId = url.searchParams.get('customerId');
+    const q = url.searchParams.get('q')?.trim();
 
     const db = await getDb();
-    const baseQuery = db.select().from(warehouseReceipts);
+    const baseQuery = db
+      .select()
+      .from(warehouseReceipts)
+      .orderBy(desc(warehouseReceipts.createdAt));
     const conditions = [
       warehouseId
         ? eq(warehouseReceipts.warehouseId, uuidSchema.parse(warehouseId))
         : undefined,
       customerId
         ? eq(warehouseReceipts.customerId, uuidSchema.parse(customerId))
+        : undefined,
+      q && q.length > 0
+        ? or(
+            ilike(warehouseReceipts.receiptNo, `%${q}%`),
+            ilike(warehouseReceipts.remarks, `%${q}%`)
+          )
         : undefined,
     ].filter(Boolean);
 
