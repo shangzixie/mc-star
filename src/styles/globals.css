@@ -70,10 +70,20 @@
   --shadow-2xl: var(--shadow-2xl);
 
   /* fonts */
+  /*
+   * Default offline-safe font stacks.
+   * These tokens are consumed by Tailwind v4's `font-*` utilities.
+   */
+  --font-noto-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-noto-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-noto-sans-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
   --font-sans: var(--font-noto-sans);
   --font-mono: var(--font-noto-sans-mono);
   --font-serif: var(--font-noto-serif);
-  --font-bricolage-grotesque: var(--font-bricolage-grotesque);
+  --font-bricolage-grotesque: var(--font-noto-sans);
 
   /* animate */
   --animate-shiny-text: shiny-text 8s infinite;
@@ -344,40 +354,104 @@ body {
 .theme-neutral {
   --primary: var(--color-neutral-600);
   --primary-foreground: var(--color-neutral-50);
+  --ring: var(--primary);
+  --accent: color-mix(in oklch, var(--primary) 12%, var(--background));
+  --accent-foreground: var(--primary);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-ring: var(--primary);
 
   @variant dark {
     --primary: var(--color-neutral-500);
     --primary-foreground: var(--color-neutral-50);
+    --ring: var(--primary);
+    --accent: color-mix(in oklch, var(--primary) 20%, var(--background));
+    --accent-foreground: var(--primary);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-ring: var(--primary);
   }
 }
 
 .theme-blue {
   --primary: var(--color-blue-600);
   --primary-foreground: var(--color-blue-50);
+  --ring: var(--primary);
+  --accent: color-mix(in oklch, var(--primary) 12%, var(--background));
+  --accent-foreground: var(--primary);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-ring: var(--primary);
 
   @variant dark {
     --primary: var(--color-blue-500);
     --primary-foreground: var(--color-blue-50);
+    --ring: var(--primary);
+    --accent: color-mix(in oklch, var(--primary) 20%, var(--background));
+    --accent-foreground: var(--primary);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-ring: var(--primary);
   }
 }
 
 .theme-green {
   --primary: var(--color-lime-600);
   --primary-foreground: var(--color-lime-50);
+  --ring: var(--primary);
+  --accent: color-mix(in oklch, var(--primary) 12%, var(--background));
+  --accent-foreground: var(--primary);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-ring: var(--primary);
 
   @variant dark {
     --primary: var(--color-lime-600);
     --primary-foreground: var(--color-lime-50);
+    --ring: var(--primary);
+    --accent: color-mix(in oklch, var(--primary) 20%, var(--background));
+    --accent-foreground: var(--primary);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-ring: var(--primary);
   }
 }
 
 .theme-amber {
   --primary: var(--color-amber-600);
   --primary-foreground: var(--color-amber-50);
+  --ring: var(--primary);
+  --accent: color-mix(in oklch, var(--primary) 12%, var(--background));
+  --accent-foreground: var(--primary);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-ring: var(--primary);
 
   @variant dark {
     --primary: var(--color-amber-500);
     --primary-foreground: var(--color-amber-50);
+    --ring: var(--primary);
+    --accent: color-mix(in oklch, var(--primary) 20%, var(--background));
+    --accent-foreground: var(--primary);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-ring: var(--primary);
   }
 }
 

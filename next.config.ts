@@ -69,4 +69,15 @@ const withNextIntl = createNextIntlPlugin();
  */
 const withMDX = createMDX();
 
-export default withMDX(withNextIntl(nextConfig));
+// Some plugins may inject experimental config keys (e.g. `turbopack`) that are
+// not recognized by the pinned Next.js version. Strip them to avoid warnings
+// and potential build issues.
+const mergedConfig = withMDX(withNextIntl(nextConfig)) as NextConfig & {
+  turbopack?: unknown;
+};
+
+// Avoid `delete` (Biome rule) while still removing the key from the exported config.
+// This prevents Next.js warnings about unknown/experimental keys injected by plugins.
+const { turbopack: _turbopack, ...mergedConfigWithoutTurbopack } = mergedConfig;
+
+export default mergedConfigWithoutTurbopack;

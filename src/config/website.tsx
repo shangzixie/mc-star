@@ -9,7 +9,7 @@ import type { WebsiteConfig } from '@/types';
 export const websiteConfig: WebsiteConfig = {
   ui: {
     theme: {
-      defaultTheme: 'default',
+      defaultTheme: 'neutral',
       enableSwitch: true,
     },
     mode: {
