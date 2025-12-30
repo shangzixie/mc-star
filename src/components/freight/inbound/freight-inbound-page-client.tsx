@@ -11,6 +11,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -27,7 +33,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
+import {
+  useDeleteFreightInventoryItem,
+  useFreightInventoryItems,
+} from '@/hooks/freight/use-freight-inventory-items';
 import {
   useFreightParties,
   useFreightWarehouses,
@@ -35,6 +44,7 @@ import {
 import {
   useAddFreightInventoryItemToReceipt,
   useCreateFreightWarehouseReceipt,
+  useDeleteFreightWarehouseReceipt,
   useFreightWarehouseReceipts,
 } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
@@ -43,19 +53,35 @@ import type {
   FreightParty,
   FreightWarehouse,
   FreightWarehouseReceipt,
+  FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
 import {
   addInventoryItemSchema,
   createWarehouseReceiptSchema,
 } from '@/lib/freight/schemas';
+import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { ArrowLeft, FileText, Package, Plus, Search } from 'lucide-react';
+import {
+  ArrowLeft,
+  Edit,
+  FileText,
+  History,
+  MoreHorizontal,
+  Package,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
+import { EditItemDialog } from './edit-item-dialog';
+import { EditReceiptDialog } from './edit-receipt-dialog';
+import { InventoryMovementsDialog } from './inventory-movements-dialog';
 
 const receiptFormSchema = z.object({
   receiptNo: z.string().min(1).max(30),
@@ -287,7 +313,7 @@ function ReceiptDetailView({
   onBack,
   onAddItem,
 }: {
-  receipt: FreightWarehouseReceipt;
+  receipt: FreightWarehouseReceiptWithRelations;
   onBack: () => void;
   onAddItem: () => void;
 }) {
@@ -831,11 +857,24 @@ export function FreightInboundPageClient() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [addItemDialogOpen, setAddItemDialogOpen] = useState(false);
 
+  // New dialog states
+  const [editReceiptOpen, setEditReceiptOpen] = useState(false);
+  const [editItemOpen, setEditItemOpen] = useState(false);
+  const [deleteReceiptOpen, setDeleteReceiptOpen] = useState(false);
+  const [deleteItemOpen, setDeleteItemOpen] = useState(false);
+  const [movementsOpen, setMovementsOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<FreightInventoryItem | null>(
+    null
+  );
+  const [deleteError, setDeleteError] = useState<string>('');
+
+  const t = useTranslations();
   const receiptsQuery = useFreightWarehouseReceipts({ q: '' });
 
   const selectedReceipt = useMemo(() => {
     if (!selectedReceiptId) return null;
-    return receiptsQuery.data?.find((r) => r.id === selectedReceiptId) ?? null;
+    return (receiptsQuery.data?.find((r) => r.id === selectedReceiptId) ??
+      null) as FreightWarehouseReceiptWithRelations | null;
   }, [selectedReceiptId, receiptsQuery.data]);
 
   const handleSelectReceipt = (receiptId: string) => {
@@ -879,6 +918,112 @@ export function FreightInboundPageClient() {
           open={addItemDialogOpen}
           onOpenChange={setAddItemDialogOpen}
           receiptId={selectedReceiptId}
+        />
+      )}
+
+      {/* Edit Receipt Dialog */}
+      {selectedReceipt && (
+        <EditReceiptDialog
+          open={editReceiptOpen}
+          onOpenChange={setEditReceiptOpen}
+          receipt={selectedReceipt}
+        />
+      )}
+
+      {/* Edit Item Dialog */}
+      {selectedItem && (
+        <EditItemDialog
+          open={editItemOpen}
+          onOpenChange={setEditItemOpen}
+          item={selectedItem}
+        />
+      )}
+
+      {/* Delete Receipt Dialog */}
+      {selectedReceipt && (
+        <DeleteConfirmDialog
+          open={deleteReceiptOpen}
+          onOpenChange={(open) => {
+            setDeleteReceiptOpen(open);
+            if (!open) setDeleteError('');
+          }}
+          title={t('Dashboard.freight.inbound.receiptActions.deleteTitle')}
+          message={t('Dashboard.freight.inbound.receiptActions.deleteMessage')}
+          errorMessage={deleteError}
+          onConfirm={async () => {
+            try {
+              const response = await fetch(
+                `/api/freight/warehouse-receipts/${selectedReceipt.id}`,
+                { method: 'DELETE' }
+              );
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Delete failed');
+              }
+              toast.success(
+                t('Dashboard.freight.inbound.receiptActions.deleteSuccess')
+              );
+              setSelectedReceiptId(null);
+              setView('list');
+              receiptsQuery.refetch();
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : t('Dashboard.freight.inbound.receiptActions.cannotDelete');
+              setDeleteError(message);
+              throw error;
+            }
+          }}
+        />
+      )}
+
+      {/* Delete Item Dialog */}
+      {selectedItem && selectedReceipt && (
+        <DeleteConfirmDialog
+          open={deleteItemOpen}
+          onOpenChange={(open) => {
+            setDeleteItemOpen(open);
+            if (!open) setDeleteError('');
+          }}
+          title={t('Dashboard.freight.inbound.itemActions.deleteTitle')}
+          message={t('Dashboard.freight.inbound.itemActions.deleteMessage')}
+          errorMessage={deleteError}
+          onConfirm={async () => {
+            try {
+              const response = await fetch(
+                `/api/freight/inventory-items/${selectedItem.id}`,
+                { method: 'DELETE' }
+              );
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Delete failed');
+              }
+              toast.success(
+                t('Dashboard.freight.inbound.itemActions.deleteSuccess')
+              );
+              receiptsQuery.refetch();
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : t('Dashboard.freight.inbound.itemActions.cannotDelete');
+              setDeleteError(message);
+              throw error;
+            }
+          }}
+        />
+      )}
+
+      {/* Inventory Movements Dialog */}
+      {selectedItem && (
+        <InventoryMovementsDialog
+          open={movementsOpen}
+          onOpenChange={setMovementsOpen}
+          itemId={selectedItem.id}
+          itemName={
+            selectedItem.commodityName || selectedItem.skuCode || undefined
+          }
         />
       )}
     </div>

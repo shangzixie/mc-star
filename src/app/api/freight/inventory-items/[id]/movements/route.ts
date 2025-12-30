@@ -3,7 +3,7 @@ import { inventoryMovements } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk } from '@/lib/api/http';
 import { uuidSchema } from '@/lib/freight/schemas';
-import { asc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -21,7 +21,7 @@ export async function GET(
       .select()
       .from(inventoryMovements)
       .where(eq(inventoryMovements.inventoryItemId, inventoryItemId))
-      .orderBy(asc(inventoryMovements.createdAt));
+      .orderBy(desc(inventoryMovements.createdAt));
 
     return jsonOk({ data: rows });
   } catch (error) {

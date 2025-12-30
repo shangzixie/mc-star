@@ -127,3 +127,37 @@ export const createAttachmentSchema = z.object({
 });
 
 export const allocationStatusSchema = z.enum(ALLOCATION_STATUSES);
+
+// Inventory item update schema (cannot modify quantities directly)
+export const updateInventoryItemSchema = z.object({
+  commodityName: z.string().optional(),
+  skuCode: z.string().max(50).optional(),
+  unit: z.string().max(10).optional(),
+  binLocation: z.string().max(50).optional(),
+  weightTotal: z.number().optional(),
+  lengthCm: z.number().optional(),
+  widthCm: z.number().optional(),
+  heightCm: z.number().optional(),
+});
+
+// Inventory movement schema
+export const inventoryMovementSchema = z.object({
+  id: uuidSchema,
+  inventoryItemId: uuidSchema,
+  refType: z.string(),
+  refId: uuidSchema.nullable(),
+  qtyDelta: z.number().int(),
+  createdAt: z.string().datetime().nullable(),
+});
+
+// Query parameter schemas for warehouse receipts
+export const warehouseReceiptsQuerySchema = z.object({
+  q: z.string().optional(),
+  warehouseId: uuidSchema.optional(),
+  customerId: uuidSchema.optional(),
+  status: z.enum(RECEIPT_STATUSES).optional(),
+  dateFrom: z.string().datetime().optional(),
+  dateTo: z.string().datetime().optional(),
+  sortBy: z.enum(['receiptNo', 'inboundTime', 'createdAt']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});

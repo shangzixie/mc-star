@@ -1,12 +1,12 @@
 import { getDb } from '@/db/index';
-import { warehouseReceipts } from '@/db/schema';
+import { parties, warehouseReceipts, warehouses } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
   createWarehouseReceiptSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
-import { and, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, lte, or } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -16,13 +16,16 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const warehouseId = url.searchParams.get('warehouseId');
     const customerId = url.searchParams.get('customerId');
+    const status = url.searchParams.get('status');
+    const dateFrom = url.searchParams.get('dateFrom');
+    const dateTo = url.searchParams.get('dateTo');
+    const sortBy = url.searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
     const q = url.searchParams.get('q')?.trim();
 
     const db = await getDb();
-    const baseQuery = db
-      .select()
-      .from(warehouseReceipts)
-      .orderBy(desc(warehouseReceipts.createdAt));
+
+    // Build conditions
     const conditions = [
       warehouseId
         ? eq(warehouseReceipts.warehouseId, uuidSchema.parse(warehouseId))
@@ -30,6 +33,11 @@ export async function GET(request: Request) {
       customerId
         ? eq(warehouseReceipts.customerId, uuidSchema.parse(customerId))
         : undefined,
+      status ? eq(warehouseReceipts.status, status) : undefined,
+      dateFrom
+        ? gte(warehouseReceipts.inboundTime, new Date(dateFrom))
+        : undefined,
+      dateTo ? lte(warehouseReceipts.inboundTime, new Date(dateTo)) : undefined,
       q && q.length > 0
         ? or(
             ilike(warehouseReceipts.receiptNo, `%${q}%`),
@@ -37,6 +45,57 @@ export async function GET(request: Request) {
           )
         : undefined,
     ].filter(Boolean);
+
+    // Determine sort column
+    const sortColumn =
+      sortBy === 'receiptNo'
+        ? warehouseReceipts.receiptNo
+        : sortBy === 'inboundTime'
+          ? warehouseReceipts.inboundTime
+          : warehouseReceipts.createdAt;
+
+    // Build query with joins
+    const baseQuery = db
+      .select({
+        id: warehouseReceipts.id,
+        receiptNo: warehouseReceipts.receiptNo,
+        warehouseId: warehouseReceipts.warehouseId,
+        customerId: warehouseReceipts.customerId,
+        status: warehouseReceipts.status,
+        inboundTime: warehouseReceipts.inboundTime,
+        remarks: warehouseReceipts.remarks,
+        createdAt: warehouseReceipts.createdAt,
+        warehouse: {
+          id: warehouses.id,
+          name: warehouses.name,
+          address: warehouses.address,
+          contactPerson: warehouses.contactPerson,
+          phone: warehouses.phone,
+          metadata: warehouses.metadata,
+          remarks: warehouses.remarks,
+          isActive: warehouses.isActive,
+          createdAt: warehouses.createdAt,
+          updatedAt: warehouses.updatedAt,
+        },
+        customer: {
+          id: parties.id,
+          code: parties.code,
+          nameCn: parties.nameCn,
+          nameEn: parties.nameEn,
+          roles: parties.roles,
+          taxNo: parties.taxNo,
+          contactInfo: parties.contactInfo,
+          address: parties.address,
+          remarks: parties.remarks,
+          isActive: parties.isActive,
+          createdAt: parties.createdAt,
+          updatedAt: parties.updatedAt,
+        },
+      })
+      .from(warehouseReceipts)
+      .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
+      .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id))
+      .orderBy(sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn));
 
     const rows =
       conditions.length > 0

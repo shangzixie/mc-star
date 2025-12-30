@@ -124,3 +124,96 @@ export function getFreightApiErrorCode(error: unknown) {
     .safeParse(error);
   return maybe.success ? maybe.data.code : 'UNKNOWN';
 }
+
+// -----------------------------------------------------------------------------
+// API Client Helper Functions
+// -----------------------------------------------------------------------------
+
+/**
+ * Get inventory movements for an inventory item
+ */
+export async function getInventoryMovements(itemId: string) {
+  const { freightInventoryMovementSchema } = await import('./api-types');
+  return freightFetch(`/api/freight/inventory-items/${itemId}/movements`, {
+    schema: z.array(freightInventoryMovementSchema),
+  });
+}
+
+/**
+ * Update a warehouse receipt
+ */
+export async function updateWarehouseReceipt(
+  receiptId: string,
+  data: {
+    warehouseId?: string;
+    customerId?: string;
+    status?: string;
+    inboundTime?: string;
+    remarks?: string;
+  }
+) {
+  const { freightWarehouseReceiptSchema } = await import('./api-types');
+  return freightFetch(`/api/freight/warehouse-receipts/${receiptId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    schema: freightWarehouseReceiptSchema,
+  });
+}
+
+/**
+ * Delete a warehouse receipt
+ */
+export async function deleteWarehouseReceipt(receiptId: string) {
+  return freightFetch(`/api/freight/warehouse-receipts/${receiptId}`, {
+    method: 'DELETE',
+    schema: z.object({ success: z.boolean() }),
+  });
+}
+
+/**
+ * Get a single inventory item with allocations
+ */
+export async function getInventoryItem(itemId: string) {
+  const { freightInventoryItemWithAllocationsSchema } = await import(
+    './api-types'
+  );
+  return freightFetch(`/api/freight/inventory-items/${itemId}`, {
+    schema: freightInventoryItemWithAllocationsSchema,
+  });
+}
+
+/**
+ * Update an inventory item (details only, not quantities)
+ */
+export async function updateInventoryItem(
+  itemId: string,
+  data: {
+    commodityName?: string;
+    skuCode?: string;
+    unit?: string;
+    binLocation?: string;
+    weightTotal?: number;
+    lengthCm?: number;
+    widthCm?: number;
+    heightCm?: number;
+  }
+) {
+  const { freightInventoryItemSchema } = await import('./api-types');
+  return freightFetch(`/api/freight/inventory-items/${itemId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    schema: freightInventoryItemSchema,
+  });
+}
+
+/**
+ * Delete an inventory item
+ */
+export async function deleteInventoryItem(itemId: string) {
+  return freightFetch(`/api/freight/inventory-items/${itemId}`, {
+    method: 'DELETE',
+    schema: z.object({ success: z.boolean() }),
+  });
+}

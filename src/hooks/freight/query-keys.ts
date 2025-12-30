@@ -34,6 +34,10 @@ export const freightKeys = {
   inventoryItems: () => [...freightKeys.all, 'inventory-items'] as const,
   inventoryItemsList: (params: { receiptId: string; q: string }) =>
     [...freightKeys.inventoryItems(), 'list', params] as const,
+  inventoryItem: (id: string) =>
+    [...freightKeys.inventoryItems(), 'detail', id] as const,
+  inventoryMovements: (itemId: string) =>
+    [...freightKeys.inventoryItems(), 'movements', itemId] as const,
 
   attachments: () => [...freightKeys.all, 'attachments'] as const,
   attachmentsByShipment: (shipmentId: string) =>

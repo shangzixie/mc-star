@@ -175,3 +175,49 @@ export const freightAttachmentSchema = z
   .passthrough();
 
 export type FreightAttachment = z.infer<typeof freightAttachmentSchema>;
+
+// Inventory movement type
+export const freightInventoryMovementSchema = z
+  .object({
+    id: uuidSchema,
+    inventoryItemId: uuidSchema,
+    refType: z.string(),
+    refId: uuidSchema.nullable(),
+    qtyDelta: z.number().int(),
+    createdAt: isoDateTimeSchema.nullable(),
+  })
+  .passthrough();
+
+export type FreightInventoryMovement = z.infer<
+  typeof freightInventoryMovementSchema
+>;
+
+// Extended types with relations and aggregations
+export const freightWarehouseReceiptWithRelationsSchema =
+  freightWarehouseReceiptSchema.extend({
+    warehouse: freightWarehouseSchema.nullable().optional(),
+    customer: freightPartySchema.nullable().optional(),
+    stats: z
+      .object({
+        totalItems: z.number().int(),
+        totalInitialQty: z.number().int(),
+        totalCurrentQty: z.number().int(),
+        totalWeight: z.string().nullable(),
+      })
+      .optional(),
+  });
+
+export type FreightWarehouseReceiptWithRelations = z.infer<
+  typeof freightWarehouseReceiptWithRelationsSchema
+>;
+
+export const freightInventoryItemWithAllocationsSchema =
+  freightInventoryItemSchema.extend({
+    allocations: z.array(freightAllocationSchema).optional(),
+    totalAllocated: z.number().int().optional(),
+    totalShipped: z.number().int().optional(),
+  });
+
+export type FreightInventoryItemWithAllocations = z.infer<
+  typeof freightInventoryItemWithAllocationsSchema
+>;

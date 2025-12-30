@@ -29,6 +29,7 @@
     "saving": "保存中...",
     "loading": "加载中...",
     "cancel": "取消",
+    "close": "关闭",
     "logoutFailed": "退出失败",
     "table": {
       "totalRecords": "总共 {count} 条记录",
@@ -643,6 +644,70 @@
         },
         "itemsList": {
           "title": "入库明细列表"
+        },
+        "warehouse": "仓库",
+        "customer": "客户",
+        "selectWarehouse": "选择仓库",
+        "selectCustomer": "选择客户",
+        "inboundTime": "入库时间",
+        "remarks": "备注",
+        "status": {
+          "label": "状态",
+          "received": "已入库",
+          "partial": "部分出库",
+          "shipped": "已出库"
+        },
+        "receiptActions": {
+          "editTitle": "编辑入库单",
+          "updateSuccess": "入库单更新成功",
+          "deleteTitle": "删除入库单",
+          "deleteMessage": "确定要删除这个入库单吗？此操作不可撤销。",
+          "deleteSuccess": "入库单删除成功",
+          "cannotDelete": "无法删除：部分商品已被分配或出库"
+        },
+        "itemActions": {
+          "editTitle": "编辑商品",
+          "updateSuccess": "商品更新成功",
+          "deleteTitle": "删除商品",
+          "deleteMessage": "确定要删除这个商品吗？此操作不可撤销。",
+          "deleteSuccess": "商品删除成功",
+          "cannotDelete": "无法删除：商品已被分配或部分出库",
+          "unnamed": "未命名商品",
+          "commodityName": "品名",
+          "skuCode": "SKU编码",
+          "unit": "单位",
+          "binLocation": "库位",
+          "weightTotal": "总重量",
+          "length": "长度",
+          "width": "宽度",
+          "height": "高度",
+          "editNote": "注意：数量字段（初始数量、当前数量）不可直接修改，仅通过库存流水自动更新。",
+          "currentQty": "当前库存",
+          "initialQty": "初始数量",
+          "allocated": "已分配",
+          "available": "可用",
+          "actions": "操作",
+          "edit": "编辑",
+          "delete": "删除",
+          "viewMovements": "查看流水"
+        },
+        "movements": {
+          "title": "库存流水",
+          "empty": "暂无流水记录",
+          "balance": "余额",
+          "type": {
+            "receipt": "入库",
+            "ship": "出库",
+            "adjust": "调整"
+          }
+        },
+        "stats": {
+          "title": "统计信息",
+          "totalItems": "商品种类",
+          "totalInitialQty": "入库总量",
+          "totalCurrentQty": "剩余库存",
+          "totalWeight": "总重量",
+          "items": "件"
         }
       },
       "settings": {

@@ -6,6 +6,7 @@ import {
   type FreightWarehouseReceipt,
   freightInventoryItemSchema,
   freightWarehouseReceiptSchema,
+  freightWarehouseReceiptWithRelationsSchema,
 } from '@/lib/freight/api-types';
 import {
   addInventoryItemSchema,
@@ -15,7 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { freightKeys } from './query-keys';
 
-const receiptsArraySchema = z.array(freightWarehouseReceiptSchema);
+const receiptsArraySchema = z.array(freightWarehouseReceiptWithRelationsSchema);
 
 export function useFreightWarehouseReceipts(params: {
   warehouseId?: string;
@@ -108,6 +109,63 @@ export function useAddFreightInventoryItemToReceipt(receiptId: string) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: freightKeys.inventoryItems(),
+      });
+      // Also invalidate the specific receipt to update stats
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouseReceipt(receiptId),
+      });
+    },
+  });
+}
+
+export function useUpdateFreightWarehouseReceipt(receiptId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      warehouseId?: string;
+      customerId?: string;
+      status?: string;
+      inboundTime?: string;
+      remarks?: string;
+    }) => {
+      const { updateWarehouseReceipt } = await import(
+        '@/lib/freight/api-client'
+      );
+      return updateWarehouseReceipt(receiptId, input);
+    },
+    onSuccess: async (updated) => {
+      // Update the cache for this specific receipt
+      queryClient.setQueryData(
+        freightKeys.warehouseReceipt(receiptId),
+        updated
+      );
+      // Invalidate all receipt lists
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouseReceipts(),
+      });
+    },
+  });
+}
+
+export function useDeleteFreightWarehouseReceipt(receiptId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { deleteWarehouseReceipt } = await import(
+        '@/lib/freight/api-client'
+      );
+      return deleteWarehouseReceipt(receiptId);
+    },
+    onSuccess: async () => {
+      // Remove from cache
+      queryClient.removeQueries({
+        queryKey: freightKeys.warehouseReceipt(receiptId),
+      });
+      // Invalidate all receipt lists
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouseReceipts(),
       });
     },
   });
