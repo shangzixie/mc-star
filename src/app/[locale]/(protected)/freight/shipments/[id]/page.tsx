@@ -3,20 +3,21 @@ import { ShipmentDetailPageClient } from '@/components/freight/shipments/shipmen
 import { getTranslations } from 'next-intl/server';
 
 interface FreightShipmentDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function FreightShipmentDetailPage({
   params,
 }: FreightShipmentDetailPageProps) {
+  const { id } = await params;
   const t = await getTranslations('Dashboard.freight');
 
   const breadcrumbs = [
     { label: t('title'), isCurrentPage: false },
     { label: t('shipments.title'), isCurrentPage: false },
-    { label: params.id, isCurrentPage: true },
+    { label: id, isCurrentPage: true },
   ];
 
   return (
@@ -26,7 +27,7 @@ export default async function FreightShipmentDetailPage({
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <ShipmentDetailPageClient shipmentId={params.id} />
+            <ShipmentDetailPageClient shipmentId={id} />
           </div>
         </div>
       </div>
