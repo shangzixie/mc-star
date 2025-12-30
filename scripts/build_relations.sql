@@ -30,10 +30,7 @@ CREATE TABLE transport_nodes (
     type VARCHAR(10) CHECK (type IN ('SEA', 'AIR', 'RAIL', 'ROAD')),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
----
---- 2. 入库商品
----
---
+
 CREATE TABLE warehouses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -48,6 +45,39 @@ CREATE TABLE warehouses (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 集装箱表
+CREATE TABLE containers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    shipment_id UUID REFERENCES shipments(id) ON DELETE CASCADE,
+
+    container_no VARCHAR(11) UNIQUE,   -- 11位标准箱号
+    container_type VARCHAR(10), -- 20GP, 40HQ, 20RF等
+    seal_no VARCHAR(50),        -- 封条号
+
+    vgm_weight NUMERIC(12, 3),  -- VGM重量
+    tare_weight NUMERIC(12, 3), -- 箱体自重
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 附件/单证表
+CREATE TABLE attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    shipment_id UUID REFERENCES shipments(id) ON DELETE CASCADE,
+
+    file_name TEXT NOT NULL,
+    file_type VARCHAR(50),      -- B/L, Invoice, Packing List, Photo
+    file_url TEXT NOT NULL,      -- 云存储地址 (S3/OSS)
+    file_size INTEGER,
+
+    uploaded_by UUID,           -- 关联用户表(如有)
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+---
+--- 2. 入库商品
+---
+--
 CREATE TABLE warehouse_receipts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_no VARCHAR(30) UNIQUE NOT NULL, -- 入库单号 (如 WHR20251201), 收据单右上方
@@ -120,20 +150,6 @@ CREATE TABLE shipments (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 集装箱表
-CREATE TABLE containers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    shipment_id UUID REFERENCES shipments(id) ON DELETE CASCADE,
-
-    container_no VARCHAR(11) UNIQUE,   -- 11位标准箱号
-    container_type VARCHAR(10), -- 20GP, 40HQ, 20RF等
-    seal_no VARCHAR(50),        -- 封条号
-
-    vgm_weight NUMERIC(12, 3),  -- VGM重量
-    tare_weight NUMERIC(12, 3), -- 箱体自重
-
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
 
 ---
 --- 4. 仓库出货/装柜（关键补充：解决拆分出库、部分出库、可追溯）
@@ -186,23 +202,6 @@ CREATE TABLE cargo_items (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
----
---- 5. 辅助功能表
----
-
--- 附件/单证表
-CREATE TABLE attachments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    shipment_id UUID REFERENCES shipments(id) ON DELETE CASCADE,
-
-    file_name TEXT NOT NULL,
-    file_type VARCHAR(50),      -- B/L, Invoice, Packing List, Photo
-    file_url TEXT NOT NULL,      -- 云存储地址 (S3/OSS)
-    file_size INTEGER,
-
-    uploaded_by UUID,           -- 关联用户表(如有)
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
 
 ---
 --- 6. 索引优化 (提高查询效率)

@@ -568,10 +568,19 @@
         },
         "receiptList": {
           "title": "入库单列表",
+          "description": "管理所有入库单据，点击查看详情",
           "searchPlaceholder": "搜索入库单号 / 备注...",
           "empty": "暂无入库单",
-          "emptyHint": "请在右侧创建新的入库单",
-          "error": "加载失败"
+          "emptyHint": "点击右下角 + 按钮创建新的入库单",
+          "error": "加载失败",
+          "columns": {
+            "receiptNo": "入库单号",
+            "warehouse": "仓库",
+            "customer": "客户",
+            "remarks": "备注",
+            "status": "状态",
+            "createdAt": "创建时间"
+          }
         },
         "receipt": {
           "title": "创建入库单",
@@ -580,13 +589,16 @@
           "creating": "创建中...",
           "created": "入库单已创建",
           "createFailed": "创建入库单失败",
+          "cancel": "取消",
           "fields": {
             "receiptNo": "入库单号",
+            "receiptNoPlaceholder": "请输入入库单号",
             "warehouse": "仓库",
             "warehousePlaceholder": "选择仓库（可选）",
             "customer": "客户",
             "customerPlaceholder": "选择客户（可选）",
-            "remarks": "备注"
+            "remarks": "备注",
+            "remarksPlaceholder": "请输入备注信息（可选）"
           }
         },
         "items": {
@@ -598,14 +610,22 @@
           "createFailed": "新增明细失败",
           "noReceipt": "请先选择或创建一个入库单",
           "searchPlaceholder": "搜索品名 / SKU...",
+          "cancel": "取消",
+          "empty": "暂无明细",
+          "emptyHint": "点击右下角 + 按钮添加明细",
+          "error": "加载明细失败",
           "fields": {
             "receiptId": "入库单ID",
             "receiptIdPlaceholder": "粘贴已有入库单ID，或先在左侧创建",
             "commodityName": "品名",
+            "commodityNamePlaceholder": "请输入品名",
             "skuCode": "SKU",
+            "skuCodePlaceholder": "请输入SKU编码",
             "initialQty": "数量",
             "unit": "单位",
+            "unitPlaceholder": "如：件、箱、个",
             "binLocation": "库位",
+            "binLocationPlaceholder": "请输入库位",
             "weightTotal": "总重",
             "lengthCm": "长(cm)",
             "widthCm": "宽(cm)",
@@ -615,9 +635,11 @@
             "commodity": "品名",
             "sku": "SKU",
             "qty": "数量",
-            "location": "库位"
-          },
-          "empty": "暂无明细"
+            "unit": "单位",
+            "location": "库位",
+            "weight": "重量",
+            "dimensions": "尺寸"
+          }
         },
         "itemsList": {
           "title": "入库明细列表"
