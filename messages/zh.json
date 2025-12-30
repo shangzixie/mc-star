@@ -556,6 +556,26 @@
           "success": "用户已被解除封禁",
           "error": "解除封禁失败"
         },
+        "invite": {
+          "button": "邀请用户",
+          "title": "邀请新用户",
+          "description": "通过邮箱向新用户发送邀请",
+          "emailLabel": "邮箱地址",
+          "emailPlaceholder": "user@example.com",
+          "submit": "发送邀请",
+          "success": "邀请已成功发送",
+          "error": "发送邀请失败",
+          "cancel": "取消"
+        },
+        "delete": {
+          "button": "删除用户",
+          "title": "删除用户",
+          "description": "您确定要删除此用户吗？此操作无法撤销。",
+          "confirm": "是的，删除用户",
+          "success": "用户已被删除",
+          "error": "删除用户失败",
+          "cancel": "取消"
+        },
         "close": "关闭"
       }
     },
@@ -1200,6 +1220,13 @@
       "email": "邮箱: {email}",
       "message": "消息: {message}",
       "subject": "来自网站的联系消息"
+    },
+    "inviteUser": {
+      "title": "你好，{invitedBy} 邀请了你。",
+      "body": "您已被邀请加入我们的平台。点击下面的按钮接受邀请并创建您的账户。",
+      "acceptInvitation": "接受邀请",
+      "expiryNote": "此邀请将在 7 天后过期。",
+      "subject": "您已被邀请加入"
     }
   },
   "HomePage": {

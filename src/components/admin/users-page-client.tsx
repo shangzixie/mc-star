@@ -1,5 +1,6 @@
 'use client';
 
+import { InviteUserDialog } from '@/components/admin/invite-user-dialog';
 import { UsersTable } from '@/components/admin/users-table';
 import { getSortingStateParser } from '@/components/data-table/lib/parsers';
 import type { ExtendedColumnSort } from '@/components/data-table/types/data-table';
@@ -13,10 +14,11 @@ import {
   parseAsString,
   useQueryStates,
 } from 'nuqs';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export function UsersPageClient() {
   const t = useTranslations('Dashboard.admin.users');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const sortableColumnIds = useMemo<Array<Extract<keyof User, string>>>(
     () => [
@@ -115,11 +117,23 @@ export function UsersPageClient() {
     size,
     search,
     safeSorting,
-    filters.serverFilters
+    filters.serverFilters,
+    refreshKey
   );
 
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
-    <UsersTable
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+        </div>
+        <InviteUserDialog onInviteSuccess={handleRefresh} />
+      </div>
+      <UsersTable
       data={data?.items || []}
       total={data?.total || 0}
       pageIndex={page}
@@ -155,6 +169,8 @@ export function UsersPageClient() {
           { history: 'replace', shallow: true }
         );
       }}
+      onUserDeleted={handleRefresh}
     />
+    </div>
   );
 }

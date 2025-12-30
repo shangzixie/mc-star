@@ -11,6 +11,7 @@ import type { Session } from './lib/auth-types';
 import { getBaseUrl } from './lib/urls/urls';
 import {
   DEFAULT_LOGIN_REDIRECT,
+  adminOnlyRoutes,
   protectedRoutes,
   routesNotAllowedByLoggedInUsers,
 } from './routes';
@@ -109,6 +110,24 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(
       new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
     );
+  }
+
+  // Check if the route is admin-only
+  const isAdminRoute = adminOnlyRoutes.some(
+    (route) =>
+      pathnameWithoutLocale === route ||
+      pathnameWithoutLocale.startsWith(`${route}/`)
+  );
+
+  // If the route is admin-only, check if user has admin role
+  if (isLoggedIn && isAdminRoute) {
+    const userRole = session?.user?.role;
+    if (userRole !== 'admin') {
+      console.log(
+        '<< middleware end, admin route, user is not admin, redirecting to dashboard'
+      );
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    }
   }
 
   // Apply intlMiddleware for all routes

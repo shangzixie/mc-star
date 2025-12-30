@@ -556,6 +556,26 @@
           "success": "User has been unbanned",
           "error": "Failed to unban user"
         },
+        "invite": {
+          "button": "Invite User",
+          "title": "Invite New User",
+          "description": "Send an invitation to a new user by email",
+          "emailLabel": "Email Address",
+          "emailPlaceholder": "user@example.com",
+          "submit": "Send Invitation",
+          "success": "Invitation sent successfully",
+          "error": "Failed to send invitation",
+          "cancel": "Cancel"
+        },
+        "delete": {
+          "button": "Delete User",
+          "title": "Delete User",
+          "description": "Are you sure you want to delete this user? This action cannot be undone.",
+          "confirm": "Yes, delete user",
+          "success": "User has been deleted",
+          "error": "Failed to delete user",
+          "cancel": "Cancel"
+        },
         "close": "Close"
       }
     },
@@ -1192,6 +1212,13 @@
       "email": "Email: {email}",
       "message": "Message: {message}",
       "subject": "Contact Message from Website"
+    },
+    "inviteUser": {
+      "title": "Hi, you've been invited by {invitedBy}.",
+      "body": "You have been invited to join our platform. Click the button below to accept the invitation and create your account.",
+      "acceptInvitation": "Accept Invitation",
+      "expiryNote": "This invitation will expire in 7 days.",
+      "subject": "You've been invited to join"
     }
   },
   "HomePage": {

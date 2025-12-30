@@ -17,6 +17,7 @@
     "list-contacts": "tsx scripts/list-contacts.ts",
     "list-users": "tsx scripts/list-users.ts",
     "create-user": "tsx scripts/create-user.ts",
+    "admin:set": "tsx scripts/set-admin-role.ts",
     "fix-payments": "tsx scripts/fix-payments.ts",
     "fix-payments-scene": "tsx scripts/fix-payments-scene.ts",
     "content": "fumadocs-mdx",

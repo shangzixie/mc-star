@@ -33,7 +33,8 @@ export function useUsers(
   pageSize: number,
   search: string,
   sorting: SortingState,
-  filters: SimpleFilter[]
+  filters: SimpleFilter[],
+  refreshKey?: number
 ) {
   return useQuery({
     queryKey: usersKeys.list({
@@ -42,6 +43,7 @@ export function useUsers(
       search,
       sorting,
       filters,
+      refreshKey,
     }),
     queryFn: async () => {
       const result = await getUsersAction({

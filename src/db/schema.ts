@@ -20,7 +20,7 @@ export const user = pgTable("user", {
 	image: text('image'),
 	createdAt: timestamp('created_at').notNull(),
 	updatedAt: timestamp('updated_at').notNull(),
-	role: text('role'),
+	role: text('role').notNull().default('user'), // 'user' or 'admin'
 	banned: boolean('banned'),
 	banReason: text('ban_reason'),
 	banExpires: timestamp('ban_expires'),
@@ -74,6 +74,21 @@ export const verification = pgTable("verification", {
 	createdAt: timestamp('created_at'),
 	updatedAt: timestamp('updated_at')
 });
+
+export const invitation = pgTable("invitation", {
+	id: text("id").primaryKey(),
+	email: text('email').notNull().unique(),
+	invitedBy: text('invited_by').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	token: text('token').notNull().unique(),
+	expiresAt: timestamp('expires_at').notNull(),
+	usedAt: timestamp('used_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+	invitationEmailIdx: index("invitation_email_idx").on(table.email),
+	invitationTokenIdx: index("invitation_token_idx").on(table.token),
+	invitationInvitedByIdx: index("invitation_invited_by_idx").on(table.invitedBy),
+}));
 
 export const payment = pgTable("payment", {
 	id: text("id").primaryKey(),

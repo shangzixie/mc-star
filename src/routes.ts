@@ -91,6 +91,11 @@ export const protectedRoutes = [
 ];
 
 /**
+ * The routes that require admin role
+ */
+export const adminOnlyRoutes = [Routes.AdminUsers];
+
+/**
  * The default redirect path after logging in
  */
 export const DEFAULT_LOGIN_REDIRECT =

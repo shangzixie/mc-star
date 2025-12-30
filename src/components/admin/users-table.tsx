@@ -1,5 +1,6 @@
 'use client';
 
+import { DeleteUserButton } from '@/components/admin/delete-user-button';
 import { UserDetailViewer } from '@/components/admin/user-detail-viewer';
 import { DataTableAdvancedToolbar } from '@/components/data-table/data-table-advanced-toolbar';
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
@@ -104,6 +105,7 @@ interface UsersTableProps {
   onPageSizeChange: (size: number) => void;
   onSortingChange?: (sorting: SortingState) => void;
   onFiltersChange?: (filters: ColumnFiltersState) => void;
+  onUserDeleted?: () => void;
 }
 
 /**
@@ -123,6 +125,7 @@ export function UsersTable({
   onPageSizeChange,
   onSortingChange,
   onFiltersChange,
+  onUserDeleted,
 }: UsersTableProps) {
   const t = useTranslations('Dashboard.admin.users');
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -352,8 +355,23 @@ export function UsersTable({
         minSize: 140,
         size: 160,
       },
+      {
+        id: 'actions',
+        header: () => null,
+        cell: ({ row }) => {
+          const user = row.original;
+          return (
+            <div className="flex items-center justify-end gap-2">
+              <DeleteUserButton user={user} onDeleteSuccess={onUserDeleted} />
+            </div>
+          );
+        },
+        size: 60,
+        enableSorting: false,
+        enableHiding: false,
+      },
     ],
-    [t]
+    [t, onUserDeleted]
   );
 
   const table = useReactTable({
