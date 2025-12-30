@@ -55,7 +55,7 @@ import type {
   FreightWarehouseReceipt,
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
-import { RECEIPT_STATUSES } from '@/lib/freight/constants';
+import { PACKAGING_UNITS, RECEIPT_STATUSES } from '@/lib/freight/constants';
 import {
   addInventoryItemSchema,
   createWarehouseReceiptSchema,
@@ -913,12 +913,18 @@ function AddItemDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="unit">{t('items.fields.unit')}</Label>
-              <Input
+              <select
                 id="unit"
-                autoComplete="off"
-                placeholder={t('items.fields.unitPlaceholder')}
+                className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                 {...form.register('unit')}
-              />
+              >
+                <option value="">{t('items.fields.unitPlaceholder')}</option>
+                {PACKAGING_UNITS.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

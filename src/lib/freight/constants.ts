@@ -42,3 +42,16 @@ export const MOVEMENT_REF_TYPES = [
   'ADJUST',
 ] as const;
 export type MovementRefType = (typeof MOVEMENT_REF_TYPES)[number];
+
+export const PACKAGING_UNITS = [
+  'CTNS',
+  'PCS',
+  'BALES',
+  'BAGS',
+  'WOODEN BOX',
+  'WOODEN PALLET',
+  'PLASTIC PALLET',
+  'METAL PALLET',
+  'OTHER',
+] as const;
+export type PackagingUnit = (typeof PACKAGING_UNITS)[number];

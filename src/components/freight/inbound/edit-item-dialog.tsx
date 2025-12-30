@@ -18,9 +18,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useUpdateFreightInventoryItem } from '@/hooks/freight/use-freight-inventory-items';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type { FreightInventoryItem } from '@/lib/freight/api-types';
+import { PACKAGING_UNITS } from '@/lib/freight/constants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
@@ -150,13 +158,27 @@ export function EditItemDialog({
                     <FormLabel>
                       {t('Dashboard.freight.inbound.itemActions.unit')}
                     </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        maxLength={10}
-                        placeholder="e.g., pcs, kg"
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t(
+                              'Dashboard.freight.inbound.items.fields.unitPlaceholder'
+                            )}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PACKAGING_UNITS.map((u) => (
+                          <SelectItem key={u} value={u}>
+                            {u}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -688,10 +688,6 @@
           "delete": "删除入库单",
           "editTitle": "编辑入库单",
           "updateSuccess": "入库单更新成功",
-          "deleteTitle": "删除入库单",
-          "deleteMessage": "确定要删除这个入库单吗？如果已有明细被分配或出库，则无法删除。",
-          "deleteSuccess": "入库单已删除",
-          "cannotDelete": "无法删除入库单",
           "changeStatusTitle": "修改入库单状态",
           "changeStatusDescription": "手动修改入库单状态",
           "currentStatus": "当前状态",
@@ -731,10 +727,7 @@
           "initialQty": "初始数量",
           "allocated": "已分配",
           "available": "可用",
-          "actions": "操作",
-          "edit": "编辑",
-          "delete": "删除",
-          "viewMovements": "查看流水"
+          "actions": "操作"
         },
         "movements": {
           "title": "库存流水",
