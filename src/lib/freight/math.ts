@@ -10,3 +10,5 @@ export function ceilToDecimals(value: number, decimals: number): number {
 export function formatCeilFixed(value: number, decimals = 2): string {
   return ceilToDecimals(value, decimals).toFixed(decimals);
 }
+
+
