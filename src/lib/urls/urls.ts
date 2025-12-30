@@ -1,15 +1,24 @@
 import { routing } from '@/i18n/routing';
 import type { Locale } from 'next-intl';
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ??
-  `http://localhost:${process.env.PORT ?? 3000}`;
-
 /**
  * Get the base URL of the application
+ * In production, prioritize VERCEL_URL or NEXT_PUBLIC_BASE_URL
+ * In development, use localhost with the specified port
  */
 export function getBaseUrl(): string {
-  return baseUrl;
+  // If NEXT_PUBLIC_BASE_URL is explicitly set, use it
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+
+  // In production on Vercel, use VERCEL_URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Fallback to localhost for development
+  return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
 /**
@@ -23,6 +32,7 @@ export function shouldAppendLocale(locale?: Locale | null): boolean {
  * Get the URL of the application with the locale appended
  */
 export function getUrlWithLocale(url: string, locale?: Locale | null): string {
+  const baseUrl = getBaseUrl();
   return shouldAppendLocale(locale)
     ? `${baseUrl}/${locale}${url}`
     : `${baseUrl}${url}`;

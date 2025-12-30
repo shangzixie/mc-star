@@ -8,7 +8,6 @@ import {
   routing,
 } from './i18n/routing';
 import type { Session } from './lib/auth-types';
-import { getBaseUrl } from './lib/urls/urls';
 import {
   DEFAULT_LOGIN_REDIRECT,
   adminOnlyRoutes,
@@ -56,15 +55,13 @@ export default async function middleware(req: NextRequest) {
 
   // do not use getSession() here, it will cause error related to edge runtime
   // const session = await getSession();
-  const { data: session } = await betterFetch<Session>(
-    '/api/auth/get-session',
-    {
-      baseURL: getBaseUrl(),
-      headers: {
-        cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
-      },
-    }
-  );
+  // Use the request URL's origin to construct the full URL for the fetch
+  const sessionUrl = new URL('/api/auth/get-session', req.url);
+  const { data: session } = await betterFetch<Session>(sessionUrl.toString(), {
+    headers: {
+      cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
+    },
+  });
   const isLoggedIn = !!session;
   // console.log('middleware, isLoggedIn', isLoggedIn);
 
