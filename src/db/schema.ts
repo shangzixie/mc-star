@@ -246,7 +246,7 @@ export const inventoryItems = pgTable(
     currentQty: integer('current_qty').notNull(),
     unit: varchar('unit', { length: 10 }),
     binLocation: varchar('bin_location', { length: 50 }),
-    weightTotal: numeric('weight_total', { precision: 12, scale: 3 }),
+    weightPerUnit: numeric('weight_per_unit', { precision: 12, scale: 3 }),
     lengthCm: numeric('length_cm', { precision: 12, scale: 3 }),
     widthCm: numeric('width_cm', { precision: 12, scale: 3 }),
     heightCm: numeric('height_cm', { precision: 12, scale: 3 }),

@@ -98,7 +98,7 @@ export const freightInventoryItemSchema = z
     currentQty: z.number().int(),
     unit: z.string().nullable(),
     binLocation: z.string().nullable(),
-    weightTotal: z.string().nullable(),
+    weightPerUnit: z.string().nullable(),
     lengthCm: z.string().nullable(),
     widthCm: z.string().nullable(),
     heightCm: z.string().nullable(),

@@ -108,7 +108,7 @@ CREATE TABLE inventory_items (
     -- 存放位置
     bin_location VARCHAR(50),      -- 库位编号：如 A-01-05
 
-    weight_total NUMERIC(12, 3), -- 毛重(KG)
+    weight_per_unit NUMERIC(12, 3), -- 单件重量(KG)
     length_cm NUMERIC(12, 3), -- 单件长度(cm)
     width_cm NUMERIC(12, 3), -- 单件宽度(cm)
     height_cm NUMERIC(12, 3), -- 单件高度(cm)

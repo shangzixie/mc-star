@@ -84,8 +84,8 @@ export async function PATCH(
         skuCode: body.skuCode,
         unit: body.unit,
         binLocation: body.binLocation,
-        weightTotal:
-          body.weightTotal != null ? `${body.weightTotal}` : undefined,
+        weightPerUnit:
+          body.weightPerUnit != null ? `${body.weightPerUnit}` : undefined,
         lengthCm: body.lengthCm != null ? `${body.lengthCm}` : undefined,
         widthCm: body.widthCm != null ? `${body.widthCm}` : undefined,
         heightCm: body.heightCm != null ? `${body.heightCm}` : undefined,

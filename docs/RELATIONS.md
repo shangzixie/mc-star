@@ -107,7 +107,7 @@
   - **字段要点**：
     - `initial_qty = 入库数量`
     - `current_qty = initial_qty`（入库完成后余额=入库数）
-    - 记录 `unit/bin_location/weight_total/尺寸` 等
+    - 记录 `unit/bin_location/weight_per_unit/尺寸` 等
 
 - **步骤 C：写入库存流水（推荐）**
   - **写入**：`inventory_movements`

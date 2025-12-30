@@ -34,6 +34,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   useDeleteFreightInventoryItem,
   useFreightInventoryItems,
 } from '@/hooks/freight/use-freight-inventory-items';
@@ -56,6 +61,7 @@ import type {
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
 import { PACKAGING_UNITS, RECEIPT_STATUSES } from '@/lib/freight/constants';
+import { formatCeilFixed } from '@/lib/freight/math';
 import {
   addInventoryItemSchema,
   createWarehouseReceiptSchema,
@@ -104,7 +110,7 @@ const addItemFormSchema = z.object({
     }),
   unit: z.string().optional(),
   binLocation: z.string().optional(),
-  weightTotal: z
+  weightPerUnit: z
     .union([z.string(), z.number(), z.null(), z.undefined()])
     .transform((v) => (v === '' || v == null ? undefined : Number(v)))
     .refine((v) => v === undefined || !Number.isNaN(v), {
@@ -503,10 +509,10 @@ function ReceiptDetailView({
                 <TableHead>{t('items.columns.unit')}</TableHead>
                 <TableHead>{t('items.columns.location')}</TableHead>
                 <TableHead className="text-right">
-                  {t('items.columns.weight')}
+                  {t('items.columns.totalWeight')}
                 </TableHead>
                 <TableHead className="text-right">
-                  {t('items.columns.dimensions')}
+                  {t('items.columns.totalVolume')}
                 </TableHead>
                 <TableHead className="w-[80px]">
                   {t('items.columns.actions')}
@@ -581,6 +587,32 @@ function ReceiptDetailView({
                   const isFullyShipped = item.currentQty === 0;
                   const isPartiallyShipped = shipped > 0 && !isFullyShipped;
 
+                  const weightPerUnit =
+                    item.weightPerUnit != null
+                      ? Number(item.weightPerUnit)
+                      : undefined;
+                  const totalWeightKg =
+                    weightPerUnit != null && Number.isFinite(weightPerUnit)
+                      ? weightPerUnit * item.initialQty
+                      : undefined;
+
+                  const lengthCm =
+                    item.lengthCm != null ? Number(item.lengthCm) : undefined;
+                  const widthCm =
+                    item.widthCm != null ? Number(item.widthCm) : undefined;
+                  const heightCm =
+                    item.heightCm != null ? Number(item.heightCm) : undefined;
+                  const totalVolumeM3 =
+                    lengthCm != null &&
+                    widthCm != null &&
+                    heightCm != null &&
+                    Number.isFinite(lengthCm) &&
+                    Number.isFinite(widthCm) &&
+                    Number.isFinite(heightCm)
+                      ? (lengthCm * widthCm * heightCm * item.initialQty) /
+                        1_000_000
+                      : undefined;
+
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
@@ -613,12 +645,36 @@ function ReceiptDetailView({
                         {item.binLocation ?? '-'}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-right">
-                        {item.weightTotal ? `${item.weightTotal} kg` : '-'}
+                        {totalWeightKg != null ? (
+                          <Tooltip delayDuration={100}>
+                            <TooltipTrigger asChild>
+                              <span className="cursor-help underline decoration-dotted underline-offset-2">
+                                {`${formatCeilFixed(totalWeightKg, 2)} kg`}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" sideOffset={6}>
+                              {`${item.weightPerUnit ?? String(weightPerUnit)} kg × ${item.initialQty} = ${formatCeilFixed(totalWeightKg, 2)} kg`}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          '-'
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-right">
-                        {item.lengthCm && item.widthCm && item.heightCm
-                          ? `${item.lengthCm}×${item.widthCm}×${item.heightCm} cm`
-                          : '-'}
+                        {totalVolumeM3 != null ? (
+                          <Tooltip delayDuration={100}>
+                            <TooltipTrigger asChild>
+                              <span className="cursor-help underline decoration-dotted underline-offset-2">
+                                {`${formatCeilFixed(totalVolumeM3, 2)} m³`}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" sideOffset={6}>
+                              {`${item.lengthCm}×${item.widthCm}×${item.heightCm} cm × ${item.initialQty} ÷ 1,000,000 = ${formatCeilFixed(totalVolumeM3, 2)} m³`}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          '-'
+                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -941,15 +997,15 @@ function AddItemDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="weightTotal">
-                {t('items.fields.weightTotal')}
+              <Label htmlFor="weightPerUnit">
+                {t('items.fields.weightPerUnit')}
               </Label>
               <Input
-                id="weightTotal"
+                id="weightPerUnit"
                 type="number"
                 step="0.001"
                 placeholder="kg"
-                {...form.register('weightTotal')}
+                {...form.register('weightPerUnit')}
               />
             </div>
           </div>

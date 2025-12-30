@@ -649,6 +649,7 @@
             "binLocation": "库位",
             "binLocationPlaceholder": "请输入库位",
             "weightTotal": "总重",
+            "weightPerUnit": "单件重量(kg)",
             "lengthCm": "长(cm)",
             "widthCm": "宽(cm)",
             "heightCm": "高(cm)"
@@ -663,7 +664,9 @@
             "unit": "单位",
             "location": "库位",
             "weight": "重量",
+            "totalWeight": "总重量(kg)",
             "dimensions": "尺寸",
+            "totalVolume": "总体积(m³)",
             "actions": "操作"
           }
         },
@@ -719,6 +722,7 @@
           "unit": "单位",
           "binLocation": "库位",
           "weightTotal": "总重量",
+          "weightPerUnit": "单件重量",
           "length": "长度",
           "width": "宽度",
           "height": "高度",
@@ -749,7 +753,7 @@
         }
       },
       "settings": {
-        "title": "设置",
+        "title": "基础资料",
         "tabs": {
           "warehouses": "仓库",
           "customers": "客户"

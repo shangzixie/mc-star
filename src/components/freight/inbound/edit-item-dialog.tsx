@@ -41,7 +41,7 @@ const editItemSchema = z.object({
   skuCode: z.string().max(50).optional(),
   unit: z.string().max(10).optional(),
   binLocation: z.string().max(50).optional(),
-  weightTotal: z.number().optional(),
+  weightPerUnit: z.number().optional(),
   lengthCm: z.number().optional(),
   widthCm: z.number().optional(),
   heightCm: z.number().optional(),
@@ -70,7 +70,7 @@ export function EditItemDialog({
       skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
       binLocation: item.binLocation ?? undefined,
-      weightTotal: item.weightTotal ? Number(item.weightTotal) : undefined,
+      weightPerUnit: item.weightPerUnit ? Number(item.weightPerUnit) : undefined,
       lengthCm: item.lengthCm ? Number(item.lengthCm) : undefined,
       widthCm: item.widthCm ? Number(item.widthCm) : undefined,
       heightCm: item.heightCm ? Number(item.heightCm) : undefined,
@@ -84,7 +84,7 @@ export function EditItemDialog({
       skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
       binLocation: item.binLocation ?? undefined,
-      weightTotal: item.weightTotal ? Number(item.weightTotal) : undefined,
+      weightPerUnit: item.weightPerUnit ? Number(item.weightPerUnit) : undefined,
       lengthCm: item.lengthCm ? Number(item.lengthCm) : undefined,
       widthCm: item.widthCm ? Number(item.widthCm) : undefined,
       heightCm: item.heightCm ? Number(item.heightCm) : undefined,
@@ -207,11 +207,11 @@ export function EditItemDialog({
 
             <FormField
               control={form.control}
-              name="weightTotal"
+              name="weightPerUnit"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {t('Dashboard.freight.inbound.itemActions.weightTotal')}{' '}
+                    {t('Dashboard.freight.inbound.itemActions.weightPerUnit')}{' '}
                     (kg)
                   </FormLabel>
                   <FormControl>

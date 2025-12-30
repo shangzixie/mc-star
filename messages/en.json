@@ -646,6 +646,7 @@
             "binLocation": "Bin location",
             "binLocationPlaceholder": "Enter bin location",
             "weightTotal": "Weight total",
+            "weightPerUnit": "Weight per unit (kg)",
             "lengthCm": "Length (cm)",
             "widthCm": "Width (cm)",
             "heightCm": "Height (cm)"
@@ -660,7 +661,9 @@
             "unit": "Unit",
             "location": "Location",
             "weight": "Weight",
+            "totalWeight": "Total Weight (kg)",
             "dimensions": "Dimensions",
+            "totalVolume": "Total Volume (m³)",
             "actions": "Actions"
           },
           "empty": "No items",
@@ -719,6 +722,7 @@
           "unit": "Unit",
           "binLocation": "Bin Location",
           "weightTotal": "Total Weight",
+          "weightPerUnit": "Weight per unit",
           "length": "Length",
           "width": "Width",
           "height": "Height",
@@ -748,7 +752,7 @@
         }
       },
       "settings": {
-        "title": "Settings",
+        "title": "Master Data",
         "tabs": {
           "warehouses": "Warehouses",
           "customers": "Customers"

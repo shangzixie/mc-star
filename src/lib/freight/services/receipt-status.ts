@@ -104,7 +104,7 @@ export async function getReceiptStats(
       totalItems: sql<number>`count(*)::int`,
       totalInitialQty: sql<number>`coalesce(sum(${inventoryItems.initialQty}), 0)::int`,
       totalCurrentQty: sql<number>`coalesce(sum(${inventoryItems.currentQty}), 0)::int`,
-      totalWeight: sql<string>`sum(${inventoryItems.weightTotal})::text`,
+      totalWeight: sql<string>`sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty})::text`,
     })
     .from(inventoryItems)
     .where(eq(inventoryItems.receiptId, receiptId));

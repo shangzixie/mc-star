@@ -193,7 +193,7 @@ export async function updateInventoryItem(
     skuCode?: string;
     unit?: string;
     binLocation?: string;
-    weightTotal?: number;
+    weightPerUnit?: number;
     lengthCm?: number;
     widthCm?: number;
     heightCm?: number;
