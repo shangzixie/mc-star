@@ -1,18 +1,10 @@
 import { AdminSection } from '@/components/dashboard/admin-section';
 import { ChartAreaInteractive } from '@/components/dashboard/chart-area-interactive';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { DataTable } from '@/components/dashboard/data-table';
+import { FreightRecentActivity } from '@/components/dashboard/freight-recent-activity';
 import { SectionCards } from '@/components/dashboard/section-cards';
 import { useTranslations } from 'next-intl';
 
-import data from './data.json';
-
-/**
- * Dashboard page
- *
- * NOTICE: This is a demo page for the dashboard, no real data is used,
- * we will show real data in the future
- */
 export default function DashboardPage() {
   const t = useTranslations();
 
@@ -35,7 +27,7 @@ export default function DashboardPage() {
             <div className="px-4 lg:px-6">
               <ChartAreaInteractive />
             </div>
-            <DataTable data={data} />
+            <FreightRecentActivity />
           </div>
         </div>
       </div>

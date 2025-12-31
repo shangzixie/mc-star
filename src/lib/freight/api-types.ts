@@ -192,6 +192,28 @@ export type FreightInventoryMovement = z.infer<
   typeof freightInventoryMovementSchema
 >;
 
+// Inventory item allocation view (joined)
+export const freightInventoryItemAllocationViewSchema = z
+  .object({
+    id: uuidSchema,
+    inventoryItemId: uuidSchema,
+    shipmentId: uuidSchema,
+    jobNo: z.string(),
+    containerId: uuidSchema.nullable(),
+    containerNo: z.string().nullable(),
+    allocatedQty: z.number().int(),
+    pickedQty: z.number().int(),
+    loadedQty: z.number().int(),
+    shippedQty: z.number().int(),
+    status: z.string(),
+    createdAt: isoDateTimeSchema.nullable(),
+  })
+  .passthrough();
+
+export type FreightInventoryItemAllocationView = z.infer<
+  typeof freightInventoryItemAllocationViewSchema
+>;
+
 // Extended types with relations and aggregations
 export const freightWarehouseReceiptWithRelationsSchema =
   freightWarehouseReceiptSchema.extend({
@@ -203,6 +225,7 @@ export const freightWarehouseReceiptWithRelationsSchema =
         totalInitialQty: z.number().int(),
         totalCurrentQty: z.number().int(),
         totalWeight: z.string().nullable(),
+        totalVolume: z.string().nullable(),
       })
       .optional(),
   });

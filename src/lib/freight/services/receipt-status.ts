@@ -98,6 +98,7 @@ export async function getReceiptStats(
   totalInitialQty: number;
   totalCurrentQty: number;
   totalWeight: string | null;
+  totalVolume: string | null;
 }> {
   const [stats] = await db
     .select({
@@ -105,6 +106,7 @@ export async function getReceiptStats(
       totalInitialQty: sql<number>`coalesce(sum(${inventoryItems.initialQty}), 0)::int`,
       totalCurrentQty: sql<number>`coalesce(sum(${inventoryItems.currentQty}), 0)::int`,
       totalWeight: sql<string>`sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty})::text`,
+      totalVolume: sql<string>`(sum(coalesce(${inventoryItems.lengthCm}, 0) * coalesce(${inventoryItems.widthCm}, 0) * coalesce(${inventoryItems.heightCm}, 0) * ${inventoryItems.initialQty}) / 1000000)::text`,
     })
     .from(inventoryItems)
     .where(eq(inventoryItems.receiptId, receiptId));
@@ -115,6 +117,7 @@ export async function getReceiptStats(
       totalInitialQty: 0,
       totalCurrentQty: 0,
       totalWeight: null,
+      totalVolume: null,
     }
   );
 }

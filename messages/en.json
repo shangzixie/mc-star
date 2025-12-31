@@ -506,7 +506,25 @@
   },
   "Dashboard": {
     "dashboard": {
-      "title": "Dashboard"
+      "title": "Dashboard",
+      "cards": {
+        "receipts": "Total Receipts",
+        "receiptsHint": "All inbound receipts",
+        "receiptsSub": "Count of all warehouse receipts",
+        "inboundQty30d": "Inbound Qty (30d)",
+        "inboundHint": "Sum of inbound item quantities",
+        "inboundSub": "Based on items created in the last 30 days",
+        "shippedQty30d": "Shipped Qty (30d)",
+        "shippedHint": "Sum of SHIP movements",
+        "shippedSub": "Based on SHIP movements in the last 30 days",
+        "currentStock": "Current Stock",
+        "currentStockHint": "Sum of current_qty across items",
+        "currentStockSub": "Current available inventory balance",
+        "total": "Total",
+        "last30d": "Last 30d",
+        "reserved": "Reserved",
+        "loading": "Loading..."
+      }
     },
     "admin": {
       "title": "Admin",
@@ -601,7 +619,8 @@
             "customer": "Customer",
             "remarks": "Remarks",
             "status": "Status",
-            "createdAt": "Created At"
+            "createdAt": "Created At",
+            "inboundTime": "Inbound Time"
           }
         },
         "receipt": {
@@ -709,7 +728,10 @@
         "itemActions": {
           "edit": "Edit",
           "viewMovements": "View History",
+          "viewAllocations": "View Allocations",
           "delete": "Delete",
+          "allocationsTitle": "Inventory Allocations",
+          "allocationsDescription": "See which shipments/containers are using this inventory item",
           "editTitle": "Edit Item",
           "updateSuccess": "Item updated successfully",
           "deleteTitle": "Delete Item",
@@ -730,7 +752,8 @@
           "currentQty": "Current Stock",
           "initialQty": "Initial Quantity",
           "allocated": "Allocated",
-          "available": "Available"
+          "available": "Available",
+          "actions": "Actions"
         },
         "movements": {
           "title": "Inventory Movements",
@@ -747,8 +770,26 @@
           "totalItems": "Total Items",
           "totalInitialQty": "Total Inbound",
           "totalCurrentQty": "Remaining Stock",
+          "totalShippedQty": "Shipped",
+          "totalWeightKg": "Total Weight (kg)",
+          "totalVolumeM3": "Total Volume (m³)",
           "totalWeight": "Total Weight",
           "items": "items"
+        },
+        "allocations": {
+          "error": "Failed to load allocations",
+          "empty": "No allocations",
+          "emptyHint": "This inventory item has not been allocated yet",
+          "columns": {
+            "jobNo": "Job No",
+            "containerNo": "Container No",
+            "status": "Status",
+            "allocatedQty": "Allocated",
+            "pickedQty": "Picked",
+            "loadedQty": "Loaded",
+            "shippedQty": "Shipped",
+            "createdAt": "Created At"
+          }
         }
       },
       "settings": {

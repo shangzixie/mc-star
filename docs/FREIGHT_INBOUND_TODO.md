@@ -661,12 +661,20 @@ Body: {
 5. ✅ **已完成** 状态 Badge 颜色区分 (蓝/黄/绿)
 
 ### 第二阶段 (重要功能 - 3-5天)
-6. ✅ 添加入库单统计信息
-7. ✅ 查看库存占用情况
-8. ✅ 手动修改状态功能
-9. ✅ 显示入库时间
-10. ✅ 优化搜索功能
-11. ✅ 编辑入库单时可修改入库时间
+6. ✅ **已完成** 添加入库单统计信息（详情页 Stats 卡片 + 后端 `getReceiptStats` 支持体积）
+   - 前端: `src/components/freight/inbound/freight-inbound-page-client.tsx`
+   - 后端: `src/lib/freight/services/receipt-status.ts` / `src/app/api/freight/warehouse-receipts/[id]/route.ts`
+7. ✅ **已完成** 查看库存占用情况（AllocationsDialog + join 视图 API）
+   - 前端: `src/components/freight/inbound/allocations-dialog.tsx`
+   - 后端: `src/app/api/freight/inventory-items/[id]/allocations/route.ts`
+8. ✅ **已完成** 手动修改状态功能（使用现有对话框 + 统一走 mutation 刷新缓存）
+   - 前端: `src/components/freight/inbound/freight-inbound-page-client.tsx`
+9. ✅ **已完成** 显示入库时间（列表列 + 详情信息卡片）
+   - 前端: `src/components/freight/inbound/freight-inbound-page-client.tsx`
+10. ✅ **已完成** 优化搜索功能（支持搜索仓库/客户名称）
+   - 后端: `src/app/api/freight/warehouse-receipts/route.ts`
+11. ✅ **已完成** 编辑入库单时可修改入库时间
+   - 前端: `src/components/freight/inbound/edit-receipt-dialog.tsx`
 
 ### 第三阶段 (增强体验 - 按需实现)
 12-27. 根据业务需要逐步实现

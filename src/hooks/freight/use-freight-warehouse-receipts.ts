@@ -45,7 +45,7 @@ export function useFreightWarehouseReceipt(id: string) {
     enabled: id.trim().length > 0,
     queryFn: async () =>
       freightFetch(`/api/freight/warehouse-receipts/${id}`, {
-        schema: freightWarehouseReceiptSchema,
+        schema: freightWarehouseReceiptWithRelationsSchema,
       }),
   });
 }

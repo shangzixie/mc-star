@@ -41,7 +41,12 @@ export async function GET(request: Request) {
       q && q.length > 0
         ? or(
             ilike(warehouseReceipts.receiptNo, `%${q}%`),
-            ilike(warehouseReceipts.remarks, `%${q}%`)
+            ilike(warehouseReceipts.remarks, `%${q}%`),
+            // allow searching warehouse / customer names
+            ilike(warehouses.name, `%${q}%`),
+            ilike(parties.nameCn, `%${q}%`),
+            ilike(parties.nameEn, `%${q}%`),
+            ilike(parties.code, `%${q}%`)
           )
         : undefined,
     ].filter(Boolean);

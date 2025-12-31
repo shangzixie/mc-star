@@ -14,6 +14,7 @@ export const freightKeys = {
     warehouseId?: string;
     customerId?: string;
     q?: string;
+    status?: string;
   }) => [...freightKeys.warehouseReceipts(), 'list', params] as const,
   warehouseReceipt: (id: string) =>
     [...freightKeys.warehouseReceipts(), 'detail', id] as const,
@@ -38,6 +39,9 @@ export const freightKeys = {
     [...freightKeys.inventoryItems(), 'detail', id] as const,
   inventoryMovements: (itemId: string) =>
     [...freightKeys.inventoryItems(), 'movements', itemId] as const,
+
+  inventoryItemAllocations: (itemId: string) =>
+    [...freightKeys.inventoryItems(), 'allocations', itemId] as const,
 
   attachments: () => [...freightKeys.all, 'attachments'] as const,
   attachmentsByShipment: (shipmentId: string) =>

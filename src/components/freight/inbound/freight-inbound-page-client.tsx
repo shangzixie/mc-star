@@ -62,7 +62,9 @@ import {
   useAddFreightInventoryItemToReceipt,
   useCreateFreightWarehouseReceipt,
   useDeleteFreightWarehouseReceipt,
+  useFreightWarehouseReceipt,
   useFreightWarehouseReceipts,
+  useUpdateFreightWarehouseReceipt,
 } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
@@ -110,10 +112,11 @@ import {
   parseAsString,
   useQueryStates,
 } from 'nuqs';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { AllocationsDialog } from './allocations-dialog';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
 import { EditItemDialog } from './edit-item-dialog';
 import { EditReceiptDialog } from './edit-receipt-dialog';
@@ -192,6 +195,9 @@ function ReceiptListRowSkeleton() {
       <TableCell className="py-3">
         <Skeleton className="h-4 w-32" />
       </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-4 w-32" />
+      </TableCell>
     </TableRow>
   );
 }
@@ -244,7 +250,14 @@ function ReceiptListView({
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const sortableColumnIds = useMemo(
-    () => ['receiptNo', 'warehouse', 'customer', 'status', 'createdAt'],
+    () => [
+      'receiptNo',
+      'warehouse',
+      'customer',
+      'status',
+      'createdAt',
+      'inboundTime',
+    ],
     []
   );
   const sortableColumnSet = useMemo(
@@ -412,6 +425,30 @@ function ReceiptListView({
         minSize: 160,
         size: 200,
       },
+      {
+        id: 'inboundTime',
+        accessorFn: (r) =>
+          r.inboundTime ? new Date(r.inboundTime).getTime() : 0,
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.inboundTime')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <span className="text-muted-foreground text-sm">
+              {receipt.inboundTime
+                ? format(new Date(receipt.inboundTime), 'yyyy-MM-dd HH:mm')
+                : '-'}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.inboundTime') },
+        minSize: 160,
+        size: 200,
+      },
     ];
 
     return cols;
@@ -552,7 +589,7 @@ function ReceiptListView({
                 ))
               ) : receiptsQuery.error ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('receiptList.error')}</EmptyTitle>
@@ -565,7 +602,7 @@ function ReceiptListView({
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('receiptList.empty')}</EmptyTitle>
@@ -620,6 +657,7 @@ function ReceiptDetailView({
   onEditItem,
   onDeleteItem,
   onViewMovements,
+  onViewAllocations,
 }: {
   receipt: FreightWarehouseReceiptWithRelations;
   onBack: () => void;
@@ -630,6 +668,7 @@ function ReceiptDetailView({
   onEditItem: (item: FreightInventoryItem) => void;
   onDeleteItem: (item: FreightInventoryItem) => void;
   onViewMovements: (item: FreightInventoryItem) => void;
+  onViewAllocations: (item: FreightInventoryItem) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [searchQ, setSearchQ] = useState('');
@@ -945,6 +984,10 @@ function ReceiptDetailView({
                   <History className="mr-2 size-4" />
                   {t('itemActions.viewMovements')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onViewAllocations(item)}>
+                  <Package className="mr-2 size-4" />
+                  {t('itemActions.viewAllocations')}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDeleteItem(item)}
                   className="text-destructive"
@@ -959,7 +1002,7 @@ function ReceiptDetailView({
         size: 72,
       },
     ],
-    [onDeleteItem, onEditItem, onViewMovements, t]
+    [onDeleteItem, onEditItem, onViewAllocations, onViewMovements, t]
   );
 
   const itemsTable = useReactTable({
@@ -1031,7 +1074,7 @@ function ReceiptDetailView({
       </div>
 
       {/* Receipt Info Card */}
-      <div className="grid gap-4 md:grid-cols-3 rounded-lg border bg-card p-4">
+      <div className="grid gap-4 md:grid-cols-4 rounded-lg border bg-card p-4">
         <div>
           <div className="text-muted-foreground text-xs font-medium uppercase">
             {t('receipt.fields.warehouse')}
@@ -1055,6 +1098,74 @@ function ReceiptDetailView({
           <div className="mt-1 font-medium">
             {receipt.createdAt
               ? format(new Date(receipt.createdAt), 'yyyy-MM-dd HH:mm')
+              : '-'}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('receiptList.columns.inboundTime')}
+          </div>
+          <div className="mt-1 font-medium">
+            {receipt.inboundTime
+              ? format(new Date(receipt.inboundTime), 'yyyy-MM-dd HH:mm')
+              : '-'}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-6">
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('stats.totalItems')}
+          </div>
+          <div className="mt-1 text-2xl font-bold tabular-nums">
+            {receipt.stats?.totalItems ?? 0}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('stats.totalInitialQty')}
+          </div>
+          <div className="mt-1 text-2xl font-bold tabular-nums">
+            {receipt.stats?.totalInitialQty ?? 0}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('stats.totalCurrentQty')}
+          </div>
+          <div className="mt-1 text-2xl font-bold tabular-nums">
+            {receipt.stats?.totalCurrentQty ?? 0}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('stats.totalShippedQty')}
+          </div>
+          <div className="mt-1 text-2xl font-bold tabular-nums">
+            {receipt.stats
+              ? receipt.stats.totalInitialQty - receipt.stats.totalCurrentQty
+              : 0}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('stats.totalWeightKg')}
+          </div>
+          <div className="mt-1 text-2xl font-bold tabular-nums">
+            {receipt.stats?.totalWeight != null
+              ? formatCeilFixed(Number(receipt.stats.totalWeight), 2)
+              : '-'}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('stats.totalVolumeM3')}
+          </div>
+          <div className="mt-1 text-2xl font-bold tabular-nums">
+            {receipt.stats?.totalVolume != null
+              ? formatCeilFixed(Number(receipt.stats.totalVolume), 2)
               : '-'}
           </div>
         </div>
@@ -1549,9 +1660,14 @@ function ChangeStatusDialog({
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [newStatus, setNewStatus] = useState(receipt.status);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
 
-  const receiptsQuery = useFreightWarehouseReceipts({ q: '' });
+  // Keep local selection in sync when switching receipts / reopening dialog.
+  // (This avoids "stale status" if the receipt changed while the dialog was closed.)
+  useEffect(() => {
+    if (!open) return;
+    setNewStatus(receipt.status);
+  }, [open, receipt.status]);
 
   const onSubmit = async () => {
     if (newStatus === receipt.status) {
@@ -1560,33 +1676,15 @@ function ChangeStatusDialog({
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `/api/freight/warehouse-receipts/${receipt.id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to update status');
-      }
+      await updateMutation.mutateAsync({ status: newStatus });
 
       toast.success(t('receiptActions.statusUpdated'));
-      receiptsQuery.refetch();
       onOpenChange(false);
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : t('receiptActions.updateFailed')
+        getFreightApiErrorMessage(error) || t('receiptActions.updateFailed')
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -1633,8 +1731,8 @@ function ChangeStatusDialog({
           >
             {t('receiptActions.cancel')}
           </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting
+          <Button onClick={onSubmit} disabled={updateMutation.isPending}>
+            {updateMutation.isPending
               ? t('receiptActions.updating')
               : t('receiptActions.confirm')}
           </Button>
@@ -1659,6 +1757,7 @@ export function FreightInboundPageClient() {
   const [deleteReceiptOpen, setDeleteReceiptOpen] = useState(false);
   const [deleteItemOpen, setDeleteItemOpen] = useState(false);
   const [movementsOpen, setMovementsOpen] = useState(false);
+  const [allocationsOpen, setAllocationsOpen] = useState(false);
   const [changeStatusOpen, setChangeStatusOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FreightInventoryItem | null>(
     null
@@ -1666,13 +1765,15 @@ export function FreightInboundPageClient() {
   const [deleteError, setDeleteError] = useState<string>('');
 
   const t = useTranslations();
-  const receiptsQuery = useFreightWarehouseReceipts({ q: '' });
-
-  const selectedReceipt = useMemo(() => {
-    if (!selectedReceiptId) return null;
-    return (receiptsQuery.data?.find((r) => r.id === selectedReceiptId) ??
-      null) as FreightWarehouseReceiptWithRelations | null;
-  }, [selectedReceiptId, receiptsQuery.data]);
+  const receiptDetailQuery = useFreightWarehouseReceipt(selectedReceiptId ?? '');
+  const selectedReceipt = receiptDetailQuery.data ?? null;
+  const deleteReceiptMutation = useDeleteFreightWarehouseReceipt(
+    selectedReceiptId ?? ''
+  );
+  const deleteItemMutation = useDeleteFreightInventoryItem(
+    selectedItem?.id ?? '',
+    selectedReceiptId ?? ''
+  );
 
   const handleSelectReceipt = (receiptId: string) => {
     setSelectedReceiptId(receiptId);
@@ -1696,6 +1797,12 @@ export function FreightInboundPageClient() {
           onSelectReceipt={handleSelectReceipt}
           onCreateReceipt={() => setCreateDialogOpen(true)}
         />
+      ) : receiptDetailQuery.isLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-72" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
       ) : selectedReceipt ? (
         <ReceiptDetailView
           receipt={selectedReceipt}
@@ -1716,8 +1823,25 @@ export function FreightInboundPageClient() {
             setSelectedItem(item);
             setMovementsOpen(true);
           }}
+          onViewAllocations={(item) => {
+            setSelectedItem(item);
+            setAllocationsOpen(true);
+          }}
         />
-      ) : null}
+      ) : (
+        <div className="py-12">
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{t('Dashboard.freight.inbound.receiptList.error')}</EmptyTitle>
+              <EmptyDescription>
+                {receiptDetailQuery.error
+                  ? getFreightApiErrorMessage(receiptDetailQuery.error)
+                  : t('Dashboard.freight.inbound.receiptList.emptyHint')}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      )}
 
       <CreateReceiptDialog
         open={createDialogOpen}
@@ -1764,25 +1888,14 @@ export function FreightInboundPageClient() {
           errorMessage={deleteError}
           onConfirm={async () => {
             try {
-              const response = await fetch(
-                `/api/freight/warehouse-receipts/${selectedReceipt.id}`,
-                { method: 'DELETE' }
-              );
-              if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Delete failed');
-              }
+              await deleteReceiptMutation.mutateAsync();
               toast.success(
                 t('Dashboard.freight.inbound.receiptActions.deleteSuccess')
               );
               setSelectedReceiptId(null);
               setView('list');
-              receiptsQuery.refetch();
             } catch (error) {
-              const message =
-                error instanceof Error
-                  ? error.message
-                  : t('Dashboard.freight.inbound.receiptActions.cannotDelete');
+              const message = getFreightApiErrorMessage(error);
               setDeleteError(message);
               throw error;
             }
@@ -1803,23 +1916,12 @@ export function FreightInboundPageClient() {
           errorMessage={deleteError}
           onConfirm={async () => {
             try {
-              const response = await fetch(
-                `/api/freight/inventory-items/${selectedItem.id}`,
-                { method: 'DELETE' }
-              );
-              if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Delete failed');
-              }
+              await deleteItemMutation.mutateAsync();
               toast.success(
                 t('Dashboard.freight.inbound.itemActions.deleteSuccess')
               );
-              receiptsQuery.refetch();
             } catch (error) {
-              const message =
-                error instanceof Error
-                  ? error.message
-                  : t('Dashboard.freight.inbound.itemActions.cannotDelete');
+              const message = getFreightApiErrorMessage(error);
               setDeleteError(message);
               throw error;
             }
@@ -1832,6 +1934,18 @@ export function FreightInboundPageClient() {
         <InventoryMovementsDialog
           open={movementsOpen}
           onOpenChange={setMovementsOpen}
+          itemId={selectedItem.id}
+          itemName={
+            selectedItem.commodityName || selectedItem.skuCode || undefined
+          }
+        />
+      )}
+
+      {/* Allocations Dialog */}
+      {selectedItem && (
+        <AllocationsDialog
+          open={allocationsOpen}
+          onOpenChange={setAllocationsOpen}
           itemId={selectedItem.id}
           itemName={
             selectedItem.commodityName || selectedItem.skuCode || undefined
