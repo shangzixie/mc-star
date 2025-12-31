@@ -17,17 +17,43 @@ export async function GET(request: Request) {
     await requireUser(request);
     const db = await getDb();
 
-    const [totals] = await db
+    const [receiptTotals] = await db.select({
+      receiptsCount: sql<number>`count(*)::int`,
+    }).from(warehouseReceipts);
+
+    const [inventoryTotals] = await db
       .select({
-        receiptsCount: sql<number>`count(${warehouseReceipts.id})::int`,
-        inventoryItemsCount: sql<number>`(select count(*) from inventory_items)::int`,
-        currentStockQty: sql<number>`(select coalesce(sum(current_qty), 0) from inventory_items)::int`,
-        reservedAllocationsCount: sql<number>`(select count(*) from inventory_allocations where status = any(${RESERVED_ALLOCATION_STATUSES}))::int`,
-        reservedAllocationsQty: sql<number>`(select coalesce(sum(allocated_qty), 0) from inventory_allocations where status = any(${RESERVED_ALLOCATION_STATUSES}))::int`,
-        inboundQty30d: sql<number>`(select coalesce(sum(initial_qty), 0) from inventory_items where created_at >= now() - interval '30 days')::int`,
-        shippedQty30d: sql<number>`(select coalesce(sum(-qty_delta), 0) from inventory_movements where ref_type = 'SHIP' and created_at >= now() - interval '30 days')::int`,
+        inventoryItemsCount: sql<number>`count(*)::int`,
+        currentStockQty: sql<number>`coalesce(sum(${inventoryItems.currentQty}), 0)::int`,
+        inboundQty30d: sql<number>`coalesce(sum(case when ${inventoryItems.createdAt} >= (now() - interval '30 days') then ${inventoryItems.initialQty} else 0 end), 0)::int`,
       })
-      .from(warehouseReceipts);
+      .from(inventoryItems);
+
+    const [movementTotals] = await db
+      .select({
+        shippedQty30d: sql<number>`coalesce(sum(case when ${inventoryMovements.refType} = 'SHIP' and ${inventoryMovements.createdAt} >= (now() - interval '30 days') then -${inventoryMovements.qtyDelta} else 0 end), 0)::int`,
+      })
+      .from(inventoryMovements);
+
+    const [allocationTotals] = await db
+      .select({
+        reservedAllocationsCount: sql<number>`count(*)::int`,
+        reservedAllocationsQty: sql<number>`coalesce(sum(${inventoryAllocations.allocatedQty}), 0)::int`,
+      })
+      .from(inventoryAllocations)
+      .where(
+        inArray(inventoryAllocations.status, [...RESERVED_ALLOCATION_STATUSES])
+      );
+
+    const totals = {
+      receiptsCount: receiptTotals?.receiptsCount ?? 0,
+      inventoryItemsCount: inventoryTotals?.inventoryItemsCount ?? 0,
+      currentStockQty: inventoryTotals?.currentStockQty ?? 0,
+      reservedAllocationsCount: allocationTotals?.reservedAllocationsCount ?? 0,
+      reservedAllocationsQty: allocationTotals?.reservedAllocationsQty ?? 0,
+      inboundQty30d: inventoryTotals?.inboundQty30d ?? 0,
+      shippedQty30d: movementTotals?.shippedQty30d ?? 0,
+    };
 
     // 90d timeseries (inbound by inventory item creation; shipped by movement SHIP)
     const series = await db.execute<{
@@ -73,15 +99,7 @@ export async function GET(request: Request) {
 
     return jsonOk({
       data: {
-        totals: totals ?? {
-          receiptsCount: 0,
-          inventoryItemsCount: 0,
-          currentStockQty: 0,
-          reservedAllocationsCount: 0,
-          reservedAllocationsQty: 0,
-          inboundQty30d: 0,
-          shippedQty30d: 0,
-        },
+        totals,
         series: series as unknown as Array<{
           date: string;
           inboundQty: number;
