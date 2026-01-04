@@ -15,6 +15,7 @@ export const freightKeys = {
     customerId?: string;
     q?: string;
     status?: string;
+    includeStats?: boolean;
   }) => [...freightKeys.warehouseReceipts(), 'list', params] as const,
   warehouseReceipt: (id: string) =>
     [...freightKeys.warehouseReceipts(), 'detail', id] as const,

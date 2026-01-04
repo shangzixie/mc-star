@@ -23,6 +23,7 @@ export function useFreightWarehouseReceipts(params: {
   customerId?: string;
   q?: string;
   status?: string;
+  includeStats?: boolean;
 }) {
   return useQuery({
     queryKey: freightKeys.warehouseReceiptsList(params),
@@ -33,6 +34,7 @@ export function useFreightWarehouseReceipts(params: {
           customerId: params.customerId,
           q: params.q,
           status: params.status,
+          includeStats: params.includeStats ? '1' : undefined,
         })}`,
         { schema: receiptsArraySchema }
       ),

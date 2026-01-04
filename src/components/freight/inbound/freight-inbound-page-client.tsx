@@ -178,39 +178,14 @@ const addItemFormSchema = z.object({
 type AddItemFormInput = z.input<typeof addItemFormSchema>;
 type AddItemFormOutput = z.output<typeof addItemFormSchema>;
 
-function ReceiptListRowSkeleton() {
+function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
   return (
     <TableRow className="h-14">
-      <TableCell className="py-3">
-        <div className="flex items-center gap-2">
-          <Skeleton className="size-4" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-28" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-28" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-28" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-28" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-48" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-6 w-20" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-32" />
-      </TableCell>
-      <TableCell className="py-3">
-        <Skeleton className="h-4 w-32" />
-      </TableCell>
+      {Array.from({ length: columnCount }).map((_, idx) => (
+        <TableCell key={`skc-${idx}`} className="py-3">
+          <Skeleton className="h-4 w-24" />
+        </TableCell>
+      ))}
     </TableRow>
   );
 }
@@ -270,6 +245,12 @@ function ReceiptListView({
       'transportType',
       'customsDeclarationType',
       'status',
+      'totalItems',
+      'totalInitialQty',
+      'totalCurrentQty',
+      'totalShippedQty',
+      'totalWeight',
+      'totalVolume',
       'createdAt',
       'inboundTime',
     ],
@@ -311,6 +292,7 @@ function ReceiptListView({
   const receiptsQuery = useFreightWarehouseReceipts({
     q,
     status,
+    includeStats: true,
   });
 
   const data = receiptsQuery.data ?? [];
@@ -472,6 +454,148 @@ function ReceiptListView({
         meta: { label: t('receiptList.columns.status') },
         minSize: 120,
         size: 140,
+      },
+      {
+        id: 'totalItems',
+        accessorFn: (r) => r.stats?.totalItems ?? 0,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('stats.totalItems')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-medium tabular-nums">
+            {row.original.stats?.totalItems ?? '-'}
+          </div>
+        ),
+        meta: { label: t('stats.totalItems') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'totalInitialQty',
+        accessorFn: (r) => r.stats?.totalInitialQty ?? 0,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('stats.totalInitialQty')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-medium tabular-nums">
+            {row.original.stats?.totalInitialQty ?? '-'}
+          </div>
+        ),
+        meta: { label: t('stats.totalInitialQty') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'totalCurrentQty',
+        accessorFn: (r) => r.stats?.totalCurrentQty ?? 0,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('stats.totalCurrentQty')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-medium tabular-nums">
+            {row.original.stats?.totalCurrentQty ?? '-'}
+          </div>
+        ),
+        meta: { label: t('stats.totalCurrentQty') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'totalShippedQty',
+        accessorFn: (r) =>
+          r.stats ? r.stats.totalInitialQty - r.stats.totalCurrentQty : 0,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('stats.totalShippedQty')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const stats = row.original.stats;
+          return (
+            <div className="text-right text-muted-foreground tabular-nums">
+              {stats ? stats.totalInitialQty - stats.totalCurrentQty : '-'}
+            </div>
+          );
+        },
+        meta: { label: t('stats.totalShippedQty') },
+        minSize: 120,
+        size: 140,
+      },
+      {
+        id: 'totalWeight',
+        accessorFn: (r) =>
+          r.stats?.totalWeight != null ? Number(r.stats.totalWeight) : 0,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('stats.totalWeightKg')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const totalWeight =
+            row.original.stats?.totalWeight != null
+              ? Number(row.original.stats.totalWeight)
+              : undefined;
+          return (
+            <div className="text-right text-muted-foreground tabular-nums">
+              {totalWeight != null
+                ? `${formatCeilFixed(totalWeight, 2)} kg`
+                : '-'}
+            </div>
+          );
+        },
+        meta: { label: t('stats.totalWeightKg') },
+        minSize: 150,
+        size: 170,
+      },
+      {
+        id: 'totalVolume',
+        accessorFn: (r) =>
+          r.stats?.totalVolume != null ? Number(r.stats.totalVolume) : 0,
+        header: ({ column }) => (
+          <div className="flex justify-end">
+            <DataTableColumnHeader
+              column={column}
+              label={t('stats.totalVolumeM3')}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const totalVolume =
+            row.original.stats?.totalVolume != null
+              ? Number(row.original.stats.totalVolume)
+              : undefined;
+          return (
+            <div className="text-right text-muted-foreground tabular-nums">
+              {totalVolume != null
+                ? `${formatCeilFixed(totalVolume, 2)} m³`
+                : '-'}
+            </div>
+          );
+        },
+        meta: { label: t('stats.totalVolumeM3') },
+        minSize: 150,
+        size: 170,
       },
       {
         id: 'createdAt',
@@ -656,7 +780,10 @@ function ReceiptListView({
             <TableBody>
               {receiptsQuery.isLoading ? (
                 Array.from({ length: size }).map((_, idx) => (
-                  <ReceiptListRowSkeleton key={`sk-${idx}`} />
+                  <ReceiptListRowSkeleton
+                    key={`sk-${idx}`}
+                    columnCount={table.getVisibleLeafColumns().length}
+                  />
                 ))
               ) : receiptsQuery.error ? (
                 <TableRow>

@@ -1,12 +1,17 @@
 import { getDb } from '@/db/index';
-import { parties, warehouseReceipts, warehouses } from '@/db/schema';
+import {
+  inventoryItems,
+  parties,
+  warehouseReceipts,
+  warehouses,
+} from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
   createWarehouseReceiptSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
-import { and, asc, desc, eq, gte, ilike, lte, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -17,6 +22,9 @@ export async function GET(request: Request) {
     const warehouseId = url.searchParams.get('warehouseId');
     const customerId = url.searchParams.get('customerId');
     const status = url.searchParams.get('status');
+    const includeStats =
+      url.searchParams.get('includeStats') === '1' ||
+      url.searchParams.get('includeStats') === 'true';
     const dateFrom = url.searchParams.get('dateFrom');
     const dateTo = url.searchParams.get('dateTo');
     const sortBy = url.searchParams.get('sortBy') || 'createdAt';
@@ -59,6 +67,33 @@ export async function GET(request: Request) {
           ? warehouseReceipts.inboundTime
           : warehouseReceipts.createdAt;
 
+    const itemStatsSubquery = includeStats
+      ? db
+          .select({
+            receiptId: inventoryItems.receiptId,
+            totalItems: sql<number>`count(*)::int`.as('totalItems'),
+            totalInitialQty:
+              sql<number>`coalesce(sum(${inventoryItems.initialQty}), 0)::int`.as(
+                'totalInitialQty'
+              ),
+            totalCurrentQty:
+              sql<number>`coalesce(sum(${inventoryItems.currentQty}), 0)::int`.as(
+                'totalCurrentQty'
+              ),
+            totalWeight:
+              sql<string>`sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty})::text`.as(
+                'totalWeight'
+              ),
+            totalVolume:
+              sql<string>`(sum(coalesce(${inventoryItems.lengthCm}, 0) * coalesce(${inventoryItems.widthCm}, 0) * coalesce(${inventoryItems.heightCm}, 0) * ${inventoryItems.initialQty}) / 1000000)::text`.as(
+                'totalVolume'
+              ),
+          })
+          .from(inventoryItems)
+          .groupBy(inventoryItems.receiptId)
+          .as('item_stats')
+      : null;
+
     // Build query with joins
     const baseQuery = db
       .select({
@@ -98,16 +133,38 @@ export async function GET(request: Request) {
           createdAt: parties.createdAt,
           updatedAt: parties.updatedAt,
         },
+        ...(includeStats
+          ? {
+              stats: {
+                totalItems: sql<number>`coalesce(${itemStatsSubquery!.totalItems}, 0)::int`,
+                totalInitialQty: sql<number>`coalesce(${itemStatsSubquery!.totalInitialQty}, 0)::int`,
+                totalCurrentQty: sql<number>`coalesce(${itemStatsSubquery!.totalCurrentQty}, 0)::int`,
+                totalWeight: itemStatsSubquery!.totalWeight,
+                totalVolume: itemStatsSubquery!.totalVolume,
+              },
+            }
+          : {}),
       })
       .from(warehouseReceipts)
       .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
-      .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id))
-      .orderBy(sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn));
+      .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id));
+
+    const queryWithStats =
+      includeStats && itemStatsSubquery
+        ? baseQuery.leftJoin(
+            itemStatsSubquery,
+            eq(itemStatsSubquery.receiptId, warehouseReceipts.id)
+          )
+        : baseQuery;
+
+    const orderedQuery = queryWithStats.orderBy(
+      sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn)
+    );
 
     const rows =
       conditions.length > 0
-        ? await baseQuery.where(and(...conditions))
-        : await baseQuery;
+        ? await orderedQuery.where(and(...conditions))
+        : await orderedQuery;
 
     return jsonOk({ data: rows });
   } catch (error) {
