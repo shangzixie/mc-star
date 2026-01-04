@@ -98,15 +98,13 @@ CREATE TABLE warehouse_receipts (
     warehouse_id UUID REFERENCES warehouses(id),
     customer_id UUID REFERENCES parties(id), -- 货主
 
-    customs_declaration_type warehouse_receipt_customs_declaration_type DEFAULT 'NO_DECLARATION', -- 报关类型（不报关/买单/正报）
+    customs_declaration_type warehouse_receipt_customs_declaration_type DEFAULT 'NO_DECLARATION', -- 报关类型：不报关/买单/正报
     status VARCHAR(20) DEFAULT 'RECEIVED', -- RECEIVED (已入库), SHIPPED (已出库), PARTIAL (部分发货)
     inbound_time TIMESTAMPTZ DEFAULT NOW(),
 
     remarks TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-COMMENT ON COLUMN warehouse_receipts.customs_declaration_type IS '报关类型';
 
 -- 入库商品明细
 CREATE TABLE inventory_items (
