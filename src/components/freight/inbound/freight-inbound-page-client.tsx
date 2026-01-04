@@ -194,6 +194,12 @@ function ReceiptListRowSkeleton() {
         <Skeleton className="h-4 w-28" />
       </TableCell>
       <TableCell className="py-3">
+        <Skeleton className="h-4 w-28" />
+      </TableCell>
+      <TableCell className="py-3">
+        <Skeleton className="h-4 w-28" />
+      </TableCell>
+      <TableCell className="py-3">
         <Skeleton className="h-4 w-48" />
       </TableCell>
       <TableCell className="py-3">
@@ -261,6 +267,8 @@ function ReceiptListView({
       'receiptNo',
       'warehouse',
       'customer',
+      'transportType',
+      'customsDeclarationType',
       'status',
       'createdAt',
       'inboundTime',
@@ -374,6 +382,62 @@ function ReceiptListView({
         meta: { label: t('receiptList.columns.customer') },
         minSize: 140,
         size: 180,
+      },
+      {
+        id: 'transportType',
+        accessorFn: (r) =>
+          r.transportType
+            ? t(`transportType.options.${r.transportType}` as any)
+            : '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.transportType')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <span className="text-muted-foreground">
+              {receipt.transportType
+                ? t(`transportType.options.${receipt.transportType}` as any)
+                : '-'}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.transportType') },
+        minSize: 160,
+        size: 200,
+      },
+      {
+        id: 'customsDeclarationType',
+        accessorFn: (r) =>
+          r.customsDeclarationType
+            ? t(
+                `customsDeclarationType.options.${r.customsDeclarationType}` as any
+              )
+            : '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.customsDeclarationType')}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          return (
+            <span className="text-muted-foreground">
+              {receipt.customsDeclarationType
+                ? t(
+                    `customsDeclarationType.options.${receipt.customsDeclarationType}` as any
+                  )
+                : '-'}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.customsDeclarationType') },
+        minSize: 160,
+        size: 220,
       },
       {
         id: 'remarks',
@@ -596,7 +660,10 @@ function ReceiptListView({
                 ))
               ) : receiptsQuery.error ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell
+                    colSpan={table.getVisibleLeafColumns().length}
+                    className="h-32 text-center"
+                  >
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('receiptList.error')}</EmptyTitle>
@@ -609,7 +676,10 @@ function ReceiptListView({
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell
+                    colSpan={table.getVisibleLeafColumns().length}
+                    className="h-32 text-center"
+                  >
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('receiptList.empty')}</EmptyTitle>
@@ -1471,7 +1541,9 @@ function CreateReceiptDialog({
               className="h-9 w-full rounded-md border bg-background px-3 text-sm"
               {...form.register('customsDeclarationType')}
             >
-              <option value="">{t('customsDeclarationType.placeholder')}</option>
+              <option value="">
+                {t('customsDeclarationType.placeholder')}
+              </option>
               {WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES.map((ct) => (
                 <option key={ct} value={ct}>
                   {t(`customsDeclarationType.options.${ct}` as any)}

@@ -683,6 +683,8 @@
             "receiptNo": "入库单号",
             "warehouse": "仓库",
             "customer": "客户",
+            "transportType": "运输类型",
+            "customsDeclarationType": "报关类型",
             "remarks": "备注",
             "status": "状态",
             "createdAt": "创建时间",

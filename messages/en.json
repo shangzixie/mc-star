@@ -683,6 +683,8 @@
             "receiptNo": "Receipt No",
             "warehouse": "Warehouse",
             "customer": "Customer",
+            "transportType": "Transport Type",
+            "customsDeclarationType": "Customs Declaration",
             "remarks": "Remarks",
             "status": "Status",
             "createdAt": "Created At",
