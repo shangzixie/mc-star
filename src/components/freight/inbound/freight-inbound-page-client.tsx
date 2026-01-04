@@ -313,15 +313,17 @@ function ReceiptListView({
         cell: ({ row }) => {
           const receipt = row.original;
           return (
-            <div className="flex items-center gap-2 font-medium">
+            <div className="flex min-w-0 items-center gap-2 font-medium">
               <FileText className="size-4 text-muted-foreground" />
-              {receipt.receiptNo}
+              <span className="block max-w-[140px] truncate">
+                {receipt.receiptNo}
+              </span>
             </div>
           );
         },
         meta: { label: t('receiptList.columns.receiptNo') },
-        minSize: 180,
-        size: 220,
+        minSize: 150,
+        size: 170,
       },
       {
         id: 'warehouse',
@@ -356,14 +358,14 @@ function ReceiptListView({
         cell: ({ row }) => {
           const receipt = row.original;
           return (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground max-w-[140px] truncate block">
               {receipt.customer?.nameCn ?? '-'}
             </span>
           );
         },
         meta: { label: t('receiptList.columns.customer') },
         minSize: 140,
-        size: 180,
+        size: 160,
       },
       {
         id: 'transportType',
@@ -380,7 +382,7 @@ function ReceiptListView({
         cell: ({ row }) => {
           const receipt = row.original;
           return (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground max-w-[140px] truncate block">
               {receipt.transportType
                 ? t(`transportType.options.${receipt.transportType}` as any)
                 : '-'}
@@ -388,8 +390,8 @@ function ReceiptListView({
           );
         },
         meta: { label: t('receiptList.columns.transportType') },
-        minSize: 160,
-        size: 200,
+        minSize: 150,
+        size: 170,
       },
       {
         id: 'customsDeclarationType',
@@ -408,7 +410,7 @@ function ReceiptListView({
         cell: ({ row }) => {
           const receipt = row.original;
           return (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground max-w-[140px] truncate block">
               {receipt.customsDeclarationType
                 ? t(
                     `customsDeclarationType.options.${receipt.customsDeclarationType}` as any
@@ -418,8 +420,8 @@ function ReceiptListView({
           );
         },
         meta: { label: t('receiptList.columns.customsDeclarationType') },
-        minSize: 160,
-        size: 220,
+        minSize: 150,
+        size: 170,
       },
       {
         id: 'remarks',
@@ -438,7 +440,7 @@ function ReceiptListView({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="max-w-xs truncate text-muted-foreground cursor-help underline decoration-dotted underline-offset-2 text-left"
+                  className="w-[140px] text-left text-muted-foreground cursor-help underline decoration-dotted underline-offset-2 line-clamp-2 break-words"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {remarks}
@@ -455,8 +457,8 @@ function ReceiptListView({
           );
         },
         meta: { label: t('receiptList.columns.remarks') },
-        minSize: 180,
-        size: 260,
+        minSize: 130,
+        size: 150,
       },
       {
         id: 'status',
@@ -479,15 +481,13 @@ function ReceiptListView({
         id: 'totalItems',
         accessorFn: (r) => r.stats?.totalItems ?? 0,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('stats.totalItems')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('stats.totalItems')}
+          />
         ),
         cell: ({ row }) => (
-          <div className="text-right font-medium tabular-nums">
+          <div className="font-medium tabular-nums">
             {row.original.stats?.totalItems ?? '-'}
           </div>
         ),
@@ -499,15 +499,13 @@ function ReceiptListView({
         id: 'totalInitialQty',
         accessorFn: (r) => r.stats?.totalInitialQty ?? 0,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('stats.totalInitialQty')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('stats.totalInitialQty')}
+          />
         ),
         cell: ({ row }) => (
-          <div className="text-right font-medium tabular-nums">
+          <div className="font-medium tabular-nums">
             {row.original.stats?.totalInitialQty ?? '-'}
           </div>
         ),
@@ -519,15 +517,13 @@ function ReceiptListView({
         id: 'totalCurrentQty',
         accessorFn: (r) => r.stats?.totalCurrentQty ?? 0,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('stats.totalCurrentQty')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('stats.totalCurrentQty')}
+          />
         ),
         cell: ({ row }) => (
-          <div className="text-right font-medium tabular-nums">
+          <div className="font-medium tabular-nums">
             {row.original.stats?.totalCurrentQty ?? '-'}
           </div>
         ),
@@ -540,17 +536,15 @@ function ReceiptListView({
         accessorFn: (r) =>
           r.stats ? r.stats.totalInitialQty - r.stats.totalCurrentQty : 0,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('stats.totalShippedQty')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('stats.totalShippedQty')}
+          />
         ),
         cell: ({ row }) => {
           const stats = row.original.stats;
           return (
-            <div className="text-right text-muted-foreground tabular-nums">
+            <div className="text-muted-foreground tabular-nums">
               {stats ? stats.totalInitialQty - stats.totalCurrentQty : '-'}
             </div>
           );
@@ -564,12 +558,10 @@ function ReceiptListView({
         accessorFn: (r) =>
           r.stats?.totalWeight != null ? Number(r.stats.totalWeight) : 0,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('stats.totalWeightKg')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('stats.totalWeightKg')}
+          />
         ),
         cell: ({ row }) => {
           const totalWeight =
@@ -577,7 +569,7 @@ function ReceiptListView({
               ? Number(row.original.stats.totalWeight)
               : undefined;
           return (
-            <div className="text-right text-muted-foreground tabular-nums">
+            <div className="text-muted-foreground tabular-nums">
               {totalWeight != null
                 ? `${formatCeilFixed(totalWeight, 2)} kg`
                 : '-'}
@@ -593,12 +585,10 @@ function ReceiptListView({
         accessorFn: (r) =>
           r.stats?.totalVolume != null ? Number(r.stats.totalVolume) : 0,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('stats.totalVolumeM3')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('stats.totalVolumeM3')}
+          />
         ),
         cell: ({ row }) => {
           const totalVolume =
@@ -606,7 +596,7 @@ function ReceiptListView({
               ? Number(row.original.stats.totalVolume)
               : undefined;
           return (
-            <div className="text-right text-muted-foreground tabular-nums">
+            <div className="text-muted-foreground tabular-nums">
               {totalVolume != null
                 ? `${formatCeilFixed(totalVolume, 2)} m³`
                 : '-'}
@@ -988,15 +978,13 @@ function ReceiptDetailView({
         id: 'initialQty',
         accessorKey: 'initialQty',
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('items.columns.initialQty')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.initialQty')}
+          />
         ),
         cell: ({ row }) => (
-          <div className="text-right font-medium">
+          <div className="font-medium tabular-nums">
             {row.original.initialQty}
           </div>
         ),
@@ -1008,12 +996,10 @@ function ReceiptDetailView({
         id: 'currentQty',
         accessorKey: 'currentQty',
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('items.columns.currentQty')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.currentQty')}
+          />
         ),
         cell: ({ row }) => {
           const item = row.original;
@@ -1021,7 +1007,7 @@ function ReceiptDetailView({
           const isFullyShipped = item.currentQty === 0;
           const isPartiallyShipped = shipped > 0 && !isFullyShipped;
           return (
-            <div className="text-right font-medium">
+            <div className="font-medium tabular-nums">
               <span
                 className={cn(
                   isFullyShipped && 'text-muted-foreground',
@@ -1041,18 +1027,16 @@ function ReceiptDetailView({
         id: 'shipped',
         accessorFn: (i) => i.initialQty - i.currentQty,
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('items.columns.shipped')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.shipped')}
+          />
         ),
         cell: ({ row }) => {
           const item = row.original;
           const shipped = item.initialQty - item.currentQty;
           return (
-            <div className="text-right text-muted-foreground">
+            <div className="text-muted-foreground tabular-nums">
               {shipped > 0 ? shipped : '-'}
             </div>
           );
@@ -1109,12 +1093,10 @@ function ReceiptDetailView({
           return totalWeightKg;
         },
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('items.columns.totalWeight')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.totalWeight')}
+          />
         ),
         cell: ({ row }) => {
           const item = row.original;
@@ -1126,7 +1108,7 @@ function ReceiptDetailView({
               : undefined;
 
           return (
-            <div className="text-right text-muted-foreground">
+            <div className="text-muted-foreground tabular-nums">
               {totalWeightKg != null ? (
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
@@ -1169,12 +1151,10 @@ function ReceiptDetailView({
           return totalVolumeM3;
         },
         header: ({ column }) => (
-          <div className="flex justify-end">
-            <DataTableColumnHeader
-              column={column}
-              label={t('items.columns.totalVolume')}
-            />
-          </div>
+          <DataTableColumnHeader
+            column={column}
+            label={t('items.columns.totalVolume')}
+          />
         ),
         cell: ({ row }) => {
           const item = row.original;
@@ -1195,7 +1175,7 @@ function ReceiptDetailView({
               : undefined;
 
           return (
-            <div className="text-right text-muted-foreground">
+            <div className="text-muted-foreground tabular-nums">
               {totalVolumeM3 != null ? (
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
