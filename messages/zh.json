@@ -674,21 +674,21 @@
         "receiptList": {
           "title": "入库单列表",
           "description": "管理所有入库单据，点击查看详情",
-          "searchPlaceholder": "搜索入库单号 / 备注...",
+          "searchPlaceholder": "搜索工作号 / 备注...",
           "statusAll": "全部状态",
           "empty": "暂无入库单",
           "emptyHint": "点击右下角 + 按钮创建新的入库单",
           "error": "加载失败",
           "columns": {
-            "receiptNo": "入库单号",
+            "receiptNo": "工作号",
             "warehouse": "仓库",
             "customer": "客户",
             "transportType": "运输类型",
             "customsDeclarationType": "报关类型",
             "remarks": "备注",
-            "status": "状态",
+            "status": "审核状态",
             "createdAt": "创建时间",
-            "inboundTime": "入库时间"
+            "inboundTime": "入仓时间"
           }
         },
         "receipt": {
@@ -767,7 +767,7 @@
         "inboundTime": "入库时间",
         "remarks": "备注",
         "status": {
-          "label": "状态",
+          "label": "审核状态",
           "received": "已入库",
           "partial": "部分出库",
           "shipped": "已出库"
@@ -836,11 +836,11 @@
         "stats": {
           "title": "统计信息",
           "totalItems": "商品种类",
-          "totalInitialQty": "入库总量",
+          "totalInitialQty": "包装件数",
           "totalCurrentQty": "剩余库存",
           "totalShippedQty": "已出库",
-          "totalWeightKg": "总重量 (kg)",
-          "totalVolumeM3": "总体积 (m³)",
+          "totalWeightKg": "合计毛重",
+          "totalVolumeM3": "合计体积",
           "totalWeight": "总重量",
           "items": "件"
         },

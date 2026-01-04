@@ -428,10 +428,30 @@ function ReceiptListView({
         header: () => t('receiptList.columns.remarks'),
         cell: ({ row }) => {
           const receipt = row.original;
+          const remarks = receipt.remarks?.trim();
+          if (!remarks) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+
           return (
-            <div className="max-w-xs truncate text-muted-foreground">
-              {receipt.remarks || '-'}
-            </div>
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="max-w-xs truncate text-muted-foreground cursor-help underline decoration-dotted underline-offset-2 text-left"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {remarks}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={6}
+                className="max-w-[420px] whitespace-pre-wrap break-words"
+              >
+                {remarks}
+              </TooltipContent>
+            </Tooltip>
           );
         },
         meta: { label: t('receiptList.columns.remarks') },
@@ -649,13 +669,45 @@ function ReceiptListView({
     return cols;
   }, [t]);
 
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const defaultColumnOrder = useMemo(
+    () => [
+      // Match desired default list order
+      'customsDeclarationType',
+      'transportType',
+      'receiptNo',
+      'customer',
+      'status',
+      'totalInitialQty',
+      'inboundTime',
+      'totalVolume',
+      'totalWeight',
+      'remarks',
+      // Keep the rest at the end (hidden by default or less commonly used)
+      'warehouse',
+      'totalItems',
+      'totalCurrentQty',
+      'totalShippedQty',
+      'createdAt',
+    ],
+    []
+  );
+
+  const [columnOrder, setColumnOrder] = useState<string[]>(defaultColumnOrder);
+
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    warehouse: false,
+    createdAt: false,
+    totalItems: false,
+    totalCurrentQty: false,
+    totalShippedQty: false,
+  });
 
   const table = useReactTable({
     data,
     columns,
     state: {
       sorting: safeSorting,
+      columnOrder,
       columnVisibility,
       pagination: { pageIndex: page, pageSize: size },
     },
@@ -665,6 +717,7 @@ function ReceiptListView({
       const normalized = normalizeSorting(next);
       void setQueryStates({ sort: normalized, page: 0 }, { shallow: true });
     },
+    onColumnOrderChange: setColumnOrder,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: (updater) => {
       const next =
