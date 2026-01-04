@@ -227,6 +227,7 @@ export const freightWarehouseReceiptWithRelationsSchema =
   freightWarehouseReceiptSchema.extend({
     warehouse: freightWarehouseSchema.nullable().optional(),
     customer: freightPartySchema.nullable().optional(),
+    commodityNames: z.string().nullable().optional(),
     stats: z
       .object({
         totalItems: z.number().int(),

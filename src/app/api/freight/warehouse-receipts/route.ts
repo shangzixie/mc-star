@@ -25,6 +25,9 @@ export async function GET(request: Request) {
     const includeStats =
       url.searchParams.get('includeStats') === '1' ||
       url.searchParams.get('includeStats') === 'true';
+    const includeItemNames =
+      url.searchParams.get('includeItemNames') === '1' ||
+      url.searchParams.get('includeItemNames') === 'true';
     const dateFrom = url.searchParams.get('dateFrom');
     const dateTo = url.searchParams.get('dateTo');
     const sortBy = url.searchParams.get('sortBy') || 'createdAt';
@@ -94,6 +97,20 @@ export async function GET(request: Request) {
           .as('item_stats')
       : null;
 
+    const itemNamesSubquery = includeItemNames
+      ? db
+          .select({
+            receiptId: inventoryItems.receiptId,
+            commodityNames:
+              sql<string>`string_agg(nullif(trim(${inventoryItems.commodityName}), ''), '; ' ORDER BY ${inventoryItems.createdAt})`.as(
+                'commodity_names'
+              ),
+          })
+          .from(inventoryItems)
+          .groupBy(inventoryItems.receiptId)
+          .as('item_names')
+      : null;
+
     // Build query with joins
     const baseQuery = db
       .select({
@@ -133,6 +150,9 @@ export async function GET(request: Request) {
           createdAt: parties.createdAt,
           updatedAt: parties.updatedAt,
         },
+        ...(includeItemNames
+          ? { commodityNames: itemNamesSubquery!.commodityNames }
+          : {}),
         ...(includeStats
           ? {
               stats: {
@@ -149,13 +169,21 @@ export async function GET(request: Request) {
       .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
       .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id));
 
+    const queryWithItemNames =
+      includeItemNames && itemNamesSubquery
+        ? baseQuery.leftJoin(
+            itemNamesSubquery,
+            eq(itemNamesSubquery.receiptId, warehouseReceipts.id)
+          )
+        : baseQuery;
+
     const queryWithStats =
       includeStats && itemStatsSubquery
-        ? baseQuery.leftJoin(
+        ? queryWithItemNames.leftJoin(
             itemStatsSubquery,
             eq(itemStatsSubquery.receiptId, warehouseReceipts.id)
           )
-        : baseQuery;
+        : queryWithItemNames;
 
     const orderedQuery = queryWithStats.orderBy(
       sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn)

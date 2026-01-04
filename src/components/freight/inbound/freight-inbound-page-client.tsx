@@ -293,6 +293,7 @@ function ReceiptListView({
     q,
     status,
     includeStats: true,
+    includeItemNames: true,
   });
 
   const data = receiptsQuery.data ?? [];
@@ -476,6 +477,43 @@ function ReceiptListView({
         meta: { label: t('receiptList.columns.status') },
         minSize: 120,
         size: 140,
+      },
+      {
+        id: 'commodityNames',
+        accessorKey: 'commodityNames',
+        enableSorting: false,
+        header: () => t('receiptList.columns.commodityNames'),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          const value = receipt.commodityNames?.trim();
+          if (!value) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+
+          return (
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="w-[220px] text-left text-muted-foreground cursor-help underline decoration-dotted underline-offset-2 line-clamp-2 break-words"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {value}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={6}
+                className="max-w-[520px] whitespace-pre-wrap break-words"
+              >
+                {value}
+              </TooltipContent>
+            </Tooltip>
+          );
+        },
+        meta: { label: t('receiptList.columns.commodityNames') },
+        minSize: 220,
+        size: 260,
       },
       {
         id: 'totalItems',
@@ -667,6 +705,7 @@ function ReceiptListView({
       'receiptNo',
       'customer',
       'status',
+      'commodityNames',
       'totalInitialQty',
       'inboundTime',
       'totalVolume',

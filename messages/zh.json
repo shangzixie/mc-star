@@ -687,6 +687,7 @@
             "customsDeclarationType": "报关类型",
             "remarks": "备注",
             "status": "审核状态",
+            "commodityNames": "货物品名",
             "createdAt": "创建时间",
             "inboundTime": "入仓时间"
           }

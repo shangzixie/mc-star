@@ -687,6 +687,7 @@
             "customsDeclarationType": "Customs Declaration",
             "remarks": "Remarks",
             "status": "Status",
+            "commodityNames": "Commodity Names",
             "createdAt": "Created At",
             "inboundTime": "Inbound Time"
           }
