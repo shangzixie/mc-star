@@ -44,5 +44,3 @@ export async function GET(
     return jsonError(error as Error);
   }
 }
-
-

@@ -39,7 +39,9 @@ export function AllocationsDialog({
   itemName?: string;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
-  const allocationsQuery = useFreightInventoryItemAllocations(open ? itemId : '');
+  const allocationsQuery = useFreightInventoryItemAllocations(
+    open ? itemId : ''
+  );
   const rows = allocationsQuery.data ?? [];
 
   return (
@@ -149,5 +151,3 @@ export function AllocationsDialog({
     </Dialog>
   );
 }
-
-

@@ -16,6 +16,24 @@ export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number];
 export const RECEIPT_STATUSES = ['RECEIVED', 'SHIPPED', 'PARTIAL'] as const;
 export type ReceiptStatus = (typeof RECEIPT_STATUSES)[number];
 
+export const WAREHOUSE_RECEIPT_TRANSPORT_TYPES = [
+  'SEA_FCL',
+  'AIR_FREIGHT',
+  'SEA_LCL',
+  'DOMESTIC_TRANSPORT',
+  'WAREHOUSING',
+  'ROAD_FTL',
+  'ROAD_LTL',
+  'EXPRESS_LINEHAUL',
+  'FBA_SEA',
+  'FBA_AIR',
+  'FBA_RAIL',
+  'BULK_CARGO',
+  'RAIL_FREIGHT',
+] as const;
+export type WarehouseReceiptTransportType =
+  (typeof WAREHOUSE_RECEIPT_TRANSPORT_TYPES)[number];
+
 export const ALLOCATION_STATUSES = [
   'ALLOCATED',
   'PICKED',

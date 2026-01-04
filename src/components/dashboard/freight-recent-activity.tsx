@@ -14,9 +14,12 @@ import {
 import { useFreightShipments } from '@/hooks/freight/use-freight-shipments';
 import { useFreightWarehouseReceipts } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { format } from 'date-fns';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 export function FreightRecentActivity() {
+  const t = useTranslations('Dashboard.dashboard');
+  const locale = useLocale();
   const receiptsQuery = useFreightWarehouseReceipts({ q: '', status: '' });
   const shipmentsQuery = useFreightShipments({ q: '', status: '' });
 
@@ -27,9 +30,11 @@ export function FreightRecentActivity() {
     <div className="grid gap-4 px-4 lg:px-6 @xl/main:grid-cols-2">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent Inbound Receipts</CardTitle>
+          <CardTitle className="text-base">
+            {t('recent.receiptsTitle')}
+          </CardTitle>
           <Button asChild variant="outline" size="sm">
-            <Link href="/freight/inbound">View all</Link>
+            <Link href="/freight/inbound">{t('recent.viewAll')}</Link>
           </Button>
         </CardHeader>
         <CardContent className="pt-0">
@@ -44,16 +49,20 @@ export function FreightRecentActivity() {
               <Table>
                 <TableHeader className="bg-muted">
                   <TableRow>
-                    <TableHead>Receipt No</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Inbound</TableHead>
+                    <TableHead>
+                      {t('recent.receipts.columns.receiptNo')}
+                    </TableHead>
+                    <TableHead>{t('recent.receipts.columns.status')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('recent.receipts.columns.inboundTime')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {receipts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={3} className="h-24 text-center">
-                        No receipts yet.
+                        {t('recent.receipts.empty')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -67,9 +76,17 @@ export function FreightRecentActivity() {
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
                           {r.inboundTime
-                            ? format(new Date(r.inboundTime), 'MM-dd HH:mm')
+                            ? format(
+                                new Date(r.inboundTime),
+                                locale === 'zh' ? 'MM-dd HH:mm' : 'MMM dd HH:mm'
+                              )
                             : r.createdAt
-                              ? format(new Date(r.createdAt), 'MM-dd HH:mm')
+                              ? format(
+                                  new Date(r.createdAt),
+                                  locale === 'zh'
+                                    ? 'MM-dd HH:mm'
+                                    : 'MMM dd HH:mm'
+                                )
                               : '-'}
                         </TableCell>
                       </TableRow>
@@ -84,9 +101,11 @@ export function FreightRecentActivity() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent Shipments</CardTitle>
+          <CardTitle className="text-base">
+            {t('recent.shipmentsTitle')}
+          </CardTitle>
           <Button asChild variant="outline" size="sm">
-            <Link href="/freight/shipments">View all</Link>
+            <Link href="/freight/shipments">{t('recent.viewAll')}</Link>
           </Button>
         </CardHeader>
         <CardContent className="pt-0">
@@ -101,16 +120,20 @@ export function FreightRecentActivity() {
               <Table>
                 <TableHeader className="bg-muted">
                   <TableRow>
-                    <TableHead>Job No</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Created</TableHead>
+                    <TableHead>{t('recent.shipments.columns.jobNo')}</TableHead>
+                    <TableHead>
+                      {t('recent.shipments.columns.status')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('recent.shipments.columns.createdAt')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {shipments.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={3} className="h-24 text-center">
-                        No shipments yet.
+                        {t('recent.shipments.empty')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -122,7 +145,10 @@ export function FreightRecentActivity() {
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
                           {s.createdAt
-                            ? format(new Date(s.createdAt), 'MM-dd HH:mm')
+                            ? format(
+                                new Date(s.createdAt),
+                                locale === 'zh' ? 'MM-dd HH:mm' : 'MMM dd HH:mm'
+                              )
                             : '-'}
                         </TableCell>
                       </TableRow>
@@ -137,5 +163,3 @@ export function FreightRecentActivity() {
     </div>
   );
 }
-
-

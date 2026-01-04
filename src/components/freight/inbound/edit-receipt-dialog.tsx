@@ -31,7 +31,10 @@ import { useFreightWarehouses } from '@/hooks/freight/use-freight-master-data';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type { FreightWarehouseReceipt } from '@/lib/freight/api-types';
-import { RECEIPT_STATUSES } from '@/lib/freight/constants';
+import {
+  RECEIPT_STATUSES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
+} from '@/lib/freight/constants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
@@ -43,6 +46,7 @@ import { z } from 'zod';
 const editReceiptSchema = z.object({
   warehouseId: z.string().optional(),
   customerId: z.string().optional(),
+  transportType: z.enum(WAREHOUSE_RECEIPT_TRANSPORT_TYPES).optional(),
   status: z.enum(RECEIPT_STATUSES).optional(),
   inboundTime: z.string().optional(),
   remarks: z.string().optional(),
@@ -72,6 +76,7 @@ export function EditReceiptDialog({
     defaultValues: {
       warehouseId: receipt.warehouseId ?? undefined,
       customerId: receipt.customerId ?? undefined,
+      transportType: receipt.transportType ?? undefined,
       status: receipt.status as 'RECEIVED' | 'SHIPPED' | 'PARTIAL',
       inboundTime: receipt.inboundTime
         ? format(new Date(receipt.inboundTime), "yyyy-MM-dd'T'HH:mm")
@@ -85,6 +90,7 @@ export function EditReceiptDialog({
     form.reset({
       warehouseId: receipt.warehouseId ?? undefined,
       customerId: receipt.customerId ?? undefined,
+      transportType: receipt.transportType ?? undefined,
       status: receipt.status as 'RECEIVED' | 'SHIPPED' | 'PARTIAL',
       inboundTime: receipt.inboundTime
         ? format(new Date(receipt.inboundTime), "yyyy-MM-dd'T'HH:mm")
@@ -207,6 +213,42 @@ export function EditReceiptDialog({
                         <SelectItem key={status} value={status}>
                           {t(
                             `Dashboard.freight.inbound.status.${status.toLowerCase()}` as any
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="transportType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('Dashboard.freight.inbound.transportType.label')}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            'Dashboard.freight.inbound.transportType.placeholder'
+                          )}
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+                        <SelectItem key={tt} value={tt}>
+                          {t(
+                            `Dashboard.freight.inbound.transportType.options.${tt}` as any
                           )}
                         </SelectItem>
                       ))}

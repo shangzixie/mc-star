@@ -5,6 +5,7 @@ import {
   RECEIPT_STATUSES,
   SHIPMENT_STATUSES,
   TRANSPORT_MODES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from './constants';
 
 export const uuidSchema = z.string().uuid();
@@ -47,6 +48,7 @@ export const createWarehouseReceiptSchema = z.object({
   receiptNo: z.string().min(1).max(30),
   warehouseId: uuidSchema.optional(),
   customerId: uuidSchema.optional(),
+  transportType: z.enum(WAREHOUSE_RECEIPT_TRANSPORT_TYPES).optional(),
   status: z.enum(RECEIPT_STATUSES).optional(),
   inboundTime: z.string().datetime().optional(),
   remarks: z.string().optional(),

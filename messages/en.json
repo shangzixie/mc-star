@@ -524,12 +524,50 @@
         "last30d": "Last 30d",
         "reserved": "Reserved",
         "loading": "Loading..."
+      },
+      "chart": {
+        "title": "Freight Flow",
+        "description": "Inbound and shipped quantities",
+        "descriptionShort": "Inbound vs shipped",
+        "legend": {
+          "inbound": "Inbound",
+          "shipped": "Shipped"
+        },
+        "range": {
+          "90d": "Last 3 months",
+          "30d": "Last 30 days",
+          "7d": "Last 7 days",
+          "ariaLabel": "Select time range"
+        }
+      },
+      "recent": {
+        "viewAll": "View all",
+        "receiptsTitle": "Recent Inbound Receipts",
+        "shipmentsTitle": "Recent Shipments",
+        "receipts": {
+          "empty": "No receipts yet.",
+          "columns": {
+            "receiptNo": "Receipt No",
+            "status": "Status",
+            "inboundTime": "Inbound"
+          }
+        },
+        "shipments": {
+          "empty": "No shipments yet.",
+          "columns": {
+            "jobNo": "Job No",
+            "status": "Status",
+            "createdAt": "Created"
+          }
+        }
       }
     },
     "admin": {
       "title": "Admin",
+      "description": "Admin-only functions for managing users and system settings",
       "users": {
         "title": "Users",
+        "description": "Manage users, invite new users, and control access",
         "fakeData": "Note: Faked data for demonstration, some features are disabled",
         "error": "Failed to get users",
         "search": "Search users...",
@@ -601,6 +639,25 @@
       "title": "Freight",
       "inbound": {
         "title": "Inbound",
+        "transportType": {
+          "label": "Transport Type",
+          "placeholder": "Select transport type (optional)",
+          "options": {
+            "SEA_FCL": "Sea (FCL)",
+            "AIR_FREIGHT": "Air Freight",
+            "SEA_LCL": "Sea (LCL)",
+            "DOMESTIC_TRANSPORT": "Domestic Transport",
+            "WAREHOUSING": "Warehousing",
+            "ROAD_FTL": "Road (FTL)",
+            "ROAD_LTL": "Road (LTL)",
+            "EXPRESS_LINEHAUL": "Express / Dedicated Line",
+            "FBA_SEA": "FBA Sea",
+            "FBA_AIR": "FBA Air",
+            "FBA_RAIL": "FBA Rail",
+            "BULK_CARGO": "Bulk Cargo Vessel",
+            "RAIL_FREIGHT": "Rail Freight"
+          }
+        },
         "tabs": {
           "selectReceipt": "Select/Create Receipt",
           "manageItems": "Manage Items"

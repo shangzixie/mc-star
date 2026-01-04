@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useDashboardFreightMetrics } from '@/hooks/dashboard/use-dashboard-freight-metrics';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardFreightMetrics } from '@/hooks/dashboard/use-dashboard-freight-metrics';
 import { useTranslations } from 'next-intl';
 
 export function SectionCards() {
@@ -43,9 +43,7 @@ export function SectionCards() {
           <div className="line-clamp-1 flex gap-2 font-medium">
             {t('cards.receiptsHint')} <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">
-            {t('cards.receiptsSub')}
-          </div>
+          <div className="text-muted-foreground">{t('cards.receiptsSub')}</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -69,9 +67,7 @@ export function SectionCards() {
           <div className="line-clamp-1 flex gap-2 font-medium">
             {t('cards.inboundHint')} <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">
-            {t('cards.inboundSub')}
-          </div>
+          <div className="text-muted-foreground">{t('cards.inboundSub')}</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -128,7 +124,9 @@ export function SectionCards() {
           <div className="line-clamp-1 flex gap-2 font-medium">
             {t('cards.currentStockHint')} <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">{t('cards.currentStockSub')}</div>
+          <div className="text-muted-foreground">
+            {t('cards.currentStockSub')}
+          </div>
         </CardFooter>
       </Card>
     </div>

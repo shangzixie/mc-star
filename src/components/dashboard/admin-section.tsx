@@ -34,9 +34,7 @@ export function AdminSection() {
             <ShieldCheckIcon className="size-5 text-primary" />
             <CardTitle>{t('admin.title')}</CardTitle>
           </div>
-          <CardDescription>
-            Admin-only functions for managing users and system settings
-          </CardDescription>
+          <CardDescription>{t('admin.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -50,7 +48,7 @@ export function AdminSection() {
                     </CardTitle>
                   </div>
                   <CardDescription className="text-sm">
-                    Manage users, invite new users, and control access
+                    {t('admin.users.description')}
                   </CardDescription>
                 </CardHeader>
               </Card>

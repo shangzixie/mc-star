@@ -147,6 +147,7 @@ export async function updateWarehouseReceipt(
   data: {
     warehouseId?: string;
     customerId?: string;
+    transportType?: string;
     status?: string;
     inboundTime?: string;
     remarks?: string;

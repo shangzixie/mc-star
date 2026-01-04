@@ -17,9 +17,11 @@ export async function GET(request: Request) {
     await requireUser(request);
     const db = await getDb();
 
-    const [receiptTotals] = await db.select({
-      receiptsCount: sql<number>`count(*)::int`,
-    }).from(warehouseReceipts);
+    const [receiptTotals] = await db
+      .select({
+        receiptsCount: sql<number>`count(*)::int`,
+      })
+      .from(warehouseReceipts);
 
     const [inventoryTotals] = await db
       .select({
@@ -111,5 +113,3 @@ export async function GET(request: Request) {
     return jsonError(error as Error);
   }
 }
-
-

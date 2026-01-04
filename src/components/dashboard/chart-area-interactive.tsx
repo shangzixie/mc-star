@@ -24,22 +24,14 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDashboardFreightMetrics } from '@/hooks/dashboard/use-dashboard-freight-metrics';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLocale, useTranslations } from 'next-intl';
 import * as React from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
-const chartConfig = {
-  inbound: {
-    label: 'Inbound',
-    color: 'var(--primary)',
-  },
-  shipped: {
-    label: 'Shipped',
-    color: 'var(--muted-foreground)',
-  },
-} satisfies ChartConfig;
-
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile();
+  const t = useTranslations('Dashboard.dashboard');
+  const locale = useLocale();
   const [timeRange, setTimeRange] = React.useState('90d');
   const metricsQuery = useDashboardFreightMetrics();
 
@@ -57,15 +49,30 @@ export function ChartAreaInteractive() {
     shipped: d.shippedQty,
   }));
 
+  const chartConfig = {
+    inbound: {
+      label: t('chart.legend.inbound'),
+      color: 'var(--primary)',
+    },
+    shipped: {
+      label: t('chart.legend.shipped'),
+      color: 'var(--muted-foreground)',
+    },
+  } satisfies ChartConfig;
+
+  const dateLocale = locale === 'zh' ? 'zh-CN' : 'en-US';
+
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Freight Flow</CardTitle>
+        <CardTitle>{t('chart.title')}</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Inbound and shipped quantities
+            {t('chart.description')}
           </span>
-          <span className="@[540px]/card:hidden">Inbound vs shipped</span>
+          <span className="@[540px]/card:hidden">
+            {t('chart.descriptionShort')}
+          </span>
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -75,27 +82,31 @@ export function ChartAreaInteractive() {
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
           >
-            <ToggleGroupItem value="90d">Last 3 months</ToggleGroupItem>
-            <ToggleGroupItem value="30d">Last 30 days</ToggleGroupItem>
-            <ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
+            <ToggleGroupItem value="90d">
+              {t('chart.range.90d')}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="30d">
+              {t('chart.range.30d')}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="7d">{t('chart.range.7d')}</ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
               className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
-              aria-label="Select a value"
+              aria-label={t('chart.range.ariaLabel')}
             >
-              <SelectValue placeholder="Last 3 months" />
+              <SelectValue placeholder={t('chart.range.90d')} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="90d" className="rounded-lg">
-                Last 3 months
+                {t('chart.range.90d')}
               </SelectItem>
               <SelectItem value="30d" className="rounded-lg">
-                Last 30 days
+                {t('chart.range.30d')}
               </SelectItem>
               <SelectItem value="7d" className="rounded-lg">
-                Last 7 days
+                {t('chart.range.7d')}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -142,7 +153,7 @@ export function ChartAreaInteractive() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString('en-US', {
+                return date.toLocaleDateString(dateLocale, {
                   month: 'short',
                   day: 'numeric',
                 });
@@ -154,7 +165,7 @@ export function ChartAreaInteractive() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
+                    return new Date(value).toLocaleDateString(dateLocale, {
                       month: 'short',
                       day: 'numeric',
                     });

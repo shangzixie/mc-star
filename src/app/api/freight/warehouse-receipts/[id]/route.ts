@@ -42,6 +42,7 @@ export async function GET(
         receiptNo: warehouseReceipts.receiptNo,
         warehouseId: warehouseReceipts.warehouseId,
         customerId: warehouseReceipts.customerId,
+        transportType: warehouseReceipts.transportType,
         status: warehouseReceipts.status,
         inboundTime: warehouseReceipts.inboundTime,
         remarks: warehouseReceipts.remarks,
@@ -112,6 +113,7 @@ export async function PATCH(
         .set({
           warehouseId: body.warehouseId,
           customerId: body.customerId,
+          transportType: body.transportType,
           status: body.status,
           inboundTime: body.inboundTime
             ? new Date(body.inboundTime)

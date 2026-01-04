@@ -74,7 +74,11 @@ import type {
   FreightWarehouseReceipt,
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
-import { PACKAGING_UNITS, RECEIPT_STATUSES } from '@/lib/freight/constants';
+import {
+  PACKAGING_UNITS,
+  RECEIPT_STATUSES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
+} from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
 import {
   addInventoryItemSchema,
@@ -126,6 +130,7 @@ const receiptFormSchema = z.object({
   receiptNo: z.string().min(1).max(30),
   warehouseId: z.string().optional(),
   customerId: z.string().optional(),
+  transportType: z.string().optional(),
   remarks: z.string().optional(),
 });
 
@@ -1074,7 +1079,7 @@ function ReceiptDetailView({
       </div>
 
       {/* Receipt Info Card */}
-      <div className="grid gap-4 md:grid-cols-4 rounded-lg border bg-card p-4">
+      <div className="grid gap-4 md:grid-cols-5 rounded-lg border bg-card p-4">
         <div>
           <div className="text-muted-foreground text-xs font-medium uppercase">
             {t('receipt.fields.warehouse')}
@@ -1089,6 +1094,16 @@ function ReceiptDetailView({
           </div>
           <div className="mt-1 font-medium">
             {receipt.customer?.nameCn ?? '-'}
+          </div>
+        </div>
+        <div>
+          <div className="text-muted-foreground text-xs font-medium uppercase">
+            {t('transportType.label')}
+          </div>
+          <div className="mt-1 font-medium">
+            {receipt.transportType
+              ? t(`transportType.options.${receipt.transportType}` as any)
+              : '-'}
           </div>
         </div>
         <div>
@@ -1336,6 +1351,7 @@ function CreateReceiptDialog({
       receiptNo: '',
       warehouseId: undefined,
       customerId: undefined,
+      transportType: undefined,
       remarks: '',
     },
   });
@@ -1346,6 +1362,7 @@ function CreateReceiptDialog({
         receiptNo: values.receiptNo.trim(),
         warehouseId: values.warehouseId || undefined,
         customerId: values.customerId || undefined,
+        transportType: values.transportType || undefined,
         remarks: values.remarks?.trim() || undefined,
       });
 
@@ -1423,6 +1440,22 @@ function CreateReceiptDialog({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="transportType">{t('transportType.label')}</Label>
+            <select
+              id="transportType"
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+              {...form.register('transportType')}
+            >
+              <option value="">{t('transportType.placeholder')}</option>
+              {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+                <option key={tt} value={tt}>
+                  {t(`transportType.options.${tt}` as any)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
@@ -1765,7 +1798,9 @@ export function FreightInboundPageClient() {
   const [deleteError, setDeleteError] = useState<string>('');
 
   const t = useTranslations();
-  const receiptDetailQuery = useFreightWarehouseReceipt(selectedReceiptId ?? '');
+  const receiptDetailQuery = useFreightWarehouseReceipt(
+    selectedReceiptId ?? ''
+  );
   const selectedReceipt = receiptDetailQuery.data ?? null;
   const deleteReceiptMutation = useDeleteFreightWarehouseReceipt(
     selectedReceiptId ?? ''
@@ -1832,7 +1867,9 @@ export function FreightInboundPageClient() {
         <div className="py-12">
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>{t('Dashboard.freight.inbound.receiptList.error')}</EmptyTitle>
+              <EmptyTitle>
+                {t('Dashboard.freight.inbound.receiptList.error')}
+              </EmptyTitle>
               <EmptyDescription>
                 {receiptDetailQuery.error
                   ? getFreightApiErrorMessage(receiptDetailQuery.error)

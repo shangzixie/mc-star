@@ -12,3 +12,5 @@ COMMENT ON COLUMN "inventory_items"."weight_per_unit" IS '单件重量(kg)';
 
 
 
+
+

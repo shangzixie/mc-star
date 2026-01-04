@@ -524,12 +524,50 @@
         "last30d": "近30天",
         "reserved": "占用",
         "loading": "加载中..."
+      },
+      "chart": {
+        "title": "货代流量",
+        "description": "入库与出库数量趋势",
+        "descriptionShort": "入库 vs 出库",
+        "legend": {
+          "inbound": "入库",
+          "shipped": "出库"
+        },
+        "range": {
+          "90d": "近3个月",
+          "30d": "近30天",
+          "7d": "近7天",
+          "ariaLabel": "选择时间范围"
+        }
+      },
+      "recent": {
+        "viewAll": "查看全部",
+        "receiptsTitle": "最近入库单",
+        "shipmentsTitle": "最近运单",
+        "receipts": {
+          "empty": "暂无入库单",
+          "columns": {
+            "receiptNo": "入库单号",
+            "status": "状态",
+            "inboundTime": "入库时间"
+          }
+        },
+        "shipments": {
+          "empty": "暂无运单",
+          "columns": {
+            "jobNo": "业务单号",
+            "status": "状态",
+            "createdAt": "创建时间"
+          }
+        }
       }
     },
     "admin": {
       "title": "系统管理",
+      "description": "仅管理员可见：管理用户与系统设置",
       "users": {
         "title": "用户管理",
+        "description": "管理用户、邀请新用户并控制访问权限",
         "fakeData": "注：只为演示功能，数据为假数据，封禁功能不可用",
         "error": "获取用户失败",
         "search": "搜索用户...",
@@ -601,6 +639,25 @@
       "title": "货代",
       "inbound": {
         "title": "入库",
+        "transportType": {
+          "label": "运输类型",
+          "placeholder": "选择运输类型（可选）",
+          "options": {
+            "SEA_FCL": "海运整柜",
+            "AIR_FREIGHT": "航空货运",
+            "SEA_LCL": "海运拼箱",
+            "DOMESTIC_TRANSPORT": "内贸运输",
+            "WAREHOUSING": "仓储服务",
+            "ROAD_FTL": "陆路运输（整车）",
+            "ROAD_LTL": "陆路运输（拼车）",
+            "EXPRESS_LINEHAUL": "快递/专线",
+            "FBA_SEA": "FBA海运",
+            "FBA_AIR": "FBA空运",
+            "FBA_RAIL": "FBA铁路",
+            "BULK_CARGO": "散杂货船",
+            "RAIL_FREIGHT": "铁路运输"
+          }
+        },
         "tabs": {
           "selectReceipt": "选择/创建入库单",
           "manageItems": "录入明细"

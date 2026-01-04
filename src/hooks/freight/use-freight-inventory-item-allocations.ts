@@ -23,5 +23,3 @@ export function useFreightInventoryItemAllocations(itemId: string) {
       }),
   });
 }
-
-

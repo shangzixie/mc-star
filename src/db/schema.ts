@@ -5,6 +5,7 @@ import {
   integer,
   jsonb,
   numeric,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -155,6 +156,25 @@ export const creditTransaction = pgTable("credit_transaction", {
 // Freight Forwarding / Warehouse outbound-loading relations (scripts/build_relations.sql)
 // -----------------------------------------------------------------------------
 
+export const warehouseReceiptTransportType = pgEnum(
+  'warehouse_receipt_transport_type',
+  [
+    'SEA_FCL',
+    'AIR_FREIGHT',
+    'SEA_LCL',
+    'DOMESTIC_TRANSPORT',
+    'WAREHOUSING',
+    'ROAD_FTL',
+    'ROAD_LTL',
+    'EXPRESS_LINEHAUL',
+    'FBA_SEA',
+    'FBA_AIR',
+    'FBA_RAIL',
+    'BULK_CARGO',
+    'RAIL_FREIGHT',
+  ]
+);
+
 export const parties = pgTable(
   'parties',
   {
@@ -218,6 +238,7 @@ export const warehouseReceipts = pgTable(
     receiptNo: varchar('receipt_no', { length: 30 }).notNull().unique(),
     warehouseId: uuid('warehouse_id').references(() => warehouses.id),
     customerId: uuid('customer_id').references(() => parties.id),
+    transportType: warehouseReceiptTransportType('transport_type'),
     status: varchar('status', { length: 20 }).notNull().default('RECEIVED'),
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),
