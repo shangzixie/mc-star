@@ -128,6 +128,7 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       warehouseId?: string;
       customerId?: string;
       transportType?: string;
+      customsDeclarationType?: string;
       status?: string;
       inboundTime?: string;
       remarks?: string;

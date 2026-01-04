@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { WAREHOUSE_RECEIPT_TRANSPORT_TYPES } from './constants';
+import {
+  WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
+} from './constants';
 import { uuidSchema } from './schemas';
 
 // -----------------------------------------------------------------------------
@@ -152,6 +155,9 @@ export const freightWarehouseReceiptSchema = z
     warehouseId: uuidSchema.nullable(),
     customerId: uuidSchema.nullable(),
     transportType: z.enum(WAREHOUSE_RECEIPT_TRANSPORT_TYPES).nullable(),
+    customsDeclarationType: z
+      .enum(WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES)
+      .nullable(),
     status: z.string(),
     inboundTime: isoDateTimeSchema.nullable(),
     remarks: z.string().nullable(),

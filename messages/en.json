@@ -658,6 +658,15 @@
             "RAIL_FREIGHT": "Rail Freight"
           }
         },
+        "customsDeclarationType": {
+          "label": "Customs Declaration",
+          "placeholder": "Select customs declaration type (optional)",
+          "options": {
+            "NO_DECLARATION": "No Declaration",
+            "BUY_ORDER": "Buy Order",
+            "FORMAL_DECLARATION": "Formal Declaration"
+          }
+        },
         "tabs": {
           "selectReceipt": "Select/Create Receipt",
           "manageItems": "Manage Items"

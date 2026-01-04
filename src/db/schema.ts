@@ -189,6 +189,19 @@ export const warehouseReceiptTransportType = pgEnum(
   ]
 );
 
+export const warehouseReceiptCustomsDeclarationType = pgEnum(
+  'warehouse_receipt_customs_declaration_type',
+  [
+    // 报关类型（存储英文枚举码；UI 通过 i18n 显示中文）
+    // NO_DECLARATION: 不报关
+    // BUY_ORDER: 买单
+    // FORMAL_DECLARATION: 正报
+    'NO_DECLARATION',
+    'BUY_ORDER',
+    'FORMAL_DECLARATION',
+  ]
+);
+
 export const parties = pgTable(
   'parties',
   {
@@ -253,6 +266,11 @@ export const warehouseReceipts = pgTable(
     warehouseId: uuid('warehouse_id').references(() => warehouses.id),
     customerId: uuid('customer_id').references(() => parties.id),
     transportType: warehouseReceiptTransportType('transport_type'),
+    customsDeclarationType: warehouseReceiptCustomsDeclarationType(
+      'customs_declaration_type'
+    )
+      .notNull()
+      .default('NO_DECLARATION'),
     status: varchar('status', { length: 20 }).notNull().default('RECEIVED'),
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),

@@ -34,6 +34,14 @@ export const WAREHOUSE_RECEIPT_TRANSPORT_TYPES = [
 export type WarehouseReceiptTransportType =
   (typeof WAREHOUSE_RECEIPT_TRANSPORT_TYPES)[number];
 
+export const WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES = [
+  'NO_DECLARATION',
+  'BUY_ORDER',
+  'FORMAL_DECLARATION',
+] as const;
+export type WarehouseReceiptCustomsDeclarationType =
+  (typeof WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES)[number];
+
 export const ALLOCATION_STATUSES = [
   'ALLOCATED',
   'PICKED',

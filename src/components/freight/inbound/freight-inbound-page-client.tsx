@@ -77,6 +77,7 @@ import type {
 import {
   PACKAGING_UNITS,
   RECEIPT_STATUSES,
+  WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
@@ -131,6 +132,7 @@ const receiptFormSchema = z.object({
   warehouseId: z.string().optional(),
   customerId: z.string().optional(),
   transportType: z.string().optional(),
+  customsDeclarationType: z.string().optional(),
   remarks: z.string().optional(),
 });
 
@@ -1352,6 +1354,7 @@ function CreateReceiptDialog({
       warehouseId: undefined,
       customerId: undefined,
       transportType: undefined,
+      customsDeclarationType: undefined,
       remarks: '',
     },
   });
@@ -1363,6 +1366,7 @@ function CreateReceiptDialog({
         warehouseId: values.warehouseId || undefined,
         customerId: values.customerId || undefined,
         transportType: values.transportType || undefined,
+        customsDeclarationType: values.customsDeclarationType || undefined,
         remarks: values.remarks?.trim() || undefined,
       });
 
@@ -1453,6 +1457,24 @@ function CreateReceiptDialog({
               {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
                 <option key={tt} value={tt}>
                   {t(`transportType.options.${tt}` as any)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customsDeclarationType">
+              {t('customsDeclarationType.label')}
+            </Label>
+            <select
+              id="customsDeclarationType"
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+              {...form.register('customsDeclarationType')}
+            >
+              <option value="">{t('customsDeclarationType.placeholder')}</option>
+              {WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES.map((ct) => (
+                <option key={ct} value={ct}>
+                  {t(`customsDeclarationType.options.${ct}` as any)}
                 </option>
               ))}
             </select>

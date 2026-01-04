@@ -148,6 +148,7 @@ export async function updateWarehouseReceipt(
     warehouseId?: string;
     customerId?: string;
     transportType?: string;
+    customsDeclarationType?: string;
     status?: string;
     inboundTime?: string;
     remarks?: string;

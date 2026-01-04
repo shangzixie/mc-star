@@ -43,6 +43,7 @@ export async function GET(
         warehouseId: warehouseReceipts.warehouseId,
         customerId: warehouseReceipts.customerId,
         transportType: warehouseReceipts.transportType,
+        customsDeclarationType: warehouseReceipts.customsDeclarationType,
         status: warehouseReceipts.status,
         inboundTime: warehouseReceipts.inboundTime,
         remarks: warehouseReceipts.remarks,
@@ -114,6 +115,7 @@ export async function PATCH(
           warehouseId: body.warehouseId,
           customerId: body.customerId,
           transportType: body.transportType,
+          customsDeclarationType: body.customsDeclarationType,
           status: body.status,
           inboundTime: body.inboundTime
             ? new Date(body.inboundTime)

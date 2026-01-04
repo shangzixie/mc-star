@@ -658,6 +658,15 @@
             "RAIL_FREIGHT": "铁路运输"
           }
         },
+        "customsDeclarationType": {
+          "label": "报关类型",
+          "placeholder": "选择报关类型（可选）",
+          "options": {
+            "NO_DECLARATION": "不报关",
+            "BUY_ORDER": "买单",
+            "FORMAL_DECLARATION": "正报"
+          }
+        },
         "tabs": {
           "selectReceipt": "选择/创建入库单",
           "manageItems": "录入明细"
