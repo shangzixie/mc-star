@@ -159,6 +159,20 @@ export const creditTransaction = pgTable("credit_transaction", {
 export const warehouseReceiptTransportType = pgEnum(
   'warehouse_receipt_transport_type',
   [
+    // 运输类型（存储英文枚举码；UI 通过 i18n 显示中文）
+    // SEA_FCL: 海运整柜
+    // AIR_FREIGHT: 航空货运
+    // SEA_LCL: 海运拼箱
+    // DOMESTIC_TRANSPORT: 内贸运输
+    // WAREHOUSING: 仓储服务
+    // ROAD_FTL: 陆路运输（整车）
+    // ROAD_LTL: 陆路运输（拼车）
+    // EXPRESS_LINEHAUL: 快递/专线
+    // FBA_SEA: FBA海运
+    // FBA_AIR: FBA空运
+    // FBA_RAIL: FBA铁路
+    // BULK_CARGO: 散杂货船
+    // RAIL_FREIGHT: 铁路运输
     'SEA_FCL',
     'AIR_FREIGHT',
     'SEA_LCL',
