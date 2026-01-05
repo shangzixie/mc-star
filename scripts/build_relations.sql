@@ -92,14 +92,49 @@ EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
 --
+-- 运输类型枚举（存储英文枚举码；UI 通过 i18n 显示中文）
+-- SEA_FCL: 海运整柜
+-- AIR_FREIGHT: 航空货运
+-- SEA_LCL: 海运拼箱
+-- DOMESTIC_TRANSPORT: 内贸运输
+-- WAREHOUSING: 仓储服务
+-- ROAD_FTL: 陆路运输（整车）
+-- ROAD_LTL: 陆路运输（拼车）
+-- EXPRESS_LINEHAUL: 快递/专线
+-- FBA_SEA: FBA海运
+-- FBA_AIR: FBA空运
+-- FBA_RAIL: FBA铁路
+-- BULK_CARGO: 散杂货船
+-- RAIL_FREIGHT: 铁路运输
+DO $$ BEGIN
+  CREATE TYPE warehouse_receipt_transport_type AS ENUM (
+    'SEA_FCL',
+    'AIR_FREIGHT',
+    'SEA_LCL',
+    'DOMESTIC_TRANSPORT',
+    'WAREHOUSING',
+    'ROAD_FTL',
+    'ROAD_LTL',
+    'EXPRESS_LINEHAUL',
+    'FBA_SEA',
+    'FBA_AIR',
+    'FBA_RAIL',
+    'BULK_CARGO',
+    'RAIL_FREIGHT'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+--
 CREATE TABLE warehouse_receipts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_no VARCHAR(30) UNIQUE NOT NULL, -- 入库单号 (如 WHR20251201), 收据单右上方
     warehouse_id UUID REFERENCES warehouses(id),
     customer_id UUID REFERENCES parties(id), -- 货主
 
+    transport_type warehouse_receipt_transport_type, -- 运输类型
     customs_declaration_type warehouse_receipt_customs_declaration_type DEFAULT 'NO_DECLARATION', -- 报关类型：不报关/买单/正报
-    status VARCHAR(20) DEFAULT 'RECEIVED', -- RECEIVED (已入库), SHIPPED (已出库), PARTIAL (部分发货)
+    status VARCHAR(20) NOT NULL DEFAULT 'RECEIVED', -- RECEIVED (已入库), SHIPPED (已出库), PARTIAL (部分发货)
     inbound_time TIMESTAMPTZ DEFAULT NOW(),
 
     remarks TEXT, -- 打印时候给顾客看到的
