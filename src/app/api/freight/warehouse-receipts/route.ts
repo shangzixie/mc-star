@@ -53,6 +53,7 @@ export async function GET(request: Request) {
         ? or(
             ilike(warehouseReceipts.receiptNo, `%${q}%`),
             ilike(warehouseReceipts.remarks, `%${q}%`),
+            ilike(warehouseReceipts.internalRemarks, `%${q}%`),
             // allow searching warehouse / customer names
             ilike(warehouses.name, `%${q}%`),
             ilike(parties.nameCn, `%${q}%`),
@@ -123,6 +124,7 @@ export async function GET(request: Request) {
         status: warehouseReceipts.status,
         inboundTime: warehouseReceipts.inboundTime,
         remarks: warehouseReceipts.remarks,
+        internalRemarks: warehouseReceipts.internalRemarks,
         createdAt: warehouseReceipts.createdAt,
         warehouse: {
           id: warehouses.id,
@@ -217,6 +219,7 @@ export async function POST(request: Request) {
         status: body.status ?? 'RECEIVED',
         inboundTime: body.inboundTime ? new Date(body.inboundTime) : undefined,
         remarks: body.remarks,
+        internalRemarks: body.internalRemarks,
       })
       .returning();
 

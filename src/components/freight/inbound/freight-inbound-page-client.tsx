@@ -134,6 +134,7 @@ const receiptFormSchema = z.object({
   transportType: z.string().optional(),
   customsDeclarationType: z.string().optional(),
   remarks: z.string().optional(),
+  internalRemarks: z.string().optional(),
 });
 
 type ReceiptFormValues = z.infer<typeof receiptFormSchema>;
@@ -462,6 +463,43 @@ function ReceiptListView({
         size: 150,
       },
       {
+        id: 'internalRemarks',
+        accessorKey: 'internalRemarks',
+        enableSorting: false,
+        header: () => t('receiptList.columns.internalRemarks'),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          const remarks = receipt.internalRemarks?.trim();
+          if (!remarks) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+
+          return (
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="w-[140px] text-left text-muted-foreground cursor-help underline decoration-dotted underline-offset-2 line-clamp-2 break-words"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {remarks}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={6}
+                className="max-w-[420px] whitespace-pre-wrap break-words"
+              >
+                {remarks}
+              </TooltipContent>
+            </Tooltip>
+          );
+        },
+        meta: { label: t('receiptList.columns.internalRemarks') },
+        minSize: 130,
+        size: 150,
+      },
+      {
         id: 'status',
         accessorKey: 'status',
         header: ({ column }) => (
@@ -711,6 +749,7 @@ function ReceiptListView({
       'totalVolume',
       'totalWeight',
       'remarks',
+      'internalRemarks',
       // Keep the rest at the end (hidden by default or less commonly used)
       'warehouse',
       'totalItems',
@@ -1625,6 +1664,7 @@ function CreateReceiptDialog({
       transportType: undefined,
       customsDeclarationType: undefined,
       remarks: '',
+      internalRemarks: '',
     },
   });
 
@@ -1637,6 +1677,7 @@ function CreateReceiptDialog({
         transportType: values.transportType || undefined,
         customsDeclarationType: values.customsDeclarationType || undefined,
         remarks: values.remarks?.trim() || undefined,
+        internalRemarks: values.internalRemarks?.trim() || undefined,
       });
 
       const created = await receiptMutation.mutateAsync(payload);
@@ -1758,6 +1799,18 @@ function CreateReceiptDialog({
               autoComplete="off"
               placeholder={t('receipt.fields.remarksPlaceholder')}
               {...form.register('remarks')}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="internalRemarks">
+              {t('receipt.fields.internalRemarks')}
+            </Label>
+            <Input
+              id="internalRemarks"
+              autoComplete="off"
+              placeholder={t('receipt.fields.internalRemarksPlaceholder')}
+              {...form.register('internalRemarks')}
             />
           </div>
 

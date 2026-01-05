@@ -686,6 +686,7 @@
             "transportType": "Transport Type",
             "customsDeclarationType": "Customs Declaration",
             "remarks": "Remarks",
+            "internalRemarks": "Internal Remarks",
             "status": "Status",
             "commodityNames": "Commodity Names",
             "createdAt": "Created At",
@@ -708,7 +709,9 @@
             "customer": "Customer",
             "customerPlaceholder": "Select customer (optional)",
             "remarks": "Remarks",
-            "remarksPlaceholder": "Enter remarks (optional)"
+            "remarksPlaceholder": "Enter remarks (optional)",
+            "internalRemarks": "Internal Remarks",
+            "internalRemarksPlaceholder": "Enter internal remarks (optional)"
           }
         },
         "items": {
@@ -767,6 +770,7 @@
         "selectCustomer": "Select customer",
         "inboundTime": "Inbound Time",
         "remarks": "Remarks",
+        "internalRemarks": "Internal Remarks",
         "status": {
           "label": "Status",
           "received": "Received",

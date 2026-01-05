@@ -161,6 +161,7 @@ export const freightWarehouseReceiptSchema = z
     status: z.string(),
     inboundTime: isoDateTimeSchema.nullable(),
     remarks: z.string().nullable(),
+    internalRemarks: z.string().nullable(),
     createdAt: isoDateTimeSchema.nullable(),
   })
   .passthrough();

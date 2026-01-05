@@ -152,6 +152,7 @@ export async function updateWarehouseReceipt(
     status?: string;
     inboundTime?: string;
     remarks?: string;
+    internalRemarks?: string;
   }
 ) {
   const { freightWarehouseReceiptSchema } = await import('./api-types');

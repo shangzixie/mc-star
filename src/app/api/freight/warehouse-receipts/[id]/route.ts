@@ -47,6 +47,7 @@ export async function GET(
         status: warehouseReceipts.status,
         inboundTime: warehouseReceipts.inboundTime,
         remarks: warehouseReceipts.remarks,
+        internalRemarks: warehouseReceipts.internalRemarks,
         createdAt: warehouseReceipts.createdAt,
         warehouse: {
           id: warehouses.id,
@@ -121,6 +122,7 @@ export async function PATCH(
             ? new Date(body.inboundTime)
             : undefined,
           remarks: body.remarks,
+          internalRemarks: body.internalRemarks,
         })
         .where(eq(warehouseReceipts.id, receiptId))
         .returning();

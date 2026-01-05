@@ -136,6 +136,7 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       status?: string;
       inboundTime?: string;
       remarks?: string;
+      internalRemarks?: string;
     }) => {
       const { updateWarehouseReceipt } = await import(
         '@/lib/freight/api-client'

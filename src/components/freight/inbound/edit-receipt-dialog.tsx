@@ -54,6 +54,7 @@ const editReceiptSchema = z.object({
   status: z.enum(RECEIPT_STATUSES).optional(),
   inboundTime: z.string().optional(),
   remarks: z.string().optional(),
+  internalRemarks: z.string().optional(),
 });
 
 type EditReceiptFormData = z.infer<typeof editReceiptSchema>;
@@ -87,6 +88,7 @@ export function EditReceiptDialog({
         ? format(new Date(receipt.inboundTime), "yyyy-MM-dd'T'HH:mm")
         : undefined,
       remarks: receipt.remarks ?? undefined,
+      internalRemarks: receipt.internalRemarks ?? undefined,
     },
   });
 
@@ -102,6 +104,7 @@ export function EditReceiptDialog({
         ? format(new Date(receipt.inboundTime), "yyyy-MM-dd'T'HH:mm")
         : undefined,
       remarks: receipt.remarks ?? undefined,
+      internalRemarks: receipt.internalRemarks ?? undefined,
     });
   }, [receipt, form]);
 
@@ -326,6 +329,22 @@ export function EditReceiptDialog({
                 <FormItem>
                   <FormLabel>
                     {t('Dashboard.freight.inbound.remarks')}
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea {...field} rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="internalRemarks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('Dashboard.freight.inbound.internalRemarks')}
                   </FormLabel>
                   <FormControl>
                     <Textarea {...field} rows={3} />

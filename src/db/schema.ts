@@ -272,6 +272,7 @@ export const warehouseReceipts = pgTable(
     status: varchar('status', { length: 20 }).notNull().default('RECEIVED'),
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),
+    internalRemarks: text('internal_remarks'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({

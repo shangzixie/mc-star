@@ -686,6 +686,7 @@
             "transportType": "运输类型",
             "customsDeclarationType": "报关类型",
             "remarks": "备注",
+            "internalRemarks": "内部备注",
             "status": "审核状态",
             "commodityNames": "货物品名",
             "createdAt": "创建时间",
@@ -708,7 +709,9 @@
             "customer": "客户",
             "customerPlaceholder": "选择客户（可选）",
             "remarks": "备注",
-            "remarksPlaceholder": "请输入备注信息（可选）"
+            "remarksPlaceholder": "请输入备注信息（可选）",
+            "internalRemarks": "内部备注",
+            "internalRemarksPlaceholder": "请输入内部备注（可选）"
           }
         },
         "items": {
@@ -767,6 +770,7 @@
         "selectCustomer": "选择客户",
         "inboundTime": "入库时间",
         "remarks": "备注",
+        "internalRemarks": "内部备注",
         "status": {
           "label": "审核状态",
           "received": "已入库",

@@ -102,7 +102,8 @@ CREATE TABLE warehouse_receipts (
     status VARCHAR(20) DEFAULT 'RECEIVED', -- RECEIVED (已入库), SHIPPED (已出库), PARTIAL (部分发货)
     inbound_time TIMESTAMPTZ DEFAULT NOW(),
 
-    remarks TEXT,
+    remarks TEXT, -- 打印时候给顾客看到的
+    internal_remarks TEXT, -- 内部自己看到的
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

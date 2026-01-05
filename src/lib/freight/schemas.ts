@@ -56,6 +56,7 @@ export const createWarehouseReceiptSchema = z.object({
   status: z.enum(RECEIPT_STATUSES).optional(),
   inboundTime: z.string().datetime().optional(),
   remarks: z.string().optional(),
+  internalRemarks: z.string().optional(),
 });
 
 export const addInventoryItemSchema = z.object({
