@@ -22,11 +22,9 @@ import type { FreightInventoryItem } from '@/lib/freight/api-types';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { AllocationsDialog } from './allocations-dialog';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
 import { EditItemDialog } from './edit-item-dialog';
 import { EditReceiptDialog } from './edit-receipt-dialog';
-import { InventoryMovementsDialog } from './inventory-movements-dialog';
 
 export function FreightInboundPageClient() {
   const [view, setView] = useState<'list' | 'detail'>('list');
@@ -41,8 +39,6 @@ export function FreightInboundPageClient() {
   const [editItemOpen, setEditItemOpen] = useState(false);
   const [deleteReceiptOpen, setDeleteReceiptOpen] = useState(false);
   const [deleteItemOpen, setDeleteItemOpen] = useState(false);
-  const [movementsOpen, setMovementsOpen] = useState(false);
-  const [allocationsOpen, setAllocationsOpen] = useState(false);
   const [changeStatusOpen, setChangeStatusOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FreightInventoryItem | null>(
     null
@@ -115,14 +111,6 @@ export function FreightInboundPageClient() {
           onDeleteItem={(item) => {
             setSelectedItem(item);
             setDeleteItemOpen(true);
-          }}
-          onViewMovements={(item) => {
-            setSelectedItem(item);
-            setMovementsOpen(true);
-          }}
-          onViewAllocations={(item) => {
-            setSelectedItem(item);
-            setAllocationsOpen(true);
           }}
         />
       ) : (
@@ -221,28 +209,6 @@ export function FreightInboundPageClient() {
               throw error;
             }
           }}
-        />
-      )}
-
-      {selectedItem && (
-        <InventoryMovementsDialog
-          open={movementsOpen}
-          onOpenChange={setMovementsOpen}
-          itemId={selectedItem.id}
-          itemName={
-            selectedItem.commodityName || selectedItem.skuCode || undefined
-          }
-        />
-      )}
-
-      {selectedItem && (
-        <AllocationsDialog
-          open={allocationsOpen}
-          onOpenChange={setAllocationsOpen}
-          itemId={selectedItem.id}
-          itemName={
-            selectedItem.commodityName || selectedItem.skuCode || undefined
-          }
         />
       )}
 
