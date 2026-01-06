@@ -639,6 +639,12 @@
       "title": "货代",
       "inbound": {
         "title": "入库",
+        "receiptWizard": {
+          "validation": {
+            "receiptNoRequired": "请输入入库单号",
+            "transportTypeRequired": "请选择运输类型"
+          }
+        },
         "transportType": {
           "label": "运输类型",
           "placeholder": "选择运输类型（可选）",

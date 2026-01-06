@@ -20,7 +20,7 @@ import {
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type { FreightInventoryItem } from '@/lib/freight/api-types';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AllocationsDialog } from './allocations-dialog';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
@@ -37,6 +37,7 @@ export function FreightInboundPageClient() {
   const [addItemDialogOpen, setAddItemDialogOpen] = useState(false);
 
   const [editReceiptOpen, setEditReceiptOpen] = useState(false);
+  const [autoOpenEditAfterCreate, setAutoOpenEditAfterCreate] = useState(false);
   const [editItemOpen, setEditItemOpen] = useState(false);
   const [deleteReceiptOpen, setDeleteReceiptOpen] = useState(false);
   const [deleteItemOpen, setDeleteItemOpen] = useState(false);
@@ -70,12 +71,21 @@ export function FreightInboundPageClient() {
   const handleCreateSuccess = (receiptId: string) => {
     setSelectedReceiptId(receiptId);
     setView('detail');
+    setAutoOpenEditAfterCreate(true);
   };
 
   const handleBack = () => {
     setView('list');
     setSelectedReceiptId(null);
+    setAutoOpenEditAfterCreate(false);
   };
+
+  useEffect(() => {
+    if (autoOpenEditAfterCreate && selectedReceipt) {
+      setEditReceiptOpen(true);
+      setAutoOpenEditAfterCreate(false);
+    }
+  }, [autoOpenEditAfterCreate, selectedReceipt]);
 
   return (
     <div className="px-4 py-6 lg:px-6">

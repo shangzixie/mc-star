@@ -639,6 +639,12 @@
       "title": "Freight",
       "inbound": {
         "title": "Inbound",
+        "receiptWizard": {
+          "validation": {
+            "receiptNoRequired": "Please enter receipt number",
+            "transportTypeRequired": "Please select transport type"
+          }
+        },
         "transportType": {
           "label": "Transport Type",
           "placeholder": "Select transport type (optional)",
