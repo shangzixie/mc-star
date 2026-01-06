@@ -1,0 +1,619 @@
+'use client';
+
+import { FreightSection } from '@/components/freight/ui/freight-section';
+import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
+import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
+import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
+import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
+import type {
+  FreightInventoryItem,
+  FreightWarehouseReceiptWithRelations,
+} from '@/lib/freight/api-types';
+import {
+  RECEIPT_STATUSES,
+  WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
+} from '@/lib/freight/constants';
+import { formatCeilFixed } from '@/lib/freight/math';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Edit,
+  MoreHorizontal,
+  Package,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+const receiptFormSchema = z.object({
+  customerId: z.string().optional(),
+  status: z.string().min(1, '单核状态必填'),
+  transportType: z.string().optional(),
+  customsDeclarationType: z.string().optional(),
+  inboundTime: z.string().min(1, '入库时间必填'),
+  remarks: z.string().optional(),
+  internalRemarks: z.string().optional(),
+});
+
+type ReceiptFormData = z.infer<typeof receiptFormSchema>;
+
+function formatDateTimeLocalValue(value: string | null | undefined) {
+  if (!value) return '';
+  try {
+    return format(new Date(value), "yyyy-MM-dd'T'HH:mm");
+  } catch {
+    return '';
+  }
+}
+
+export function ReceiptDetailEditView({
+  receipt,
+  onBack,
+  onAddItem,
+  onDelete,
+  onEditItem,
+  onDeleteItem,
+}: {
+  receipt: FreightWarehouseReceiptWithRelations;
+  onBack: () => void;
+  onAddItem: () => void;
+  onDelete: () => void;
+  onEditItem: (item: FreightInventoryItem) => void;
+  onDeleteItem: (item: FreightInventoryItem) => void;
+}) {
+  const t = useTranslations('Dashboard.freight.inbound');
+  const tCommon = useTranslations('Common');
+  const tCustomerFields = useTranslations(
+    'Dashboard.freight.settings.customers.fields'
+  );
+  const tCustomerColumns = useTranslations(
+    'Dashboard.freight.settings.customers.columns'
+  );
+
+  const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
+  const { data: allParties } = useFreightParties({ q: '' });
+  const customers = allParties?.filter((p) => p.roles.includes('CUSTOMER'));
+
+  const itemsQuery = useFreightInventoryItems({
+    receiptId: receipt.id,
+    q: '',
+  });
+
+  const items = itemsQuery.data ?? [];
+  const renderedItems = useMemo(() => items, [items]);
+
+  const form = useForm<ReceiptFormData>({
+    resolver: zodResolver(receiptFormSchema),
+    defaultValues: {
+      customerId: receipt.customerId ?? '',
+      status: receipt.status ?? 'RECEIVED',
+      transportType: receipt.transportType ?? '',
+      customsDeclarationType: receipt.customsDeclarationType ?? '',
+      inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
+      remarks: receipt.remarks ?? '',
+      internalRemarks: receipt.internalRemarks ?? '',
+    },
+  });
+
+  const isDirty = form.formState.isDirty;
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleSave = async (data: ReceiptFormData) => {
+    try {
+      const payload: Record<string, any> = {};
+
+      if (data.customerId !== (receipt.customerId ?? '')) {
+        payload.customerId = data.customerId || undefined;
+      }
+      if (data.status !== receipt.status) {
+        payload.status = data.status;
+      }
+      if (data.transportType !== (receipt.transportType ?? '')) {
+        payload.transportType = data.transportType || undefined;
+      }
+      if (data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')) {
+        payload.customsDeclarationType = data.customsDeclarationType || undefined;
+      }
+      if (data.inboundTime !== formatDateTimeLocalValue(receipt.inboundTime)) {
+        payload.inboundTime = data.inboundTime;
+      }
+      if (data.remarks !== (receipt.remarks ?? '')) {
+        payload.remarks = data.remarks;
+      }
+      if (data.internalRemarks !== (receipt.internalRemarks ?? '')) {
+        payload.internalRemarks = data.internalRemarks;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        toast.info('没有需要保存的更改');
+        return;
+      }
+
+      await updateMutation.mutateAsync(payload);
+      toast.success(t('receiptActions.updateSuccess'));
+      form.reset(data);
+    } catch (error) {
+      const message = getFreightApiErrorMessage(error);
+      toast.error(message);
+    }
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+      {/* 顶部操作栏 */}
+      <div className="flex items-center gap-4">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="shrink-0"
+        >
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div className="flex-1">
+          {isDirty && (
+            <div className="flex items-center gap-2 text-sm text-amber-600">
+              <AlertCircle className="size-3" />
+              有未保存的更改
+            </div>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          disabled={updateMutation.isPending || !isDirty}
+          size="sm"
+        >
+          <Save className="mr-2 size-4" />
+          {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onDelete} className="text-destructive">
+              <Trash2 className="mr-2 size-4" />
+              {t('receiptActions.delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* 主要内容区域 */}
+      <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
+        {/* 左侧：基本信息表单 */}
+        <FreightSection title={t('receipt.fields.receiptNo')}>
+          <div className="space-y-4">
+            {/* 入库单号（只读） */}
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">
+                {t('receipt.fields.receiptNo')}
+              </Label>
+              <div className="text-lg font-semibold">{receipt.receiptNo}</div>
+            </div>
+
+            {/* 客户 */}
+            <div className="space-y-2">
+              <Label htmlFor="customerId">{t('customer')}</Label>
+              <Select
+                value={form.watch('customerId')}
+                onValueChange={(value) =>
+                  form.setValue('customerId', value, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger id="customerId">
+                  <SelectValue placeholder={t('selectCustomer')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers?.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nameCn || c.nameEn || c.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 单核状态 */}
+            <div className="space-y-2">
+              <Label htmlFor="status">
+                {t('status.label')}
+                <span className="ml-1 text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.watch('status')}
+                onValueChange={(value) =>
+                  form.setValue('status', value, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RECEIPT_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {t(`status.${s.toLowerCase()}` as any)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.status && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.status.message}
+                </p>
+              )}
+            </div>
+
+            {/* 运输类型 */}
+            <div className="space-y-2">
+              <Label htmlFor="transportType">{t('transportType.label')}</Label>
+              <Select
+                value={form.watch('transportType')}
+                onValueChange={(value) =>
+                  form.setValue('transportType', value, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger id="transportType">
+                  <SelectValue placeholder={t('transportType.placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+                    <SelectItem key={tt} value={tt}>
+                      {t(`transportType.options.${tt}` as any)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 报关类型 */}
+            <div className="space-y-2">
+              <Label htmlFor="customsDeclarationType">
+                {t('customsDeclarationType.label')}
+              </Label>
+              <Select
+                value={form.watch('customsDeclarationType')}
+                onValueChange={(value) =>
+                  form.setValue('customsDeclarationType', value, {
+                    shouldDirty: true,
+                  })
+                }
+              >
+                <SelectTrigger id="customsDeclarationType">
+                  <SelectValue
+                    placeholder={t('customsDeclarationType.placeholder')}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES.map((ct) => (
+                    <SelectItem key={ct} value={ct}>
+                      {t(`customsDeclarationType.options.${ct}` as any)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 入库时间 */}
+            <div className="space-y-2">
+              <Label htmlFor="inboundTime">
+                {t('inboundTime')}
+                <span className="ml-1 text-destructive">*</span>
+              </Label>
+              <Input
+                id="inboundTime"
+                type="datetime-local"
+                {...form.register('inboundTime')}
+              />
+              {form.formState.errors.inboundTime && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.inboundTime.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </FreightSection>
+
+        {/* 右侧：商品明细表格 */}
+        <FreightTableSection
+          title={t('itemsList.title')}
+          icon={Package}
+          actions={
+            <Button onClick={onAddItem} size="sm" type="button">
+              <Plus className="mr-2 size-4" />
+              {t('items.create')}
+            </Button>
+          }
+        >
+          <Table>
+            <TableHeader className="bg-muted">
+              <TableRow>
+                <TableHead>{t('items.columns.commodity')}</TableHead>
+                <TableHead>{t('items.columns.sku')}</TableHead>
+                <TableHead className="text-right">
+                  {t('items.columns.initialQty')}
+                </TableHead>
+                <TableHead>{t('items.columns.unit')}</TableHead>
+                <TableHead>{t('items.columns.location')}</TableHead>
+                <TableHead className="text-right">
+                  {t('items.fields.weightPerUnit')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('items.columns.totalWeight')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('items.columns.totalVolume')}
+                </TableHead>
+                <TableHead className="w-[72px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {itemsQuery.isLoading ? (
+                Array.from({ length: 3 }).map((_, idx) => (
+                  <TableRow key={`sk-${idx}`} className="h-14">
+                    {Array.from({ length: 9 }).map((__, cIdx) => (
+                      <TableCell key={`sk-${idx}-${cIdx}`}>
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : itemsQuery.error ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="h-32 text-center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyTitle>{t('items.error')}</EmptyTitle>
+                        <EmptyDescription>
+                          {getFreightApiErrorMessage(itemsQuery.error)}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : renderedItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="h-32 text-center">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyTitle>{t('items.empty')}</EmptyTitle>
+                        <EmptyDescription>
+                          {t('items.emptyHint')}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                renderedItems.map((item) => {
+                  const weightPerUnit =
+                    item.weightPerUnit != null
+                      ? Number(item.weightPerUnit)
+                      : undefined;
+                  const totalWeightKg =
+                    weightPerUnit != null && Number.isFinite(weightPerUnit)
+                      ? weightPerUnit * item.initialQty
+                      : undefined;
+
+                  const lengthCm =
+                    item.lengthCm != null ? Number(item.lengthCm) : undefined;
+                  const widthCm =
+                    item.widthCm != null ? Number(item.widthCm) : undefined;
+                  const heightCm =
+                    item.heightCm != null ? Number(item.heightCm) : undefined;
+                  const totalVolumeM3 =
+                    lengthCm != null &&
+                    widthCm != null &&
+                    heightCm != null &&
+                    Number.isFinite(lengthCm) &&
+                    Number.isFinite(widthCm) &&
+                    Number.isFinite(heightCm)
+                      ? (lengthCm * widthCm * heightCm * item.initialQty) /
+                        1_000_000
+                      : undefined;
+
+                  return (
+                    <TableRow key={item.id} className="h-14">
+                      <TableCell className="font-medium">
+                        {item.commodityName ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.skuCode ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums font-medium">
+                        {item.initialQty}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.unit ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.binLocation ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {weightPerUnit != null
+                          ? formatCeilFixed(weightPerUnit, 3)
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {totalWeightKg != null
+                          ? formatCeilFixed(totalWeightKg, 2)
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {totalVolumeM3 != null
+                          ? formatCeilFixed(totalVolumeM3, 3)
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              type="button"
+                            >
+                              <MoreHorizontal className="size-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEditItem(item)}>
+                              <Edit className="mr-2 size-4" />
+                              {t('itemActions.edit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDeleteItem(item)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              {t('itemActions.delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </FreightTableSection>
+      </div>
+
+      {/* 备注区域 */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="internalRemarks">{t('internalRemarks')}</Label>
+          <Textarea
+            id="internalRemarks"
+            {...form.register('internalRemarks')}
+            placeholder={t('receipt.fields.internalRemarksPlaceholder')}
+            rows={3}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="remarks">{t('remarks')}</Label>
+          <Textarea
+            id="remarks"
+            {...form.register('remarks')}
+            placeholder={t('receipt.fields.remarksPlaceholder')}
+            rows={3}
+          />
+        </div>
+      </div>
+
+      {/* Tab区域：联系资料等 */}
+      <Tabs defaultValue="basic" className="space-y-3">
+        <TabsList>
+          <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="basic">
+          <FreightSection title={t('detailSections.contact')}>
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">{t('customer')}</div>
+                <div className="text-sm text-muted-foreground">
+                  {receipt.customer?.nameCn ??
+                    receipt.customer?.nameEn ??
+                    receipt.customer?.code ??
+                    '-'}
+                </div>
+                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1 text-sm">
+                  <div className="text-muted-foreground">
+                    {tCustomerColumns('contact')}
+                  </div>
+                  <div className="whitespace-pre-wrap break-words">
+                    {typeof receipt.customer?.contactInfo === 'string'
+                      ? receipt.customer.contactInfo
+                      : receipt.customer?.contactInfo
+                        ? JSON.stringify(receipt.customer.contactInfo)
+                        : '-'}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {tCustomerFields('address')}
+                  </div>
+                  <div className="whitespace-pre-wrap break-words">
+                    {receipt.customer?.address ?? '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FreightSection>
+        </TabsContent>
+      </Tabs>
+
+      {/* 底部固定保存按钮 */}
+      <div className="sticky bottom-0 bg-background border-t pt-4 flex justify-end">
+        <Button
+          type="submit"
+          disabled={updateMutation.isPending || !isDirty}
+          size="lg"
+        >
+          <Save className="mr-2 size-4" />
+          {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+

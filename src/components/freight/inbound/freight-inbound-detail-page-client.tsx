@@ -3,7 +3,7 @@
 import { AddItemDialog } from '@/components/freight/inbound/add-item-dialog';
 import { DeleteConfirmDialog } from '@/components/freight/inbound/delete-confirm-dialog';
 import { EditItemDialog } from '@/components/freight/inbound/edit-item-dialog';
-import { ReceiptDetailView } from '@/components/freight/inbound/receipt-detail-view';
+import { ReceiptDetailEditView } from '@/components/freight/inbound/receipt-detail-edit-view';
 import {
   Empty,
   EmptyDescription,
@@ -42,11 +42,6 @@ export function FreightInboundDetailPageClient({
     null
   );
   const [deleteError, setDeleteError] = useState('');
-  const [autoEditHandled, setAutoEditHandled] = useState(false);
-  const [editRequest, setEditRequest] = useState<{
-    key: 'customerId';
-    nonce: number;
-  } | null>(null);
 
   const receiptDetailQuery = useFreightWarehouseReceipt(receiptId);
   const selectedReceipt = receiptDetailQuery.data ?? null;
@@ -69,20 +64,6 @@ export function FreightInboundDetailPageClient({
   const handleBack = () => {
     router.push(getBackUrl());
   };
-
-  useEffect(() => {
-    if (autoEditHandled) return;
-    if (!selectedReceipt) return;
-    if (searchParams.get('autoEdit') !== '1') return;
-
-    setEditRequest({ key: 'customerId', nonce: Date.now() });
-    setAutoEditHandled(true);
-
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete('autoEdit');
-    const qs = next.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname);
-  }, [autoEditHandled, pathname, router, searchParams, selectedReceipt]);
 
   if (receiptDetailQuery.isLoading) {
     return (
@@ -117,11 +98,10 @@ export function FreightInboundDetailPageClient({
 
   return (
     <div className="px-4 lg:px-6">
-      <ReceiptDetailView
+      <ReceiptDetailEditView
         receipt={selectedReceipt}
         onBack={handleBack}
         onAddItem={() => setAddItemDialogOpen(true)}
-        onEdit={() => setEditRequest({ key: 'customerId', nonce: Date.now() })}
         onDelete={() => setDeleteReceiptOpen(true)}
         onEditItem={(item) => {
           setSelectedItem(item);
@@ -131,7 +111,6 @@ export function FreightInboundDetailPageClient({
           setSelectedItem(item);
           setDeleteItemOpen(true);
         }}
-        editRequest={editRequest}
       />
 
       <AddItemDialog
