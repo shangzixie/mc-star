@@ -19,6 +19,7 @@ export const partyContactInfoSchema = z
   .passthrough();
 
 export const createPartySchema = z.object({
+  code: z.string().max(50).optional(),
   nameCn: z.string().min(1),
   nameEn: z.string().optional(),
   roles: z.array(z.string().min(1).max(20)).min(1),

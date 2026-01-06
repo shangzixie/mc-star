@@ -1,5 +1,7 @@
 'use client';
 
+import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
+import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +15,6 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type { FreightWarehouseReceiptWithRelations } from '@/lib/freight/api-types';
@@ -26,7 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { AlertCircle, ArrowLeft, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -67,9 +68,8 @@ export function ReceiptFormEditView({
   const t = useTranslations('Dashboard.freight.inbound');
   const tCommon = useTranslations('Common');
 
+  const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
-  const { data: allParties } = useFreightParties({ q: '' });
-  const customers = allParties?.filter((p) => p.roles.includes('CUSTOMER'));
 
   const form = useForm<ReceiptFormData>({
     resolver: zodResolver(receiptFormSchema),
@@ -113,8 +113,11 @@ export function ReceiptFormEditView({
       if (data.transportType !== (receipt.transportType ?? '')) {
         payload.transportType = data.transportType || undefined;
       }
-      if (data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')) {
-        payload.customsDeclarationType = data.customsDeclarationType || undefined;
+      if (
+        data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')
+      ) {
+        payload.customsDeclarationType =
+          data.customsDeclarationType || undefined;
       }
       if (data.inboundTime !== formatDateTimeLocalValue(receipt.inboundTime)) {
         payload.inboundTime = data.inboundTime;
@@ -152,9 +155,7 @@ export function ReceiptFormEditView({
             size="icon"
             onClick={() => {
               if (isDirty) {
-                if (
-                  confirm('有未保存的更改，确定要离开吗？')
-                ) {
+                if (confirm('有未保存的更改，确定要离开吗？')) {
                   onBack();
                 }
               } else {
@@ -183,9 +184,7 @@ export function ReceiptFormEditView({
             variant="outline"
             onClick={() => {
               if (isDirty) {
-                if (
-                  confirm('有未保存的更改，确定要取消吗？')
-                ) {
+                if (confirm('有未保存的更改，确定要取消吗？')) {
                   onBack();
                 }
               } else {
@@ -196,10 +195,7 @@ export function ReceiptFormEditView({
             {tCommon('cancel')}
           </Button>
 
-          <Button
-            type="submit"
-            disabled={updateMutation.isPending || !isDirty}
-          >
+          <Button type="submit" disabled={updateMutation.isPending || !isDirty}>
             <Save className="mr-2 size-4" />
             {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
           </Button>
@@ -208,9 +204,10 @@ export function ReceiptFormEditView({
 
       {/* Tab分区 */}
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
-          <TabsTrigger value="remarks">备注</TabsTrigger>
+          <TabsTrigger value="contact">{t('detailTabs.contact')}</TabsTrigger>
+          <TabsTrigger value="remarks">{t('detailTabs.remarks')}</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: 基本信息 */}
@@ -228,28 +225,6 @@ export function ReceiptFormEditView({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 客户 */}
-                <div className="space-y-2">
-                  <Label htmlFor="customerId">
-                    {t('customer')}
-                  </Label>
-                  <Select
-                    value={form.watch('customerId')}
-                    onValueChange={(value) => form.setValue('customerId', value, { shouldDirty: true })}
-                  >
-                    <SelectTrigger id="customerId">
-                      <SelectValue placeholder={t('selectCustomer')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers?.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.nameCn || c.nameEn || c.code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* 单核状态 */}
                 <div className="space-y-2">
                   <Label htmlFor="status" className="flex items-center gap-1">
@@ -258,7 +233,9 @@ export function ReceiptFormEditView({
                   </Label>
                   <Select
                     value={form.watch('status')}
-                    onValueChange={(value) => form.setValue('status', value, { shouldDirty: true })}
+                    onValueChange={(value) =>
+                      form.setValue('status', value, { shouldDirty: true })
+                    }
                   >
                     <SelectTrigger id="status">
                       <SelectValue />
@@ -285,10 +262,16 @@ export function ReceiptFormEditView({
                   </Label>
                   <Select
                     value={form.watch('transportType')}
-                    onValueChange={(value) => form.setValue('transportType', value, { shouldDirty: true })}
+                    onValueChange={(value) =>
+                      form.setValue('transportType', value, {
+                        shouldDirty: true,
+                      })
+                    }
                   >
                     <SelectTrigger id="transportType">
-                      <SelectValue placeholder={t('transportType.placeholder')} />
+                      <SelectValue
+                        placeholder={t('transportType.placeholder')}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
@@ -308,11 +291,15 @@ export function ReceiptFormEditView({
                   <Select
                     value={form.watch('customsDeclarationType')}
                     onValueChange={(value) =>
-                      form.setValue('customsDeclarationType', value, { shouldDirty: true })
+                      form.setValue('customsDeclarationType', value, {
+                        shouldDirty: true,
+                      })
                     }
                   >
                     <SelectTrigger id="customsDeclarationType">
-                      <SelectValue placeholder={t('customsDeclarationType.placeholder')} />
+                      <SelectValue
+                        placeholder={t('customsDeclarationType.placeholder')}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES.map((ct) => (
@@ -326,7 +313,10 @@ export function ReceiptFormEditView({
 
                 {/* 入库时间 */}
                 <div className="space-y-2">
-                  <Label htmlFor="inboundTime" className="flex items-center gap-1">
+                  <Label
+                    htmlFor="inboundTime"
+                    className="flex items-center gap-1"
+                  >
                     {t('inboundTime')}
                     <span className="text-destructive">*</span>
                   </Label>
@@ -346,15 +336,33 @@ export function ReceiptFormEditView({
           </FreightSection>
         </TabsContent>
 
-        {/* Tab 2: 备注 */}
+        {/* Tab 2: 联系信息 */}
+        <TabsContent value="contact" className="space-y-6">
+          <FreightSection title={t('detailTabs.contact')}>
+            <div className="space-y-4">
+              {/* 客户 */}
+              <div className="space-y-2">
+                <Label htmlFor="customerId">{t('customer')}</Label>
+                <CustomerCombobox
+                  value={form.watch('customerId')}
+                  onValueChange={(value) =>
+                    form.setValue('customerId', value, { shouldDirty: true })
+                  }
+                  onAddNew={() => setAddCustomerDialogOpen(true)}
+                  placeholder={t('selectCustomer')}
+                />
+              </div>
+            </div>
+          </FreightSection>
+        </TabsContent>
+
+        {/* Tab 3: 备注 */}
         <TabsContent value="remarks" className="space-y-6">
           <FreightSection title="备注信息">
             <div className="space-y-4">
               {/* 内部备注 */}
               <div className="space-y-2">
-                <Label htmlFor="internalRemarks">
-                  {t('internalRemarks')}
-                </Label>
+                <Label htmlFor="internalRemarks">{t('internalRemarks')}</Label>
                 <Textarea
                   id="internalRemarks"
                   {...form.register('internalRemarks')}
@@ -365,9 +373,7 @@ export function ReceiptFormEditView({
 
               {/* 订舱备注 */}
               <div className="space-y-2">
-                <Label htmlFor="remarks">
-                  {t('remarks')}
-                </Label>
+                <Label htmlFor="remarks">{t('remarks')}</Label>
                 <Textarea
                   id="remarks"
                   {...form.register('remarks')}
@@ -387,9 +393,7 @@ export function ReceiptFormEditView({
           variant="outline"
           onClick={() => {
             if (isDirty) {
-              if (
-                confirm('有未保存的更改，确定要取消吗？')
-              ) {
+              if (confirm('有未保存的更改，确定要取消吗？')) {
                 onBack();
               }
             } else {
@@ -400,15 +404,20 @@ export function ReceiptFormEditView({
           {tCommon('cancel')}
         </Button>
 
-        <Button
-          type="submit"
-          disabled={updateMutation.isPending || !isDirty}
-        >
+        <Button type="submit" disabled={updateMutation.isPending || !isDirty}>
           <Save className="mr-2 size-4" />
           {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
         </Button>
       </div>
+
+      {/* Add Customer Dialog */}
+      <AddCustomerDialog
+        open={addCustomerDialogOpen}
+        onOpenChange={setAddCustomerDialogOpen}
+        onSuccess={(customerId) => {
+          form.setValue('customerId', customerId, { shouldDirty: true });
+        }}
+      />
     </form>
   );
 }
-

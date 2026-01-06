@@ -1,5 +1,7 @@
 'use client';
 
+import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
+import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
 import {
   EditableFieldList,
   type EditableFieldRowConfig,
@@ -13,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type { FreightWarehouseReceiptWithRelations } from '@/lib/freight/api-types';
@@ -24,7 +25,7 @@ import {
 } from '@/lib/freight/constants';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 export type ReceiptEditableKey =
@@ -52,9 +53,8 @@ export function ReceiptBasicInfoEditor({
   const t = useTranslations('Dashboard.freight.inbound');
   const tCommon = useTranslations('Common');
 
+  const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
-  const { data: allParties } = useFreightParties({ q: '' });
-  const customers = allParties?.filter((p) => p.roles.includes('CUSTOMER'));
 
   const rows = useMemo<EditableFieldRowConfig[]>(() => {
     return [
@@ -70,22 +70,13 @@ export function ReceiptBasicInfoEditor({
         renderEditor: ({ draft, setDraft, disabled }) => {
           const value = typeof draft === 'string' ? draft : '';
           return (
-            <Select
+            <CustomerCombobox
               value={value}
-              onValueChange={(v) => setDraft(v)}
+              onValueChange={(v) => setDraft(v ?? '')}
               disabled={disabled}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('selectCustomer')} />
-              </SelectTrigger>
-              <SelectContent>
-                {customers?.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nameCn || c.nameEn || c.code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onAddNew={() => setAddCustomerDialogOpen(true)}
+              placeholder={t('selectCustomer')}
+            />
           );
         },
         toPayload: (draft) => {
@@ -240,7 +231,7 @@ export function ReceiptBasicInfoEditor({
         },
       },
     ] as const;
-  }, [customers, receipt, t]);
+  }, [receipt, t]);
 
   return (
     <FreightSection title={t('receipt.fields.receiptNo')}>
@@ -267,6 +258,17 @@ export function ReceiptBasicInfoEditor({
           }}
         />
       </div>
+
+      {/* Add Customer Dialog */}
+      <AddCustomerDialog
+        open={addCustomerDialogOpen}
+        onOpenChange={setAddCustomerDialogOpen}
+        onSuccess={(customerId) => {
+          // The dialog will trigger cache invalidation automatically
+          // The user can then select the newly created customer
+          toast.success(t('customerFields.createSuccessAndSelect'));
+        }}
+      />
     </FreightSection>
   );
 }

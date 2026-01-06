@@ -1,5 +1,7 @@
 'use client';
 
+import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
+import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
@@ -36,7 +38,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
-import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
@@ -62,7 +63,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -112,9 +113,8 @@ export function ReceiptDetailEditView({
     'Dashboard.freight.settings.customers.columns'
   );
 
+  const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
-  const { data: allParties } = useFreightParties({ q: '' });
-  const customers = allParties?.filter((p) => p.roles.includes('CUSTOMER'));
 
   const itemsQuery = useFreightInventoryItems({
     receiptId: receipt.id,
@@ -164,8 +164,11 @@ export function ReceiptDetailEditView({
       if (data.transportType !== (receipt.transportType ?? '')) {
         payload.transportType = data.transportType || undefined;
       }
-      if (data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')) {
-        payload.customsDeclarationType = data.customsDeclarationType || undefined;
+      if (
+        data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')
+      ) {
+        payload.customsDeclarationType =
+          data.customsDeclarationType || undefined;
       }
       if (data.inboundTime !== formatDateTimeLocalValue(receipt.inboundTime)) {
         payload.inboundTime = data.inboundTime;
@@ -249,28 +252,6 @@ export function ReceiptDetailEditView({
                 {t('receipt.fields.receiptNo')}
               </Label>
               <div className="text-lg font-semibold">{receipt.receiptNo}</div>
-            </div>
-
-            {/* 客户 */}
-            <div className="space-y-2">
-              <Label htmlFor="customerId">{t('customer')}</Label>
-              <Select
-                value={form.watch('customerId')}
-                onValueChange={(value) =>
-                  form.setValue('customerId', value, { shouldDirty: true })
-                }
-              >
-                <SelectTrigger id="customerId">
-                  <SelectValue placeholder={t('selectCustomer')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers?.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nameCn || c.nameEn || c.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {/* 单核状态 */}
@@ -570,32 +551,17 @@ export function ReceiptDetailEditView({
         <TabsContent value="basic">
           <FreightSection title={t('detailSections.contact')}>
             <div className="grid gap-4">
+              {/* 客户选择 */}
               <div className="space-y-2">
-                <div className="text-sm font-semibold">{t('customer')}</div>
-                <div className="text-sm text-muted-foreground">
-                  {receipt.customer?.nameCn ??
-                    receipt.customer?.nameEn ??
-                    receipt.customer?.code ??
-                    '-'}
-                </div>
-                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1 text-sm">
-                  <div className="text-muted-foreground">
-                    {tCustomerColumns('contact')}
-                  </div>
-                  <div className="whitespace-pre-wrap break-words">
-                    {typeof receipt.customer?.contactInfo === 'string'
-                      ? receipt.customer.contactInfo
-                      : receipt.customer?.contactInfo
-                        ? JSON.stringify(receipt.customer.contactInfo)
-                        : '-'}
-                  </div>
-                  <div className="text-muted-foreground">
-                    {tCustomerFields('address')}
-                  </div>
-                  <div className="whitespace-pre-wrap break-words">
-                    {receipt.customer?.address ?? '-'}
-                  </div>
-                </div>
+                <Label htmlFor="customerId">{t('customer')}</Label>
+                <CustomerCombobox
+                  value={form.watch('customerId')}
+                  onValueChange={(value) =>
+                    form.setValue('customerId', value, { shouldDirty: true })
+                  }
+                  onAddNew={() => setAddCustomerDialogOpen(true)}
+                  placeholder={t('selectCustomer')}
+                />
               </div>
             </div>
           </FreightSection>
@@ -613,7 +579,15 @@ export function ReceiptDetailEditView({
           {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
         </Button>
       </div>
+
+      {/* Add Customer Dialog */}
+      <AddCustomerDialog
+        open={addCustomerDialogOpen}
+        onOpenChange={setAddCustomerDialogOpen}
+        onSuccess={(customerId) => {
+          form.setValue('customerId', customerId, { shouldDirty: true });
+        }}
+      />
     </form>
   );
 }
-

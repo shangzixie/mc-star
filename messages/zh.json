@@ -679,7 +679,9 @@
           "manageItems": "录入明细"
         },
         "detailTabs": {
-          "basic": "基本"
+          "basic": "基本",
+          "contact": "联系信息",
+          "remarks": "备注"
         },
         "detailSections": {
           "contact": "联系资料"
@@ -781,6 +783,10 @@
         "customer": "客户",
         "selectWarehouse": "选择仓库",
         "selectCustomer": "选择客户",
+        "searchCustomer": "搜索客户名称或代码...",
+        "noCustomerFound": "未找到客户",
+        "addNewCustomer": "新增客户",
+        "loading": "加载中...",
         "inboundTime": "入库时间",
         "remarks": "备注",
         "internalRemarks": "内部备注",
@@ -810,6 +816,27 @@
           "deleteMessage": "确定要删除这个入库单吗？此操作不可撤销。",
           "deleteSuccess": "入库单删除成功",
           "cannotDelete": "无法删除：部分商品已被分配或出库"
+        },
+        "customerFields": {
+          "name": "客户名称",
+          "nameCn": "客户中文名",
+          "nameCnPlaceholder": "请输入客户中文名称",
+          "nameEn": "客户英文名",
+          "nameEnPlaceholder": "请输入客户英文名称（可选）",
+          "code": "客户代码",
+          "codePlaceholder": "请输入客户代码（可选）",
+          "contact": "联系方式",
+          "phone": "联系电话",
+          "phonePlaceholder": "请输入联系电话",
+          "email": "电子邮箱",
+          "emailPlaceholder": "请输入电子邮箱",
+          "address": "地址",
+          "addressPlaceholder": "请输入详细地址",
+          "remarks": "备注",
+          "remarksPlaceholder": "请输入备注信息",
+          "createSuccess": "客户创建成功",
+          "createSuccessAndSelect": "客户创建成功，请在列表中选择",
+          "addDescription": "请填写客户的基本信息，中文名称为必填项"
         },
         "itemActions": {
           "edit": "编辑",

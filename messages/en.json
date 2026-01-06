@@ -679,7 +679,9 @@
           "manageItems": "Manage Items"
         },
         "detailTabs": {
-          "basic": "Basic"
+          "basic": "Basic",
+          "contact": "Contact Information",
+          "remarks": "Remarks"
         },
         "detailSections": {
           "contact": "Contact"
@@ -781,6 +783,10 @@
         "customer": "Customer",
         "selectWarehouse": "Select warehouse",
         "selectCustomer": "Select customer",
+        "searchCustomer": "Search customer name or code...",
+        "noCustomerFound": "No customer found",
+        "addNewCustomer": "Add New Customer",
+        "loading": "Loading...",
         "inboundTime": "Inbound Time",
         "remarks": "Remarks",
         "internalRemarks": "Internal Remarks",
@@ -810,6 +816,27 @@
           "cancel": "Cancel",
           "confirm": "Confirm",
           "updating": "Updating..."
+        },
+        "customerFields": {
+          "name": "Customer Name",
+          "nameCn": "Customer Name (CN)",
+          "nameCnPlaceholder": "Enter customer Chinese name",
+          "nameEn": "Customer Name (EN)",
+          "nameEnPlaceholder": "Enter customer English name (optional)",
+          "code": "Customer Code",
+          "codePlaceholder": "Enter customer code (optional)",
+          "contact": "Contact",
+          "phone": "Phone",
+          "phonePlaceholder": "Enter phone number",
+          "email": "Email",
+          "emailPlaceholder": "Enter email address",
+          "address": "Address",
+          "addressPlaceholder": "Enter detailed address",
+          "remarks": "Remarks",
+          "remarksPlaceholder": "Enter remarks",
+          "createSuccess": "Customer created successfully",
+          "createSuccessAndSelect": "Customer created successfully, please select from the list",
+          "addDescription": "Please fill in customer's basic information. Chinese name is required."
         },
         "itemActions": {
           "edit": "Edit",
