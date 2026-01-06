@@ -14,14 +14,18 @@ export function FreightInboundPageClient() {
 
   const handleSelectReceipt = (receiptId: string) => {
     const qs = searchParams.toString();
-    router.push(qs ? `${pathname}/${receiptId}?${qs}` : `${pathname}/${receiptId}`);
+    router.push(
+      qs ? `${pathname}/${receiptId}?${qs}` : `${pathname}/${receiptId}`
+    );
   };
 
   const handleCreateSuccess = (receiptId: string) => {
     const next = new URLSearchParams(searchParams.toString());
     next.set('autoEdit', '1');
     const qs = next.toString();
-    router.push(qs ? `${pathname}/${receiptId}?${qs}` : `${pathname}/${receiptId}`);
+    router.push(
+      qs ? `${pathname}/${receiptId}?${qs}` : `${pathname}/${receiptId}`
+    );
   };
 
   return (

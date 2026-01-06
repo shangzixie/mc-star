@@ -25,6 +25,7 @@
       "neutral": "中性"
     },
     "copy": "复制",
+    "edit": "编辑",
     "save": "保存",
     "saving": "保存中...",
     "loading": "加载中...",
@@ -676,6 +677,12 @@
         "tabs": {
           "selectReceipt": "选择/创建入库单",
           "manageItems": "录入明细"
+        },
+        "detailTabs": {
+          "basic": "基本"
+        },
+        "detailSections": {
+          "contact": "联系资料"
         },
         "receiptList": {
           "title": "入库单列表",

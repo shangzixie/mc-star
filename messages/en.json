@@ -25,6 +25,7 @@
       "neutral": "Neutral"
     },
     "copy": "Copy",
+    "edit": "Edit",
     "saving": "Saving...",
     "save": "Save",
     "loading": "Loading...",
@@ -676,6 +677,12 @@
         "tabs": {
           "selectReceipt": "Select/Create Receipt",
           "manageItems": "Manage Items"
+        },
+        "detailTabs": {
+          "basic": "Basic"
+        },
+        "detailSections": {
+          "contact": "Contact"
         },
         "receiptList": {
           "title": "Receipt List",

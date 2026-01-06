@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  ReceiptBasicInfoEditor,
+  type ReceiptEditableKey,
+} from '@/components/freight/inbound/receipt-basic-info-editor';
+import { EditableTextSection } from '@/components/freight/ui/editable-text-section';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
@@ -24,7 +29,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
+import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
   FreightInventoryItem,
@@ -41,6 +48,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 
 export function ReceiptDetailView({
   receipt,
@@ -48,20 +56,29 @@ export function ReceiptDetailView({
   onAddItem,
   onEdit,
   onDelete,
-  onChangeStatus,
   onEditItem,
   onDeleteItem,
+  editRequest,
 }: {
   receipt: FreightWarehouseReceiptWithRelations;
   onBack: () => void;
   onAddItem: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onChangeStatus: () => void;
   onEditItem: (item: FreightInventoryItem) => void;
   onDeleteItem: (item: FreightInventoryItem) => void;
+  editRequest?: { key: ReceiptEditableKey; nonce: number } | null;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
+  const tCommon = useTranslations('Common');
+  const tCustomerFields = useTranslations(
+    'Dashboard.freight.settings.customers.fields'
+  );
+  const tCustomerColumns = useTranslations(
+    'Dashboard.freight.settings.customers.columns'
+  );
+
+  const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
 
   const itemsQuery = useFreightInventoryItems({
     receiptId: receipt.id,
@@ -97,9 +114,6 @@ export function ReceiptDetailView({
               <Edit className="mr-2 size-4" />
               {t('receiptActions.edit')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onChangeStatus}>
-              {t('receiptActions.changeStatus')}
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete} className="text-destructive">
               <Trash2 className="mr-2 size-4" />
               {t('receiptActions.delete')}
@@ -108,11 +122,8 @@ export function ReceiptDetailView({
         </DropdownMenu>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-        <FreightSection title={t('receipt.fields.receiptNo')}>
-          <div className="font-semibold">{receipt.receiptNo}</div>
-        </FreightSection>
-
+      <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
+        <ReceiptBasicInfoEditor receipt={receipt} editRequest={editRequest} />
         <FreightTableSection
           title={t('itemsList.title')}
           icon={Package}
@@ -277,6 +288,90 @@ export function ReceiptDetailView({
           </Table>
         </FreightTableSection>
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <EditableTextSection
+          title={t('internalRemarks')}
+          value={receipt.internalRemarks}
+          placeholder={t('receipt.fields.internalRemarksPlaceholder')}
+          labels={{
+            edit: tCommon('edit'),
+            cancel: tCommon('cancel'),
+            save: tCommon('save'),
+            saving: tCommon('saving'),
+          }}
+          onSave={async (nextValue) => {
+            try {
+              await updateMutation.mutateAsync({ internalRemarks: nextValue });
+              toast.success(t('receiptActions.updateSuccess'));
+            } catch (error) {
+              const message = getFreightApiErrorMessage(error);
+              toast.error(message);
+              throw new Error(message);
+            }
+          }}
+        />
+        <EditableTextSection
+          title={t('remarks')}
+          value={receipt.remarks}
+          placeholder={t('receipt.fields.remarksPlaceholder')}
+          labels={{
+            edit: tCommon('edit'),
+            cancel: tCommon('cancel'),
+            save: tCommon('save'),
+            saving: tCommon('saving'),
+          }}
+          onSave={async (nextValue) => {
+            try {
+              await updateMutation.mutateAsync({ remarks: nextValue });
+              toast.success(t('receiptActions.updateSuccess'));
+            } catch (error) {
+              const message = getFreightApiErrorMessage(error);
+              toast.error(message);
+              throw new Error(message);
+            }
+          }}
+        />
+      </div>
+
+      <Tabs defaultValue="basic" className="space-y-3">
+        <TabsList>
+          <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="basic">
+          <FreightSection title={t('detailSections.contact')}>
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">{t('customer')}</div>
+                <div className="text-sm text-muted-foreground">
+                  {receipt.customer?.nameCn ??
+                    receipt.customer?.nameEn ??
+                    receipt.customer?.code ??
+                    '-'}
+                </div>
+                <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1 text-sm">
+                  <div className="text-muted-foreground">
+                    {tCustomerColumns('contact')}
+                  </div>
+                  <div className="whitespace-pre-wrap break-words">
+                    {typeof receipt.customer?.contactInfo === 'string'
+                      ? receipt.customer.contactInfo
+                      : receipt.customer?.contactInfo
+                        ? JSON.stringify(receipt.customer.contactInfo)
+                        : '-'}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {tCustomerFields('address')}
+                  </div>
+                  <div className="whitespace-pre-wrap break-words">
+                    {receipt.customer?.address ?? '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FreightSection>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
