@@ -272,3 +272,17 @@ export const freightMasterBillOfLadingSchema = z
 export type FreightMasterBillOfLading = z.infer<
   typeof freightMasterBillOfLadingSchema
 >;
+
+export const transportNodeSchema = z
+  .object({
+    id: uuidSchema,
+    unLocode: z.string().nullable(),
+    nameCn: z.string(),
+    nameEn: z.string().nullable(),
+    countryCode: z.string().nullable(),
+    type: z.string().nullable(),
+    createdAt: isoDateTimeSchema.nullable(),
+  })
+  .passthrough();
+
+export type TransportNode = z.infer<typeof transportNodeSchema>;

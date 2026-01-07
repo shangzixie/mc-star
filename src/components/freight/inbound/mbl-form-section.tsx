@@ -1,6 +1,7 @@
 'use client';
 
 import { FreightSection } from '@/components/freight/ui/freight-section';
+import { PortCombobox } from '@/components/freight/shared/port-combobox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -120,10 +121,16 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
           {/* 目的港 */}
           <div className="space-y-2">
             <Label htmlFor="portOfDestination">{t('portOfDestination')}</Label>
-            <Input
-              id="portOfDestination"
-              {...form.register('portOfDestination')}
-              placeholder={t('portOfDestinationPlaceholder')}
+            <Controller
+              control={form.control}
+              name="portOfDestination"
+              render={({ field }) => (
+                <PortCombobox
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('portOfDestinationPlaceholder')}
+                />
+              )}
             />
           </div>
 
@@ -142,30 +149,48 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
           {/* 卸货港 */}
           <div className="space-y-2">
             <Label htmlFor="portOfDischarge">{t('portOfDischarge')}</Label>
-            <Input
-              id="portOfDischarge"
-              {...form.register('portOfDischarge')}
-              placeholder={t('portOfDischargePlaceholder')}
+            <Controller
+              control={form.control}
+              name="portOfDischarge"
+              render={({ field }) => (
+                <PortCombobox
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('portOfDischargePlaceholder')}
+                />
+              )}
             />
           </div>
 
           {/* 起运港 */}
           <div className="space-y-2">
             <Label htmlFor="portOfLoading">{t('portOfLoading')}</Label>
-            <Input
-              id="portOfLoading"
-              {...form.register('portOfLoading')}
-              placeholder={t('portOfLoadingPlaceholder')}
+            <Controller
+              control={form.control}
+              name="portOfLoading"
+              render={({ field }) => (
+                <PortCombobox
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('portOfLoadingPlaceholder')}
+                />
+              )}
             />
           </div>
 
           {/* 收货地 */}
           <div className="space-y-2">
             <Label htmlFor="placeOfReceipt">{t('placeOfReceipt')}</Label>
-            <Input
-              id="placeOfReceipt"
-              {...form.register('placeOfReceipt')}
-              placeholder={t('placeOfReceiptPlaceholder')}
+            <Controller
+              control={form.control}
+              name="placeOfReceipt"
+              render={({ field }) => (
+                <PortCombobox
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('placeOfReceiptPlaceholder')}
+                />
+              )}
             />
           </div>
         </div>
