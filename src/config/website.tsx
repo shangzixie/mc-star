@@ -55,17 +55,17 @@ export const websiteConfig: WebsiteConfig = {
     enableCredentialLogin: true,
   },
   i18n: {
-    defaultLocale: 'en',
+    defaultLocale: 'zh',
     locales: {
-      en: {
-        flag: '🇺🇸',
-        name: 'English',
-        hreflang: 'en',
-      },
       zh: {
         flag: '🇨🇳',
         name: '中文',
         hreflang: 'zh-CN',
+      },
+      en: {
+        flag: '🇺🇸',
+        name: 'English',
+        hreflang: 'en',
       },
     },
   },

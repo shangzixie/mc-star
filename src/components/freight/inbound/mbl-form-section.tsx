@@ -173,4 +173,3 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
     </form>
   );
 }
-

@@ -1,5 +1,5 @@
-import { freightMasterBillOfLadingSchema } from '@/lib/freight/api-types';
 import { freightApiClient } from '@/lib/freight/api-client';
+import { freightMasterBillOfLadingSchema } from '@/lib/freight/api-types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const MBL_QUERY_KEY = 'freight-master-bills-of-lading';
@@ -77,4 +77,3 @@ export function useUpdateFreightMBL(receiptId: string) {
     },
   });
 }
-

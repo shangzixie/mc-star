@@ -1,8 +1,8 @@
 'use client';
 
+import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
-import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
