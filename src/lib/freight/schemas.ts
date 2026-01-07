@@ -169,3 +169,21 @@ export const warehouseReceiptsQuerySchema = z.object({
   sortBy: z.enum(['receiptNo', 'inboundTime', 'createdAt']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
+
+// Master Bill of Lading (MBL) schemas
+export const createMasterBillOfLadingSchema = z.object({
+  receiptId: uuidSchema,
+  portOfDestination: z.string().optional(),
+  countryOfDestination: z.string().max(100).optional(),
+  portOfDischarge: z.string().optional(),
+  portOfLoading: z.string().optional(),
+  placeOfReceipt: z.string().optional(),
+});
+
+export const updateMasterBillOfLadingSchema = z.object({
+  portOfDestination: z.string().optional(),
+  countryOfDestination: z.string().max(100).optional(),
+  portOfDischarge: z.string().optional(),
+  portOfLoading: z.string().optional(),
+  placeOfReceipt: z.string().optional(),
+});

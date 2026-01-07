@@ -462,3 +462,24 @@ export const attachments = pgTable(
     ),
   })
 );
+
+export const masterBillsOfLading = pgTable(
+  'master_bills_of_lading',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    receiptId: uuid('receipt_id')
+      .references(() => warehouseReceipts.id, { onDelete: 'cascade' })
+      .notNull()
+      .unique(),
+    portOfDestination: text('port_of_destination'),
+    countryOfDestination: varchar('country_of_destination', { length: 100 }),
+    portOfDischarge: text('port_of_discharge'),
+    portOfLoading: text('port_of_loading'),
+    placeOfReceipt: text('place_of_receipt'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    idxMblReceiptId: index('idx_mbl_receipt_id').on(table.receiptId),
+  })
+);

@@ -684,7 +684,28 @@
           "remarks": "Remarks"
         },
         "detailSections": {
-          "contact": "Contact"
+          "contact": "Contact",
+          "mbl": "Master Bill of Lading (MBL)"
+        },
+        "mbl": {
+          "title": "Master Bill of Lading (MBL)",
+          "description": "Master Bill of Lading information",
+          "portOfDestination": "Port of Destination",
+          "portOfDestinationPlaceholder": "Enter port of destination",
+          "countryOfDestination": "Country of Destination",
+          "countryOfDestinationPlaceholder": "Enter country of destination",
+          "portOfDischarge": "Port of Discharge",
+          "portOfDischargePlaceholder": "Enter port of discharge",
+          "portOfLoading": "Port of Loading",
+          "portOfLoadingPlaceholder": "Enter port of loading",
+          "placeOfReceipt": "Place of Receipt",
+          "placeOfReceiptPlaceholder": "Enter place of receipt",
+          "save": "Save",
+          "saving": "Saving...",
+          "saved": "MBL information saved",
+          "saveFailed": "Failed to save MBL information",
+          "empty": "No MBL information",
+          "emptyHint": "Fill in the information below to create MBL"
         },
         "receiptList": {
           "title": "Receipt List",

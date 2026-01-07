@@ -684,7 +684,28 @@
           "remarks": "备注"
         },
         "detailSections": {
-          "contact": "联系资料"
+          "contact": "联系资料",
+          "mbl": "提单信息 (MBL)"
+        },
+        "mbl": {
+          "title": "提单信息 (MBL)",
+          "description": "Master Bill of Lading 主提单信息",
+          "portOfDestination": "目的港",
+          "portOfDestinationPlaceholder": "请输入目的港",
+          "countryOfDestination": "目的国",
+          "countryOfDestinationPlaceholder": "请输入目的国",
+          "portOfDischarge": "卸货港",
+          "portOfDischargePlaceholder": "请输入卸货港",
+          "portOfLoading": "起运港",
+          "portOfLoadingPlaceholder": "请输入起运港",
+          "placeOfReceipt": "收货地",
+          "placeOfReceiptPlaceholder": "请输入收货地",
+          "save": "保存",
+          "saving": "保存中...",
+          "saved": "提单信息已保存",
+          "saveFailed": "保存提单信息失败",
+          "empty": "暂无提单信息",
+          "emptyHint": "填写以下信息以创建提单"
         },
         "receiptList": {
           "title": "入库单列表",

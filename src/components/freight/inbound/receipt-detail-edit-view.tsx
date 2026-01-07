@@ -2,6 +2,7 @@
 
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
+import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
@@ -543,28 +544,34 @@ export function ReceiptDetailEditView({
         </div>
       </div>
 
-      {/* Tab区域：联系资料等 */}
+      {/* Tab区域：基本信息 */}
       <Tabs defaultValue="basic" className="space-y-3">
         <TabsList>
           <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
-          <FreightSection title={t('detailSections.contact')}>
-            <div className="grid gap-4">
-              {/* 客户选择 */}
-              <div className="space-y-2">
-                <Label htmlFor="customerId">{t('customer')}</Label>
-                <CustomerCombobox
-                  value={form.watch('customerId')}
-                  onValueChange={(value) =>
-                    form.setValue('customerId', value, { shouldDirty: true })
-                  }
-                  onAddNew={() => setAddCustomerDialogOpen(true)}
-                  placeholder={t('selectCustomer')}
-                />
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* 左侧：联系资料 */}
+            <FreightSection title={t('detailSections.contact')}>
+              <div className="grid gap-4">
+                {/* 客户选择 */}
+                <div className="space-y-2">
+                  <Label htmlFor="customerId">{t('customer')}</Label>
+                  <CustomerCombobox
+                    value={form.watch('customerId')}
+                    onValueChange={(value) =>
+                      form.setValue('customerId', value, { shouldDirty: true })
+                    }
+                    onAddNew={() => setAddCustomerDialogOpen(true)}
+                    placeholder={t('selectCustomer')}
+                  />
+                </div>
               </div>
-            </div>
-          </FreightSection>
+            </FreightSection>
+
+            {/* 右侧：提单信息 */}
+            <MBLFormSection receiptId={receipt.id} />
+          </div>
         </TabsContent>
       </Tabs>
 

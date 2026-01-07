@@ -254,3 +254,21 @@ export const freightInventoryItemWithAllocationsSchema =
 export type FreightInventoryItemWithAllocations = z.infer<
   typeof freightInventoryItemWithAllocationsSchema
 >;
+
+export const freightMasterBillOfLadingSchema = z
+  .object({
+    id: uuidSchema,
+    receiptId: uuidSchema,
+    portOfDestination: z.string().nullable(),
+    countryOfDestination: z.string().nullable(),
+    portOfDischarge: z.string().nullable(),
+    portOfLoading: z.string().nullable(),
+    placeOfReceipt: z.string().nullable(),
+    createdAt: isoDateTimeSchema.nullable(),
+    updatedAt: isoDateTimeSchema.nullable(),
+  })
+  .passthrough();
+
+export type FreightMasterBillOfLading = z.infer<
+  typeof freightMasterBillOfLadingSchema
+>;
