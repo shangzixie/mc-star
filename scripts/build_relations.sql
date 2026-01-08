@@ -20,6 +20,19 @@ CREATE TABLE parties (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 员工表（单一公司；员工可选绑定账号 user.id）
+-- 说明：
+-- 1) user_id 可为空：允许存在“无账号的员工档案”
+-- 2) user_id UNIQUE：一个账号最多绑定一个员工
+-- 3) 外键依赖认证模块的 user 表（Drizzle: "user"），删除账号时将 user_id 置空
+CREATE TABLE employees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT UNIQUE REFERENCES "user"(id) ON DELETE SET NULL,
+    full_name TEXT NOT NULL,
+    branch TEXT NOT NULL,
+    department TEXT NOT NULL
+);
+
 -- 运输节点表（用于 POL/POD：港口/机场/铁路站/口岸等）
 CREATE TABLE transport_nodes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -287,6 +300,11 @@ CREATE INDEX idx_warehouse_receipts_warehouse ON warehouse_receipts(warehouse_id
 CREATE INDEX idx_warehouse_receipts_customer ON warehouse_receipts(customer_id);
 CREATE INDEX idx_inventory_items_receipt ON inventory_items(receipt_id);
 CREATE INDEX idx_mbl_receipt_id ON master_bills_of_lading(receipt_id);
+
+-- 常用索引（员工侧）
+CREATE INDEX idx_employees_user_id ON employees(user_id);
+CREATE INDEX idx_employees_branch ON employees(branch);
+CREATE INDEX idx_employees_department ON employees(department);
 
 -- 出库/装柜侧
 CREATE INDEX idx_alloc_inventory_item ON inventory_allocations(inventory_item_id);

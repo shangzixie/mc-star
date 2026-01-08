@@ -124,6 +124,29 @@ export const payment = pgTable("payment", {
 	paymentInvoiceIdIdx: index("payment_invoice_id_idx").on(table.invoiceId),
 }));
 
+// -----------------------------------------------------------------------------
+// Company / Employees
+// -----------------------------------------------------------------------------
+
+export const employees = pgTable(
+  'employees',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    // Some employees may not have an account. If linked, enforce 1:1.
+    userId: text('user_id')
+      .unique()
+      .references(() => user.id, { onDelete: 'set null' }),
+    fullName: text('full_name').notNull(),
+    branch: text('branch').notNull(),
+    department: text('department').notNull(),
+  },
+  (table) => ({
+    idxEmployeesBranch: index('idx_employees_branch').on(table.branch),
+    idxEmployeesDepartment: index('idx_employees_department').on(table.department),
+    idxEmployeesUserId: index('idx_employees_user_id').on(table.userId),
+  })
+);
+
 export const userCredit = pgTable("user_credit", {
 	id: text("id").primaryKey(),
 	userId: text("user_id").notNull().references(() => user.id, { onDelete: 'cascade' }),
