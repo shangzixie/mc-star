@@ -20,6 +20,7 @@
     "admin:set": "tsx scripts/set-admin-role.ts",
     "fix-payments": "tsx scripts/fix-payments.ts",
     "fix-payments-scene": "tsx scripts/fix-payments-scene.ts",
+    "import-transport-nodes": "tsx scripts/import-transport-nodes.ts --file docs/transport_nodes_info.json",
     "content": "fumadocs-mdx",
     "email": "email dev --dir src/mail/templates --port 3333",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

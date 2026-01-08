@@ -228,7 +228,7 @@ export const transportNodes = pgTable(
   'transport_nodes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    unLocode: char('un_locode', { length: 5 }).unique(),
+    unLocode: varchar('un_locode', { length: 10 }).unique(),
     nameCn: text('name_cn').notNull(),
     nameEn: text('name_en'),
     countryCode: char('country_code', { length: 2 }),
@@ -471,15 +471,36 @@ export const masterBillsOfLading = pgTable(
       .references(() => warehouseReceipts.id, { onDelete: 'cascade' })
       .notNull()
       .unique(),
-    portOfDestination: text('port_of_destination'),
-    countryOfDestination: varchar('country_of_destination', { length: 100 }),
-    portOfDischarge: text('port_of_discharge'),
-    portOfLoading: text('port_of_loading'),
-    placeOfReceipt: text('place_of_receipt'),
+    portOfDestinationId: uuid('port_of_destination_id').references(
+      () => transportNodes.id,
+      { onDelete: 'set null' }
+    ),
+    portOfDischargeId: uuid('port_of_discharge_id').references(
+      () => transportNodes.id,
+      { onDelete: 'set null' }
+    ),
+    portOfLoadingId: uuid('port_of_loading_id').references(() => transportNodes.id, {
+      onDelete: 'set null',
+    }),
+    placeOfReceiptId: uuid('place_of_receipt_id').references(() => transportNodes.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
     idxMblReceiptId: index('idx_mbl_receipt_id').on(table.receiptId),
+    idxMblPortOfDestinationId: index('idx_mbl_port_of_destination_id').on(
+      table.portOfDestinationId
+    ),
+    idxMblPortOfDischargeId: index('idx_mbl_port_of_discharge_id').on(
+      table.portOfDischargeId
+    ),
+    idxMblPortOfLoadingId: index('idx_mbl_port_of_loading_id').on(
+      table.portOfLoadingId
+    ),
+    idxMblPlaceOfReceiptId: index('idx_mbl_place_of_receipt_id').on(
+      table.placeOfReceiptId
+    ),
   })
 );

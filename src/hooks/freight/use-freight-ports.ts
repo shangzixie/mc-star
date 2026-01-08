@@ -19,4 +19,3 @@ export function useFreightPorts(query: string) {
     enabled: query.length > 0,
   });
 }
-

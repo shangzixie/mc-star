@@ -257,17 +257,34 @@ export type FreightInventoryItemWithAllocations = z.infer<
 
 export const freightMasterBillOfLadingSchema = z
   .object({
-    id: uuidSchema,
-    receiptId: uuidSchema,
-    portOfDestination: z.string().nullable(),
-    countryOfDestination: z.string().nullable(),
-    portOfDischarge: z.string().nullable(),
-    portOfLoading: z.string().nullable(),
-    placeOfReceipt: z.string().nullable(),
-    createdAt: isoDateTimeSchema.nullable(),
-    updatedAt: isoDateTimeSchema.nullable(),
+    id: z.union([uuidSchema, z.string()]), // UUID or string (handles Drizzle's UUID conversion)
+    receiptId: z.union([uuidSchema, z.string()]),
+    portOfDestinationId: z.union([uuidSchema, z.string(), z.null()]),
+    portOfDischargeId: z.union([uuidSchema, z.string(), z.null()]),
+    portOfLoadingId: z.union([uuidSchema, z.string(), z.null()]),
+    placeOfReceiptId: z.union([uuidSchema, z.string(), z.null()]),
+    createdAt: z.union([isoDateTimeSchema, z.string(), z.null()]), // Handle timestamp objects
+    updatedAt: z.union([isoDateTimeSchema, z.string(), z.null()]),
   })
-  .passthrough();
+  .passthrough()
+  .transform((data) => ({
+    ...data,
+    // Ensure all UUID/timestamp fields are serialized to strings
+    id: String(data.id),
+    receiptId: String(data.receiptId),
+    portOfDestinationId: data.portOfDestinationId
+      ? String(data.portOfDestinationId)
+      : null,
+    portOfDischargeId: data.portOfDischargeId
+      ? String(data.portOfDischargeId)
+      : null,
+    portOfLoadingId: data.portOfLoadingId ? String(data.portOfLoadingId) : null,
+    placeOfReceiptId: data.placeOfReceiptId
+      ? String(data.placeOfReceiptId)
+      : null,
+    createdAt: data.createdAt ? String(data.createdAt) : null,
+    updatedAt: data.updatedAt ? String(data.updatedAt) : null,
+  }));
 
 export type FreightMasterBillOfLading = z.infer<
   typeof freightMasterBillOfLadingSchema

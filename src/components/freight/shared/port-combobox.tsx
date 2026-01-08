@@ -15,12 +15,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useFreightPorts } from '@/hooks/freight/use-freight-ports';
+import type { TransportNode } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface PortComboboxProps {
-  value?: string;
+  value?: string; // transport_nodes.id (uuid)
   onValueChange: (value: string | undefined) => void;
   disabled?: boolean;
   className?: string;
@@ -36,12 +37,12 @@ export function PortCombobox({
 }: PortComboboxProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('A'); // Default to 'A'
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
+      setDebouncedQuery(searchQuery || 'A'); // Always at least 'A'
     }, 300);
 
     return () => clearTimeout(timer);
@@ -49,17 +50,14 @@ export function PortCombobox({
 
   const { data: ports = [], isLoading } = useFreightPorts(debouncedQuery);
 
-  const getPortDisplayName = (port: any) => {
-    return port.nameCn || port.nameEn || port.unLocode || port.id;
-  };
+  // Find selected port to display its label
+  const selectedPort = useMemo(() => {
+    if (!value) return null;
+    return ports.find((p) => p.id === value) ?? null;
+  }, [value, ports]);
 
-  const getPortSecondaryInfo = (port: any) => {
-    const parts: string[] = [];
-    if (port.unLocode) parts.push(port.unLocode);
-    if (port.nameEn && port.nameEn !== port.nameCn) {
-      parts.push(port.nameEn);
-    }
-    return parts.join(' • ');
+  const getPortDisplayName = (port: TransportNode) => {
+    return port.nameCn || port.nameEn || port.unLocode || port.id;
   };
 
   return (
@@ -68,11 +66,21 @@ export function PortCombobox({
         <Button
           variant="outline"
           aria-expanded={open}
-          className={cn('w-full justify-between', className)}
+          className={cn('w-full justify-between h-auto py-2', className)}
           disabled={disabled}
         >
-          {value ? (
-            <span className="truncate">{value}</span>
+          {selectedPort ? (
+            <div className="flex flex-col items-start text-left">
+              <span className="font-medium text-sm">
+                {selectedPort.unLocode || '-'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {selectedPort.nameEn || selectedPort.nameCn || '-'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {selectedPort.countryCode || '-'}
+              </span>
+            </div>
           ) : (
             <span className="text-muted-foreground">
               {placeholder || 'Select port...'}
@@ -81,7 +89,7 @@ export function PortCombobox({
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
+      <PopoverContent className="w-[500px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={placeholder || 'Search ports...'}
@@ -97,35 +105,30 @@ export function PortCombobox({
                 {ports.map((port) => (
                   <CommandItem
                     key={port.id}
-                    value={getPortDisplayName(port)}
-                    onSelect={(currentValue) => {
-                      onValueChange(
-                        currentValue === value ? undefined : currentValue
-                      );
+                    value={port.id}
+                    onSelect={() => {
+                      onValueChange(port.id === value ? undefined : port.id);
                       setOpen(false);
                       setSearchQuery('');
                     }}
-                    className="flex items-center justify-between"
+                    className="flex items-center gap-3"
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Check
-                        className={cn(
-                          'size-4 shrink-0',
-                          value === getPortDisplayName(port)
-                            ? 'opacity-100'
-                            : 'opacity-0'
-                        )}
-                      />
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="truncate">
-                          {getPortDisplayName(port)}
-                        </span>
-                        {getPortSecondaryInfo(port) && (
-                          <span className="text-xs text-muted-foreground truncate">
-                            {getPortSecondaryInfo(port)}
-                          </span>
-                        )}
-                      </div>
+                    <Check
+                      className={cn(
+                        'size-4 shrink-0',
+                        port.id === value ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <div className="grid grid-cols-[100px_1fr_60px] gap-2 flex-1 min-w-0">
+                      <span className="font-mono text-sm truncate">
+                        {port.unLocode || '-'}
+                      </span>
+                      <span className="truncate">
+                        {port.nameCn || port.nameEn || '-'}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {port.countryCode || '-'}
+                      </span>
                     </div>
                   </CommandItem>
                 ))}
@@ -137,4 +140,3 @@ export function PortCombobox({
     </Popover>
   );
 }
-

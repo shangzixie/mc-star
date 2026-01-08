@@ -1,7 +1,7 @@
 'use client';
 
-import { FreightSection } from '@/components/freight/ui/freight-section';
 import { PortCombobox } from '@/components/freight/shared/port-combobox';
+import { FreightSection } from '@/components/freight/ui/freight-section';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,11 +21,10 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const mblFormSchema = z.object({
-  portOfDestination: z.string().optional(),
-  countryOfDestination: z.string().max(100).optional(),
-  portOfDischarge: z.string().optional(),
-  portOfLoading: z.string().optional(),
-  placeOfReceipt: z.string().optional(),
+  portOfDestinationId: z.string().uuid().optional(),
+  portOfDischargeId: z.string().uuid().optional(),
+  portOfLoadingId: z.string().uuid().optional(),
+  placeOfReceiptId: z.string().uuid().optional(),
 });
 
 type MBLFormData = z.infer<typeof mblFormSchema>;
@@ -43,11 +42,10 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
   const form = useForm<MBLFormData>({
     resolver: zodResolver(mblFormSchema),
     defaultValues: {
-      portOfDestination: '',
-      countryOfDestination: '',
-      portOfDischarge: '',
-      portOfLoading: '',
-      placeOfReceipt: '',
+      portOfDestinationId: undefined,
+      portOfDischargeId: undefined,
+      portOfLoadingId: undefined,
+      placeOfReceiptId: undefined,
     },
   });
 
@@ -55,11 +53,10 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
   useEffect(() => {
     if (existingMBL) {
       form.reset({
-        portOfDestination: existingMBL.portOfDestination ?? '',
-        countryOfDestination: existingMBL.countryOfDestination ?? '',
-        portOfDischarge: existingMBL.portOfDischarge ?? '',
-        portOfLoading: existingMBL.portOfLoading ?? '',
-        placeOfReceipt: existingMBL.placeOfReceipt ?? '',
+        portOfDestinationId: existingMBL.portOfDestinationId ?? undefined,
+        portOfDischargeId: existingMBL.portOfDischargeId ?? undefined,
+        portOfLoadingId: existingMBL.portOfLoadingId ?? undefined,
+        placeOfReceiptId: existingMBL.placeOfReceiptId ?? undefined,
       });
     }
   }, [existingMBL, form]);
@@ -101,100 +98,87 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(handleSave)}>
-      <FreightSection
-        title={t('title')}
-        description={t('description')}
-        actions={
-          <Button
-            type="submit"
-            disabled={isSaving || !isDirty}
-            size="sm"
-            variant="default"
-          >
-            <Save className="mr-2 size-4" />
-            {isSaving ? t('saving') : t('save')}
-          </Button>
-        }
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* 目的港 */}
-          <div className="space-y-2">
-            <Label htmlFor="portOfDestination">{t('portOfDestination')}</Label>
-            <Controller
-              control={form.control}
-              name="portOfDestination"
-              render={({ field }) => (
-                <PortCombobox
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder={t('portOfDestinationPlaceholder')}
-                />
-              )}
-            />
-          </div>
-
-          {/* 目的国 */}
-          <div className="space-y-2">
-            <Label htmlFor="countryOfDestination">
-              {t('countryOfDestination')}
-            </Label>
-            <Input
-              id="countryOfDestination"
-              {...form.register('countryOfDestination')}
-              placeholder={t('countryOfDestinationPlaceholder')}
-            />
-          </div>
-
-          {/* 卸货港 */}
-          <div className="space-y-2">
-            <Label htmlFor="portOfDischarge">{t('portOfDischarge')}</Label>
-            <Controller
-              control={form.control}
-              name="portOfDischarge"
-              render={({ field }) => (
-                <PortCombobox
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder={t('portOfDischargePlaceholder')}
-                />
-              )}
-            />
-          </div>
-
-          {/* 起运港 */}
-          <div className="space-y-2">
-            <Label htmlFor="portOfLoading">{t('portOfLoading')}</Label>
-            <Controller
-              control={form.control}
-              name="portOfLoading"
-              render={({ field }) => (
-                <PortCombobox
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder={t('portOfLoadingPlaceholder')}
-                />
-              )}
-            />
-          </div>
-
-          {/* 收货地 */}
-          <div className="space-y-2">
-            <Label htmlFor="placeOfReceipt">{t('placeOfReceipt')}</Label>
-            <Controller
-              control={form.control}
-              name="placeOfReceipt"
-              render={({ field }) => (
-                <PortCombobox
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder={t('placeOfReceiptPlaceholder')}
-                />
-              )}
-            />
-          </div>
+    <FreightSection
+      title={t('title')}
+      description={t('description')}
+      actions={
+        <Button
+          type="button"
+          onClick={form.handleSubmit(handleSave)}
+          disabled={isSaving || !isDirty}
+          size="sm"
+          variant="default"
+        >
+          <Save className="mr-2 size-4" />
+          {isSaving ? t('saving') : t('save')}
+        </Button>
+      }
+    >
+      <div className="space-y-4">
+        {/* 目的港 */}
+        <div className="space-y-2">
+          <Label htmlFor="portOfDestinationId">{t('portOfDestination')}</Label>
+          <Controller
+            control={form.control}
+            name="portOfDestinationId"
+            render={({ field }) => (
+              <PortCombobox
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder={t('portOfDestinationPlaceholder')}
+              />
+            )}
+          />
         </div>
-      </FreightSection>
-    </form>
+
+        {/* 卸货港 */}
+        <div className="space-y-2">
+          <Label htmlFor="portOfDischargeId">{t('portOfDischarge')}</Label>
+          <Controller
+            control={form.control}
+            name="portOfDischargeId"
+            render={({ field }) => (
+              <PortCombobox
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder={t('portOfDischargePlaceholder')}
+              />
+            )}
+          />
+        </div>
+
+        {/* 起运港 */}
+        <div className="space-y-2">
+          <Label htmlFor="portOfLoadingId">{t('portOfLoading')}</Label>
+          <Controller
+            control={form.control}
+            name="portOfLoadingId"
+            render={({ field }) => (
+              <PortCombobox
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder={t('portOfLoadingPlaceholder')}
+              />
+            )}
+          />
+        </div>
+
+        {/* 收货地 */}
+        <div className="space-y-2">
+          <Label htmlFor="placeOfReceiptId">{t('placeOfReceipt')}</Label>
+          <Controller
+            control={form.control}
+            name="placeOfReceiptId"
+            render={({ field }) => (
+              <PortCombobox
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder={t('placeOfReceiptPlaceholder')}
+              />
+            )}
+          />
+        </div>
+      </div>
+    </FreightSection>
   );
 }

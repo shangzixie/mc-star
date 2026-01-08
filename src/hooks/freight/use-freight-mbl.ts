@@ -14,9 +14,9 @@ export function useFreightMBL(receiptId: string) {
       const response = await freightApiClient.get(
         `/api/freight/master-bills-of-lading/${receiptId}`
       );
-      const data = response.data;
+      const payload = (response.data as any)?.data ?? null;
       // Allow null response (no MBL created yet)
-      return data ? freightMasterBillOfLadingSchema.parse(data) : null;
+      return payload ? freightMasterBillOfLadingSchema.parse(payload) : null;
     },
     enabled: !!receiptId,
   });
@@ -31,18 +31,18 @@ export function useCreateFreightMBL(receiptId: string) {
   return useMutation({
     mutationFn: async (
       data: Partial<{
-        portOfDestination?: string;
-        countryOfDestination?: string;
-        portOfDischarge?: string;
-        portOfLoading?: string;
-        placeOfReceipt?: string;
+        portOfDestinationId?: string;
+        portOfDischargeId?: string;
+        portOfLoadingId?: string;
+        placeOfReceiptId?: string;
       }>
     ) => {
       const response = await freightApiClient.post(
         `/api/freight/master-bills-of-lading/${receiptId}`,
         data
       );
-      return freightMasterBillOfLadingSchema.parse(response.data);
+      const payload = (response.data as any)?.data;
+      return freightMasterBillOfLadingSchema.parse(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [MBL_QUERY_KEY, receiptId] });
@@ -59,18 +59,18 @@ export function useUpdateFreightMBL(receiptId: string) {
   return useMutation({
     mutationFn: async (
       data: Partial<{
-        portOfDestination?: string;
-        countryOfDestination?: string;
-        portOfDischarge?: string;
-        portOfLoading?: string;
-        placeOfReceipt?: string;
+        portOfDestinationId?: string;
+        portOfDischargeId?: string;
+        portOfLoadingId?: string;
+        placeOfReceiptId?: string;
       }>
     ) => {
       const response = await freightApiClient.patch(
         `/api/freight/master-bills-of-lading/${receiptId}`,
         data
       );
-      return freightMasterBillOfLadingSchema.parse(response.data);
+      const payload = (response.data as any)?.data;
+      return freightMasterBillOfLadingSchema.parse(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [MBL_QUERY_KEY, receiptId] });

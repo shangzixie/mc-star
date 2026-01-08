@@ -30,7 +30,7 @@ export const createPartySchema = z.object({
 });
 
 export const createLocationSchema = z.object({
-  unLocode: z.string().length(5).optional(),
+  unLocode: z.string().min(1).max(10).optional(),
   nameCn: z.string().min(1),
   nameEn: z.string().optional(),
   countryCode: z.string().length(2).optional(),
@@ -172,18 +172,15 @@ export const warehouseReceiptsQuerySchema = z.object({
 
 // Master Bill of Lading (MBL) schemas
 export const createMasterBillOfLadingSchema = z.object({
-  receiptId: uuidSchema,
-  portOfDestination: z.string().optional(),
-  countryOfDestination: z.string().max(100).optional(),
-  portOfDischarge: z.string().optional(),
-  portOfLoading: z.string().optional(),
-  placeOfReceipt: z.string().optional(),
+  portOfDestinationId: uuidSchema.optional(),
+  portOfDischargeId: uuidSchema.optional(),
+  portOfLoadingId: uuidSchema.optional(),
+  placeOfReceiptId: uuidSchema.optional(),
 });
 
 export const updateMasterBillOfLadingSchema = z.object({
-  portOfDestination: z.string().optional(),
-  countryOfDestination: z.string().max(100).optional(),
-  portOfDischarge: z.string().optional(),
-  portOfLoading: z.string().optional(),
-  placeOfReceipt: z.string().optional(),
+  portOfDestinationId: uuidSchema.optional(),
+  portOfDischargeId: uuidSchema.optional(),
+  portOfLoadingId: uuidSchema.optional(),
+  placeOfReceiptId: uuidSchema.optional(),
 });

@@ -29,11 +29,12 @@ export async function GET(request: Request) {
           )
         : undefined;
 
-    const ports = searchClause ? await base.where(searchClause).limit(20) : await base.limit(20);
+    const ports = searchClause
+      ? await base.where(searchClause).limit(20)
+      : await base.limit(20);
 
     return jsonOk({ data: ports });
   } catch (error) {
     return jsonError(error as Error);
   }
 }
-

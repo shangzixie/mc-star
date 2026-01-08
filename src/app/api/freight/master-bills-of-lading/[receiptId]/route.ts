@@ -96,21 +96,17 @@ export async function POST(
       });
     }
 
-    const body = await parseJson(request);
-    const data = createMasterBillOfLadingSchema.parse({
-      ...body,
-      receiptId: validReceiptId,
-    });
+    const body = await parseJson(request, createMasterBillOfLadingSchema);
+    const data = { ...body, receiptId: validReceiptId };
 
     const [newMbl] = await db
       .insert(masterBillsOfLading)
       .values({
-        receiptId: data.receiptId,
-        portOfDestination: data.portOfDestination,
-        countryOfDestination: data.countryOfDestination,
-        portOfDischarge: data.portOfDischarge,
-        portOfLoading: data.portOfLoading,
-        placeOfReceipt: data.placeOfReceipt,
+        receiptId: data.receiptId as any,
+        portOfDestinationId: data.portOfDestinationId as any,
+        portOfDischargeId: data.portOfDischargeId as any,
+        portOfLoadingId: data.portOfLoadingId as any,
+        placeOfReceiptId: data.placeOfReceiptId as any,
       })
       .returning();
 
@@ -149,29 +145,23 @@ export async function PATCH(
       });
     }
 
-    const body = await parseJson(request);
-    const data = updateMasterBillOfLadingSchema.parse(body);
+    const body = await parseJson(request, updateMasterBillOfLadingSchema);
+    const data = body;
 
-    const updateData: Record<string, any> = {
-      updatedAt: new Date().toISOString(),
-    };
+    const updateData: Record<string, any> = {};
 
-    if (data.portOfDestination !== undefined) {
-      updateData.portOfDestination = data.portOfDestination;
+    if (data.portOfDestinationId !== undefined) {
+      updateData.portOfDestinationId = data.portOfDestinationId;
     }
-    if (data.countryOfDestination !== undefined) {
-      updateData.countryOfDestination = data.countryOfDestination;
+    if (data.portOfDischargeId !== undefined) {
+      updateData.portOfDischargeId = data.portOfDischargeId;
     }
-    if (data.portOfDischarge !== undefined) {
-      updateData.portOfDischarge = data.portOfDischarge;
+    if (data.portOfLoadingId !== undefined) {
+      updateData.portOfLoadingId = data.portOfLoadingId;
     }
-    if (data.portOfLoading !== undefined) {
-      updateData.portOfLoading = data.portOfLoading;
+    if (data.placeOfReceiptId !== undefined) {
+      updateData.placeOfReceiptId = data.placeOfReceiptId;
     }
-    if (data.placeOfReceipt !== undefined) {
-      updateData.placeOfReceipt = data.placeOfReceipt;
-    }
-
     const [updatedMbl] = await db
       .update(masterBillsOfLading)
       .set(updateData)

@@ -220,3 +220,96 @@ export async function deleteInventoryItem(itemId: string) {
     schema: z.object({ success: z.boolean() }),
   });
 }
+
+// -----------------------------------------------------------------------------
+// Freight API Client (for use in hooks)
+// A simple HTTP client wrapper for making requests to /api/freight/* endpoints
+// -----------------------------------------------------------------------------
+
+interface RequestConfig {
+  params?: Record<string, string | number | boolean>;
+  headers?: Record<string, string>;
+  data?: unknown;
+}
+
+interface Response<T = unknown> {
+  data: T;
+  status: number;
+  statusText: string;
+}
+
+class FreightApiClient {
+  async get<T = unknown>(
+    url: string,
+    config?: RequestConfig
+  ): Promise<Response<T>> {
+    const params = new URLSearchParams();
+    if (config?.params) {
+      for (const [key, value] of Object.entries(config.params)) {
+        params.append(key, String(value));
+      }
+    }
+
+    const fullUrl = params.size > 0 ? `${url}?${params.toString()}` : url;
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+      },
+    });
+
+    const data = await response.json();
+    return {
+      data,
+      status: response.status,
+      statusText: response.statusText,
+    };
+  }
+
+  async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: RequestConfig
+  ): Promise<Response<T>> {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    const responseData = await response.json();
+    return {
+      data: responseData,
+      status: response.status,
+      statusText: response.statusText,
+    };
+  }
+
+  async patch<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: RequestConfig
+  ): Promise<Response<T>> {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    const responseData = await response.json();
+    return {
+      data: responseData,
+      status: response.status,
+      statusText: response.statusText,
+    };
+  }
+}
+
+export const freightApiClient = new FreightApiClient();
