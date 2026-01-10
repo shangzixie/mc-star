@@ -32,6 +32,7 @@ export function useCreateFreightMBL(receiptId: string) {
     mutationFn: async (
       data: Partial<{
         mblNo?: string;
+        soNo?: string;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
@@ -61,6 +62,7 @@ export function useUpdateFreightMBL(receiptId: string) {
     mutationFn: async (
       data: Partial<{
         mblNo?: string | null;
+        soNo?: string | null;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;

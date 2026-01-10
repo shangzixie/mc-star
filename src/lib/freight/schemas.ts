@@ -173,6 +173,7 @@ export const warehouseReceiptsQuerySchema = z.object({
 // Master Bill of Lading (MBL) schemas
 export const createMasterBillOfLadingSchema = z.object({
   mblNo: z.string().max(50).optional(),
+  soNo: z.string().max(50).optional(),
   portOfDestinationId: uuidSchema.optional(),
   portOfDischargeId: uuidSchema.optional(),
   portOfLoadingId: uuidSchema.optional(),
@@ -181,6 +182,7 @@ export const createMasterBillOfLadingSchema = z.object({
 
 export const updateMasterBillOfLadingSchema = z.object({
   mblNo: z.string().max(50).nullable().optional(),
+  soNo: z.string().max(50).nullable().optional(),
   portOfDestinationId: uuidSchema.optional(),
   portOfDischargeId: uuidSchema.optional(),
   portOfLoadingId: uuidSchema.optional(),

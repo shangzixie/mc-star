@@ -104,6 +104,7 @@ export async function POST(
       .values({
         receiptId: data.receiptId as any,
         mblNo: data.mblNo ?? null,
+        soNo: data.soNo ?? null,
         portOfDestinationId: data.portOfDestinationId as any,
         portOfDischargeId: data.portOfDischargeId as any,
         portOfLoadingId: data.portOfLoadingId as any,
@@ -153,6 +154,9 @@ export async function PATCH(
 
     if (data.mblNo !== undefined) {
       updateData.mblNo = data.mblNo;
+    }
+    if (data.soNo !== undefined) {
+      updateData.soNo = data.soNo;
     }
     if (data.portOfDestinationId !== undefined) {
       updateData.portOfDestinationId = data.portOfDestinationId;

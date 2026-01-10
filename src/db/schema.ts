@@ -495,6 +495,7 @@ export const masterBillsOfLading = pgTable(
       .notNull()
       .unique(),
     mblNo: varchar('mbl_no', { length: 50 }),
+    soNo: varchar('so_no', { length: 50 }),
     portOfDestinationId: uuid('port_of_destination_id').references(
       () => transportNodes.id,
       { onDelete: 'set null' }

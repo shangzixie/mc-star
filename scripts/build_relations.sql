@@ -160,6 +160,9 @@ CREATE TABLE master_bills_of_lading (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_id UUID NOT NULL UNIQUE REFERENCES warehouse_receipts(id) ON DELETE CASCADE, -- 一对一关系
 
+    mbl_no VARCHAR(50), -- MBL号
+    so_no VARCHAR(50),  -- SO号
+
     -- 运输节点（港口/机场/车站等）改为存 transport_nodes.id，保证一致性和可关联查询
     port_of_destination_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL, -- 目的港
     port_of_discharge_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL,   -- 卸货港
@@ -174,6 +177,8 @@ CREATE TABLE master_bills_of_lading (
 CREATE TABLE house_bills_of_lading (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_id UUID NOT NULL UNIQUE REFERENCES warehouse_receipts(id) ON DELETE CASCADE, -- 一对一关系
+
+    hbl_no VARCHAR(50), -- HBL号
 
     -- 运输节点（港口/机场/车站等）改为存 transport_nodes.id，保证一致性和可关联查询
     place_of_receipt_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL,    -- 收货地

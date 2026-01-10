@@ -260,6 +260,7 @@ export const freightMasterBillOfLadingSchema = z
     id: z.union([uuidSchema, z.string()]), // UUID or string (handles Drizzle's UUID conversion)
     receiptId: z.union([uuidSchema, z.string()]),
     mblNo: z.string().nullable().optional(),
+    soNo: z.string().nullable().optional(),
     portOfDestinationId: z.union([uuidSchema, z.string(), z.null()]),
     portOfDischargeId: z.union([uuidSchema, z.string(), z.null()]),
     portOfLoadingId: z.union([uuidSchema, z.string(), z.null()]),
@@ -274,6 +275,7 @@ export const freightMasterBillOfLadingSchema = z
     id: String(data.id),
     receiptId: String(data.receiptId),
     mblNo: data.mblNo ?? null,
+    soNo: data.soNo ?? null,
     portOfDestinationId: data.portOfDestinationId
       ? String(data.portOfDestinationId)
       : null,

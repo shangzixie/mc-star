@@ -60,9 +60,7 @@ import type {
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
 import {
-  RECEIPT_STATUSES,
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
-  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -85,11 +83,10 @@ import { z } from 'zod';
 
 const receiptFormSchema = z.object({
   customerId: z.string().optional(),
-  status: z.string().min(1, '单核状态必填'),
-  transportType: z.string().optional(),
   customsDeclarationType: z.string().optional(),
   inboundTime: z.string().min(1, '入库时间必填'),
   mblNo: z.string().max(50).optional(),
+  soNo: z.string().max(50).optional(),
   hblNo: z.string().max(50).optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
@@ -166,11 +163,10 @@ export function ReceiptDetailEditView({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
       customerId: receipt.customerId ?? '',
-      status: receipt.status ?? 'RECEIVED',
-      transportType: receipt.transportType ?? '',
       customsDeclarationType: receipt.customsDeclarationType ?? '',
       inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
       mblNo: '',
+      soNo: '',
       hblNo: '',
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
@@ -207,6 +203,14 @@ export function ReceiptDetailEditView({
   }, [mblQuery.data?.mblNo, form]);
 
   useEffect(() => {
+    const nextSoNo = mblQuery.data?.soNo ?? '';
+    const current = form.getValues('soNo') ?? '';
+    if (nextSoNo !== current) {
+      form.setValue('soNo', nextSoNo, { shouldDirty: false });
+    }
+  }, [mblQuery.data?.soNo, form]);
+
+  useEffect(() => {
     const nextHblNo = hblQuery.data?.hblNo ?? '';
     const current = form.getValues('hblNo') ?? '';
     if (nextHblNo !== current) {
@@ -233,12 +237,6 @@ export function ReceiptDetailEditView({
       if (data.customerId !== (receipt.customerId ?? '')) {
         payload.customerId = data.customerId || undefined;
       }
-      if (data.status !== receipt.status) {
-        payload.status = data.status;
-      }
-      if (data.transportType !== (receipt.transportType ?? '')) {
-        payload.transportType = data.transportType || undefined;
-      }
       if (
         data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')
       ) {
@@ -258,6 +256,10 @@ export function ReceiptDetailEditView({
       const nextMblNo = (data.mblNo ?? '').trim();
       const prevMblNo = (mblQuery.data?.mblNo ?? '').trim();
       const hasMblNoChange = nextMblNo !== prevMblNo;
+
+      const nextSoNo = (data.soNo ?? '').trim();
+      const prevSoNo = (mblQuery.data?.soNo ?? '').trim();
+      const hasSoNoChange = nextSoNo !== prevSoNo;
 
       const nextHblNo = (data.hblNo ?? '').trim();
       const prevHblNo = (hblQuery.data?.hblNo ?? '').trim();
@@ -304,6 +306,7 @@ export function ReceiptDetailEditView({
       if (
         Object.keys(payload).length === 0 &&
         !hasMblNoChange &&
+        !hasSoNoChange &&
         !hasHblNoChange
       ) {
         toast.info('没有需要保存的更改');
@@ -323,6 +326,15 @@ export function ReceiptDetailEditView({
         }
       }
 
+      if (hasSoNoChange) {
+        const soNo = nextSoNo || null;
+        if (mblQuery.data) {
+          await updateMblMutation.mutateAsync({ soNo });
+        } else if (soNo) {
+          await createMblMutation.mutateAsync({ soNo });
+        }
+      }
+
       if (hasHblNoChange) {
         const hblNo = nextHblNo || null;
         if (hblQuery.data) {
@@ -336,6 +348,7 @@ export function ReceiptDetailEditView({
       form.reset({
         ...data,
         mblNo: nextMblNo,
+        soNo: nextSoNo,
         hblNo: nextHblNo,
       });
     } catch (error) {
@@ -397,7 +410,24 @@ export function ReceiptDetailEditView({
               <Label className="text-base font-semibold">
                 {t('receipt.fields.receiptNo')}
               </Label>
-              <div className="text-lg font-semibold">{receipt.receiptNo}</div>
+              <div className="text-lg font-semibold">
+                {receipt.receiptNo}
+                {mblQuery.data?.soNo ? (
+                  <span className="ml-2 text-base font-medium text-muted-foreground">
+                    / SO {mblQuery.data.soNo}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            {/* SO No */}
+            <div className="space-y-2">
+              <Label htmlFor="soNo">SO号</Label>
+              <Input
+                id="soNo"
+                placeholder="请输入SO号"
+                {...form.register('soNo')}
+              />
             </div>
 
             {/* MBL No */}
@@ -420,56 +450,14 @@ export function ReceiptDetailEditView({
               />
             </div>
 
-            {/* 单核状态 */}
+            {/* 运输类型（创建时已确定，仅展示） */}
             <div className="space-y-2">
-              <Label htmlFor="status">
-                {t('status.label')}
-                <span className="ml-1 text-destructive">*</span>
-              </Label>
-              <Select
-                value={form.watch('status')}
-                onValueChange={(value) =>
-                  form.setValue('status', value, { shouldDirty: true })
-                }
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RECEIPT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {t(`status.${s.toLowerCase()}` as any)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.status && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.status.message}
-                </p>
-              )}
-            </div>
-
-            {/* 运输类型 */}
-            <div className="space-y-2">
-              <Label htmlFor="transportType">{t('transportType.label')}</Label>
-              <Select
-                value={form.watch('transportType')}
-                onValueChange={(value) =>
-                  form.setValue('transportType', value, { shouldDirty: true })
-                }
-              >
-                <SelectTrigger id="transportType">
-                  <SelectValue placeholder={t('transportType.placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
-                    <SelectItem key={tt} value={tt}>
-                      {t(`transportType.options.${tt}` as any)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm">{t('transportType.label')}</Label>
+              <div className="text-sm text-muted-foreground">
+                {receipt.transportType
+                  ? t(`transportType.options.${receipt.transportType}` as any)
+                  : '-'}
+              </div>
             </div>
 
             {/* 报关类型 */}
