@@ -723,7 +723,7 @@
             "customsDeclarationType": "报关类型",
             "remarks": "备注",
             "internalRemarks": "内部备注",
-            "status": "审核状态",
+            "status": "状态",
             "commodityNames": "货物品名",
             "createdAt": "创建时间",
             "inboundTime": "入仓时间"
@@ -827,7 +827,7 @@
         "remarks": "备注",
         "internalRemarks": "内部备注",
         "status": {
-          "label": "审核状态",
+          "label": "状态",
           "received": "已入库",
           "partial": "部分出库",
           "shipped": "已出库"
