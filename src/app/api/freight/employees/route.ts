@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const q = url.searchParams.get('q')?.trim();
 
     const db = await getDb();
-    
+
     // Fuzzy search on fullName if query provided
     const rows =
       q && q.length > 0
@@ -34,4 +34,3 @@ export async function GET(request: Request) {
     return jsonError(error as Error);
   }
 }
-

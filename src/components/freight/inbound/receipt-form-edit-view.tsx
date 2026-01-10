@@ -1,7 +1,10 @@
 'use client';
 
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
+import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
+import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
+import { ShipperCombobox } from '@/components/freight/shared/shipper-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +44,10 @@ const receiptFormSchema = z.object({
   inboundTime: z.string().min(1, '入库时间必填'),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
+  // Contact information - parties (frontend only)
+  shipperId: z.string().optional(),
+  bookingAgentId: z.string().optional(),
+  customsAgentId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -81,6 +88,10 @@ export function ReceiptFormEditView({
       inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
+      // Contact information - parties (frontend only for now)
+      shipperId: '',
+      bookingAgentId: '',
+      customsAgentId: '',
     },
   });
 
@@ -127,6 +138,17 @@ export function ReceiptFormEditView({
       }
       if (data.internalRemarks !== (receipt.internalRemarks ?? '')) {
         payload.internalRemarks = data.internalRemarks;
+      }
+
+      // Contact information - parties (frontend only, backend not yet implemented)
+      if (data.shipperId) {
+        payload.shipperId = data.shipperId;
+      }
+      if (data.bookingAgentId) {
+        payload.bookingAgentId = data.bookingAgentId;
+      }
+      if (data.customsAgentId) {
+        payload.customsAgentId = data.customsAgentId;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -350,6 +372,46 @@ export function ReceiptFormEditView({
                   }
                   onAddNew={() => setAddCustomerDialogOpen(true)}
                   placeholder={t('selectCustomer')}
+                />
+              </div>
+
+              {/* 发货人 */}
+              <div className="space-y-2">
+                <Label htmlFor="shipperId">{t('shipper')}</Label>
+                <ShipperCombobox
+                  value={form.watch('shipperId')}
+                  onValueChange={(value) =>
+                    form.setValue('shipperId', value, { shouldDirty: true })
+                  }
+                  placeholder={t('selectShipper')}
+                />
+              </div>
+
+              {/* 订舱代理 */}
+              <div className="space-y-2">
+                <Label htmlFor="bookingAgentId">{t('bookingAgent')}</Label>
+                <BookingAgentCombobox
+                  value={form.watch('bookingAgentId')}
+                  onValueChange={(value) =>
+                    form.setValue('bookingAgentId', value, {
+                      shouldDirty: true,
+                    })
+                  }
+                  placeholder={t('selectBookingAgent')}
+                />
+              </div>
+
+              {/* 清关代理 */}
+              <div className="space-y-2">
+                <Label htmlFor="customsAgentId">{t('customsAgent')}</Label>
+                <CustomsAgentCombobox
+                  value={form.watch('customsAgentId')}
+                  onValueChange={(value) =>
+                    form.setValue('customsAgentId', value, {
+                      shouldDirty: true,
+                    })
+                  }
+                  placeholder={t('selectCustomsAgent')}
                 />
               </div>
             </div>

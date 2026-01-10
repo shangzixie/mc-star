@@ -807,6 +807,18 @@
         "searchCustomer": "搜索客户名称或代码...",
         "noCustomerFound": "未找到客户",
         "addNewCustomer": "新增客户",
+        "shipper": "发货人",
+        "selectShipper": "选择发货人",
+        "searchShipper": "搜索发货人名称或代码...",
+        "noShipperFound": "未找到发货人",
+        "bookingAgent": "订舱代理",
+        "selectBookingAgent": "选择订舱代理",
+        "searchBookingAgent": "搜索订舱代理名称或代码...",
+        "noBookingAgentFound": "未找到订舱代理",
+        "customsAgent": "清关代理",
+        "selectCustomsAgent": "选择清关代理",
+        "searchCustomsAgent": "搜索清关代理名称或代码...",
+        "noCustomsAgentFound": "未找到清关代理",
         "loading": "加载中...",
         "employees": {
           "title": "雇员分配",
@@ -874,6 +886,24 @@
           "createSuccess": "客户创建成功",
           "createSuccessAndSelect": "客户创建成功，请在列表中选择",
           "addDescription": "请填写客户的基本信息，中文名称为必填项"
+        },
+        "shipperFields": {
+          "name": "发货人名称",
+          "code": "发货人代码",
+          "contact": "联系方式",
+          "address": "地址"
+        },
+        "bookingAgentFields": {
+          "name": "订舱代理名称",
+          "code": "订舱代理代码",
+          "contact": "联系方式",
+          "address": "地址"
+        },
+        "customsAgentFields": {
+          "name": "清关代理名称",
+          "code": "清关代理代码",
+          "contact": "联系方式",
+          "address": "地址"
         },
         "itemActions": {
           "edit": "编辑",

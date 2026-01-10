@@ -807,6 +807,18 @@
         "searchCustomer": "Search customer name or code...",
         "noCustomerFound": "No customer found",
         "addNewCustomer": "Add New Customer",
+        "shipper": "Shipper",
+        "selectShipper": "Select shipper",
+        "searchShipper": "Search shipper name or code...",
+        "noShipperFound": "No shipper found",
+        "bookingAgent": "Booking Agent",
+        "selectBookingAgent": "Select booking agent",
+        "searchBookingAgent": "Search booking agent name or code...",
+        "noBookingAgentFound": "No booking agent found",
+        "customsAgent": "Customs Clearance Agent",
+        "selectCustomsAgent": "Select customs agent",
+        "searchCustomsAgent": "Search customs agent name or code...",
+        "noCustomsAgentFound": "No customs agent found",
         "loading": "Loading...",
         "employees": {
           "title": "Employee Assignments",
@@ -874,6 +886,24 @@
           "createSuccess": "Customer created successfully",
           "createSuccessAndSelect": "Customer created successfully, please select from the list",
           "addDescription": "Please fill in customer's basic information. Chinese name is required."
+        },
+        "shipperFields": {
+          "name": "Shipper Name",
+          "code": "Shipper Code",
+          "contact": "Contact",
+          "address": "Address"
+        },
+        "bookingAgentFields": {
+          "name": "Booking Agent Name",
+          "code": "Booking Agent Code",
+          "contact": "Contact",
+          "address": "Address"
+        },
+        "customsAgentFields": {
+          "name": "Customs Agent Name",
+          "code": "Customs Agent Code",
+          "contact": "Contact",
+          "address": "Address"
         },
         "itemActions": {
           "edit": "Edit",

@@ -144,4 +144,3 @@ export function EmployeeAssignmentsSection({
     </FreightSection>
   );
 }
-

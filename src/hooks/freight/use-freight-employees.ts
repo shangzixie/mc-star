@@ -38,4 +38,3 @@ export function useFreightEmployees(params: UseFreightEmployeesParams = {}) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
-

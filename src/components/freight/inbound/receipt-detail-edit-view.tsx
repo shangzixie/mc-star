@@ -3,7 +3,10 @@
 import { EmployeeAssignmentsSection } from '@/components/freight/inbound/employee-assignments-section';
 import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
+import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
+import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-combobox';
+import { ShipperCombobox } from '@/components/freight/shared/shipper-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
@@ -87,6 +90,10 @@ const receiptFormSchema = z.object({
   financeEmployeeId: z.string().optional(),
   bookingEmployeeId: z.string().optional(),
   reviewerEmployeeId: z.string().optional(),
+  // Contact information - parties
+  shipperId: z.string().optional(),
+  bookingAgentId: z.string().optional(),
+  customsAgentId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -154,6 +161,10 @@ export function ReceiptDetailEditView({
       financeEmployeeId: '',
       bookingEmployeeId: '',
       reviewerEmployeeId: '',
+      // Contact information - parties (frontend only for now)
+      shipperId: '',
+      bookingAgentId: '',
+      customsAgentId: '',
     },
   });
 
@@ -225,6 +236,17 @@ export function ReceiptDetailEditView({
       }
       if (data.reviewerEmployeeId) {
         payload.reviewerEmployeeId = data.reviewerEmployeeId;
+      }
+
+      // Contact information - parties (frontend only, backend not yet implemented)
+      if (data.shipperId) {
+        payload.shipperId = data.shipperId;
+      }
+      if (data.bookingAgentId) {
+        payload.bookingAgentId = data.bookingAgentId;
+      }
+      if (data.customsAgentId) {
+        payload.customsAgentId = data.customsAgentId;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -600,7 +622,9 @@ export function ReceiptDetailEditView({
             {/* 左侧：雇员分配 */}
             <EmployeeAssignmentsSection
               salesEmployeeId={form.watch('salesEmployeeId')}
-              customerServiceEmployeeId={form.watch('customerServiceEmployeeId')}
+              customerServiceEmployeeId={form.watch(
+                'customerServiceEmployeeId'
+              )}
               overseasCsEmployeeId={form.watch('overseasCsEmployeeId')}
               operationsEmployeeId={form.watch('operationsEmployeeId')}
               documentationEmployeeId={form.watch('documentationEmployeeId')}
@@ -608,7 +632,9 @@ export function ReceiptDetailEditView({
               bookingEmployeeId={form.watch('bookingEmployeeId')}
               reviewerEmployeeId={form.watch('reviewerEmployeeId')}
               onSalesEmployeeChange={(value) =>
-                form.setValue('salesEmployeeId', value ?? '', { shouldDirty: true })
+                form.setValue('salesEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
               }
               onCustomerServiceEmployeeChange={(value) =>
                 form.setValue('customerServiceEmployeeId', value ?? '', {
@@ -631,13 +657,19 @@ export function ReceiptDetailEditView({
                 })
               }
               onFinanceEmployeeChange={(value) =>
-                form.setValue('financeEmployeeId', value ?? '', { shouldDirty: true })
+                form.setValue('financeEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
               }
               onBookingEmployeeChange={(value) =>
-                form.setValue('bookingEmployeeId', value ?? '', { shouldDirty: true })
+                form.setValue('bookingEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
               }
               onReviewerEmployeeChange={(value) =>
-                form.setValue('reviewerEmployeeId', value ?? '', { shouldDirty: true })
+                form.setValue('reviewerEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
               }
             />
 
@@ -654,6 +686,46 @@ export function ReceiptDetailEditView({
                     }
                     onAddNew={() => setAddCustomerDialogOpen(true)}
                     placeholder={t('selectCustomer')}
+                  />
+                </div>
+
+                {/* 发货人 */}
+                <div className="space-y-2">
+                  <Label htmlFor="shipperId">{t('shipper')}</Label>
+                  <ShipperCombobox
+                    value={form.watch('shipperId')}
+                    onValueChange={(value) =>
+                      form.setValue('shipperId', value, { shouldDirty: true })
+                    }
+                    placeholder={t('selectShipper')}
+                  />
+                </div>
+
+                {/* 订舱代理 */}
+                <div className="space-y-2">
+                  <Label htmlFor="bookingAgentId">{t('bookingAgent')}</Label>
+                  <BookingAgentCombobox
+                    value={form.watch('bookingAgentId')}
+                    onValueChange={(value) =>
+                      form.setValue('bookingAgentId', value, {
+                        shouldDirty: true,
+                      })
+                    }
+                    placeholder={t('selectBookingAgent')}
+                  />
+                </div>
+
+                {/* 清关代理 */}
+                <div className="space-y-2">
+                  <Label htmlFor="customsAgentId">{t('customsAgent')}</Label>
+                  <CustomsAgentCombobox
+                    value={form.watch('customsAgentId')}
+                    onValueChange={(value) =>
+                      form.setValue('customsAgentId', value, {
+                        shouldDirty: true,
+                      })
+                    }
+                    placeholder={t('selectCustomsAgent')}
                   />
                 </div>
               </div>
