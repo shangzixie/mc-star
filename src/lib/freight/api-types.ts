@@ -259,6 +259,7 @@ export const freightMasterBillOfLadingSchema = z
   .object({
     id: z.union([uuidSchema, z.string()]), // UUID or string (handles Drizzle's UUID conversion)
     receiptId: z.union([uuidSchema, z.string()]),
+    mblNo: z.string().nullable().optional(),
     portOfDestinationId: z.union([uuidSchema, z.string(), z.null()]),
     portOfDischargeId: z.union([uuidSchema, z.string(), z.null()]),
     portOfLoadingId: z.union([uuidSchema, z.string(), z.null()]),
@@ -272,6 +273,7 @@ export const freightMasterBillOfLadingSchema = z
     // Ensure all UUID/timestamp fields are serialized to strings
     id: String(data.id),
     receiptId: String(data.receiptId),
+    mblNo: data.mblNo ?? null,
     portOfDestinationId: data.portOfDestinationId
       ? String(data.portOfDestinationId)
       : null,
@@ -294,6 +296,7 @@ export const freightHouseBillOfLadingSchema = z
   .object({
     id: z.union([uuidSchema, z.string()]), // UUID or string (handles Drizzle's UUID conversion)
     receiptId: z.union([uuidSchema, z.string()]),
+    hblNo: z.string().nullable().optional(),
     portOfDestinationId: z.union([uuidSchema, z.string(), z.null()]),
     portOfDischargeId: z.union([uuidSchema, z.string(), z.null()]),
     portOfLoadingId: z.union([uuidSchema, z.string(), z.null()]),
@@ -306,6 +309,7 @@ export const freightHouseBillOfLadingSchema = z
     ...data,
     id: String(data.id),
     receiptId: String(data.receiptId),
+    hblNo: data.hblNo ?? null,
     portOfDestinationId: data.portOfDestinationId
       ? String(data.portOfDestinationId)
       : null,
@@ -320,7 +324,9 @@ export const freightHouseBillOfLadingSchema = z
     updatedAt: data.updatedAt ? String(data.updatedAt) : null,
   }));
 
-export type FreightHouseBillOfLading = z.infer<typeof freightHouseBillOfLadingSchema>;
+export type FreightHouseBillOfLading = z.infer<
+  typeof freightHouseBillOfLadingSchema
+>;
 
 export const transportNodeSchema = z
   .object({

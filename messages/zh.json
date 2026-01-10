@@ -740,6 +740,10 @@
           "fields": {
             "receiptNo": "入库单号",
             "receiptNoPlaceholder": "请输入入库单号",
+            "mblNo": "MBL No",
+            "mblNoPlaceholder": "请输入 MBL No（可选）",
+            "hblNo": "HBL No",
+            "hblNoPlaceholder": "请输入 HBL No（可选）",
             "warehouse": "仓库",
             "warehousePlaceholder": "选择仓库（可选）",
             "customer": "客户",

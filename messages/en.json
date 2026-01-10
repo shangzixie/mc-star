@@ -740,6 +740,10 @@
           "fields": {
             "receiptNo": "Receipt No",
             "receiptNoPlaceholder": "Enter receipt number",
+            "mblNo": "MBL No",
+            "mblNoPlaceholder": "Enter MBL No (optional)",
+            "hblNo": "HBL No",
+            "hblNoPlaceholder": "Enter HBL No (optional)",
             "warehouse": "Warehouse",
             "warehousePlaceholder": "Select warehouse (optional)",
             "customer": "Customer",

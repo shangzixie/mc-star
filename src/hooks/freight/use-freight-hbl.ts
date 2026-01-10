@@ -1,37 +1,36 @@
 import { freightApiClient } from '@/lib/freight/api-client';
-import { freightMasterBillOfLadingSchema } from '@/lib/freight/api-types';
+import { freightHouseBillOfLadingSchema } from '@/lib/freight/api-types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const MBL_QUERY_KEY = 'freight-master-bills-of-lading';
+export const HBL_QUERY_KEY = 'freight-house-bills-of-lading';
 
 /**
- * Get MBL by receipt ID
+ * Get HBL by receipt ID
  */
-export function useFreightMBL(receiptId: string) {
+export function useFreightHBL(receiptId: string) {
   return useQuery({
-    queryKey: [MBL_QUERY_KEY, receiptId],
+    queryKey: [HBL_QUERY_KEY, receiptId],
     queryFn: async () => {
       const response = await freightApiClient.get(
-        `/api/freight/master-bills-of-lading/${receiptId}`
+        `/api/freight/house-bills-of-lading/${receiptId}`
       );
       const payload = (response.data as any)?.data ?? null;
-      // Allow null response (no MBL created yet)
-      return payload ? freightMasterBillOfLadingSchema.parse(payload) : null;
+      return payload ? freightHouseBillOfLadingSchema.parse(payload) : null;
     },
     enabled: !!receiptId,
   });
 }
 
 /**
- * Create MBL
+ * Create HBL
  */
-export function useCreateFreightMBL(receiptId: string) {
+export function useCreateFreightHBL(receiptId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (
       data: Partial<{
-        mblNo?: string;
+        hblNo?: string;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
@@ -39,28 +38,28 @@ export function useCreateFreightMBL(receiptId: string) {
       }>
     ) => {
       const response = await freightApiClient.post(
-        `/api/freight/master-bills-of-lading/${receiptId}`,
+        `/api/freight/house-bills-of-lading/${receiptId}`,
         data
       );
       const payload = (response.data as any)?.data;
-      return freightMasterBillOfLadingSchema.parse(payload);
+      return freightHouseBillOfLadingSchema.parse(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [MBL_QUERY_KEY, receiptId] });
+      queryClient.invalidateQueries({ queryKey: [HBL_QUERY_KEY, receiptId] });
     },
   });
 }
 
 /**
- * Update MBL
+ * Update HBL
  */
-export function useUpdateFreightMBL(receiptId: string) {
+export function useUpdateFreightHBL(receiptId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (
       data: Partial<{
-        mblNo?: string | null;
+        hblNo?: string | null;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
@@ -68,14 +67,14 @@ export function useUpdateFreightMBL(receiptId: string) {
       }>
     ) => {
       const response = await freightApiClient.patch(
-        `/api/freight/master-bills-of-lading/${receiptId}`,
+        `/api/freight/house-bills-of-lading/${receiptId}`,
         data
       );
       const payload = (response.data as any)?.data;
-      return freightMasterBillOfLadingSchema.parse(payload);
+      return freightHouseBillOfLadingSchema.parse(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [MBL_QUERY_KEY, receiptId] });
+      queryClient.invalidateQueries({ queryKey: [HBL_QUERY_KEY, receiptId] });
     },
   });
 }

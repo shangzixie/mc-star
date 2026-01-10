@@ -15,8 +15,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-  useFreightEmployees,
   type FreightEmployee,
+  useFreightEmployees,
 } from '@/hooks/freight/use-freight-employees';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown } from 'lucide-react';

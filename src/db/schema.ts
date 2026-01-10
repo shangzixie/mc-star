@@ -494,6 +494,7 @@ export const masterBillsOfLading = pgTable(
       .references(() => warehouseReceipts.id, { onDelete: 'cascade' })
       .notNull()
       .unique(),
+    mblNo: varchar('mbl_no', { length: 50 }),
     portOfDestinationId: uuid('port_of_destination_id').references(
       () => transportNodes.id,
       { onDelete: 'set null' }
@@ -513,6 +514,7 @@ export const masterBillsOfLading = pgTable(
   },
   (table) => ({
     idxMblReceiptId: index('idx_mbl_receipt_id').on(table.receiptId),
+    idxMblMblNo: index('idx_mbl_mbl_no').on(table.mblNo),
     idxMblPortOfDestinationId: index('idx_mbl_port_of_destination_id').on(
       table.portOfDestinationId
     ),
@@ -536,6 +538,7 @@ export const houseBillsOfLading = pgTable(
       .references(() => warehouseReceipts.id, { onDelete: 'cascade' })
       .notNull()
       .unique(),
+    hblNo: varchar('hbl_no', { length: 50 }),
     portOfDestinationId: uuid('port_of_destination_id').references(
       () => transportNodes.id,
       { onDelete: 'set null' }
@@ -555,6 +558,7 @@ export const houseBillsOfLading = pgTable(
   },
   (table) => ({
     idxHblReceiptId: index('idx_hbl_receipt_id').on(table.receiptId),
+    idxHblHblNo: index('idx_hbl_hbl_no').on(table.hblNo),
     idxHblPortOfDestinationId: index('idx_hbl_port_of_destination_id').on(
       table.portOfDestinationId
     ),

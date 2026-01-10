@@ -2,8 +2,8 @@
 
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
-import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
+import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-combobox';
 import { ShipperCombobox } from '@/components/freight/shared/shipper-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { Button } from '@/components/ui/button';

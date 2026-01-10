@@ -1,10 +1,10 @@
 import { getDb } from '@/db/index';
-import { masterBillsOfLading, warehouseReceipts } from '@/db/schema';
+import { houseBillsOfLading, warehouseReceipts } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
-  createMasterBillOfLadingSchema,
-  updateMasterBillOfLadingSchema,
+  createHouseBillOfLadingSchema,
+  updateHouseBillOfLadingSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
 import { eq } from 'drizzle-orm';
@@ -12,8 +12,8 @@ import { eq } from 'drizzle-orm';
 export const runtime = 'nodejs';
 
 /**
- * GET /api/freight/master-bills-of-lading/[receiptId]
- * Get MBL by receipt ID
+ * GET /api/freight/house-bills-of-lading/[receiptId]
+ * Get HBL by receipt ID
  */
 export async function GET(
   request: Request,
@@ -40,22 +40,20 @@ export async function GET(
       });
     }
 
-    // Get MBL for this receipt
-    const [mbl] = await db
+    const [hbl] = await db
       .select()
-      .from(masterBillsOfLading)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId));
+      .from(houseBillsOfLading)
+      .where(eq(houseBillsOfLading.receiptId, validReceiptId));
 
-    // Return null if no MBL exists yet (not an error)
-    return jsonOk({ data: mbl ?? null });
+    return jsonOk({ data: hbl ?? null });
   } catch (error) {
     return jsonError(error as Error);
   }
 }
 
 /**
- * POST /api/freight/master-bills-of-lading/[receiptId]
- * Create MBL for a receipt
+ * POST /api/freight/house-bills-of-lading/[receiptId]
+ * Create HBL for a receipt
  */
 export async function POST(
   request: Request,
@@ -68,7 +66,6 @@ export async function POST(
 
     const db = await getDb();
 
-    // Check if warehouse receipt exists
     const [receipt] = await db
       .select()
       .from(warehouseReceipts)
@@ -82,28 +79,27 @@ export async function POST(
       });
     }
 
-    // Check if MBL already exists
-    const [existingMbl] = await db
+    const [existingHbl] = await db
       .select()
-      .from(masterBillsOfLading)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId));
+      .from(houseBillsOfLading)
+      .where(eq(houseBillsOfLading.receiptId, validReceiptId));
 
-    if (existingMbl) {
+    if (existingHbl) {
       throw new ApiError({
         status: 409,
-        code: 'MBL_ALREADY_EXISTS',
-        message: 'Master Bill of Lading already exists for this receipt',
+        code: 'HBL_ALREADY_EXISTS',
+        message: 'House Bill of Lading already exists for this receipt',
       });
     }
 
-    const body = await parseJson(request, createMasterBillOfLadingSchema);
+    const body = await parseJson(request, createHouseBillOfLadingSchema);
     const data = { ...body, receiptId: validReceiptId };
 
-    const [newMbl] = await db
-      .insert(masterBillsOfLading)
+    const [newHbl] = await db
+      .insert(houseBillsOfLading)
       .values({
         receiptId: data.receiptId as any,
-        mblNo: data.mblNo ?? null,
+        hblNo: data.hblNo ?? null,
         portOfDestinationId: data.portOfDestinationId as any,
         portOfDischargeId: data.portOfDischargeId as any,
         portOfLoadingId: data.portOfLoadingId as any,
@@ -111,15 +107,15 @@ export async function POST(
       })
       .returning();
 
-    return jsonOk({ data: newMbl }, { status: 201 });
+    return jsonOk({ data: newHbl }, { status: 201 });
   } catch (error) {
     return jsonError(error as Error);
   }
 }
 
 /**
- * PATCH /api/freight/master-bills-of-lading/[receiptId]
- * Update MBL for a receipt
+ * PATCH /api/freight/house-bills-of-lading/[receiptId]
+ * Update HBL for a receipt
  */
 export async function PATCH(
   request: Request,
@@ -132,27 +128,26 @@ export async function PATCH(
 
     const db = await getDb();
 
-    // Check if MBL exists
-    const [existingMbl] = await db
+    const [existingHbl] = await db
       .select()
-      .from(masterBillsOfLading)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId));
+      .from(houseBillsOfLading)
+      .where(eq(houseBillsOfLading.receiptId, validReceiptId));
 
-    if (!existingMbl) {
+    if (!existingHbl) {
       throw new ApiError({
         status: 404,
-        code: 'MBL_NOT_FOUND',
-        message: 'Master Bill of Lading not found for this receipt',
+        code: 'HBL_NOT_FOUND',
+        message: 'House Bill of Lading not found for this receipt',
       });
     }
 
-    const body = await parseJson(request, updateMasterBillOfLadingSchema);
+    const body = await parseJson(request, updateHouseBillOfLadingSchema);
     const data = body;
 
     const updateData: Record<string, any> = {};
 
-    if (data.mblNo !== undefined) {
-      updateData.mblNo = data.mblNo;
+    if (data.hblNo !== undefined) {
+      updateData.hblNo = data.hblNo;
     }
     if (data.portOfDestinationId !== undefined) {
       updateData.portOfDestinationId = data.portOfDestinationId;
@@ -166,13 +161,14 @@ export async function PATCH(
     if (data.placeOfReceiptId !== undefined) {
       updateData.placeOfReceiptId = data.placeOfReceiptId;
     }
-    const [updatedMbl] = await db
-      .update(masterBillsOfLading)
+
+    const [updatedHbl] = await db
+      .update(houseBillsOfLading)
       .set(updateData)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId))
+      .where(eq(houseBillsOfLading.receiptId, validReceiptId))
       .returning();
 
-    return jsonOk({ data: updatedMbl });
+    return jsonOk({ data: updatedHbl });
   } catch (error) {
     return jsonError(error as Error);
   }

@@ -42,7 +42,17 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  useCreateFreightHBL,
+  useFreightHBL,
+  useUpdateFreightHBL,
+} from '@/hooks/freight/use-freight-hbl';
 import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
+import {
+  useCreateFreightMBL,
+  useFreightMBL,
+  useUpdateFreightMBL,
+} from '@/hooks/freight/use-freight-mbl';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
@@ -79,6 +89,8 @@ const receiptFormSchema = z.object({
   transportType: z.string().optional(),
   customsDeclarationType: z.string().optional(),
   inboundTime: z.string().min(1, '入库时间必填'),
+  mblNo: z.string().max(50).optional(),
+  hblNo: z.string().max(50).optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
   // Employee assignments
@@ -134,6 +146,14 @@ export function ReceiptDetailEditView({
   const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
 
+  const mblQuery = useFreightMBL(receipt.id);
+  const createMblMutation = useCreateFreightMBL(receipt.id);
+  const updateMblMutation = useUpdateFreightMBL(receipt.id);
+
+  const hblQuery = useFreightHBL(receipt.id);
+  const createHblMutation = useCreateFreightHBL(receipt.id);
+  const updateHblMutation = useUpdateFreightHBL(receipt.id);
+
   const itemsQuery = useFreightInventoryItems({
     receiptId: receipt.id,
     q: '',
@@ -150,6 +170,8 @@ export function ReceiptDetailEditView({
       transportType: receipt.transportType ?? '',
       customsDeclarationType: receipt.customsDeclarationType ?? '',
       inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
+      mblNo: '',
+      hblNo: '',
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
       // Employee assignments - will be populated when backend is ready
@@ -169,6 +191,28 @@ export function ReceiptDetailEditView({
   });
 
   const isDirty = form.formState.isDirty;
+  const isSaving =
+    updateMutation.isPending ||
+    createMblMutation.isPending ||
+    updateMblMutation.isPending ||
+    createHblMutation.isPending ||
+    updateHblMutation.isPending;
+
+  useEffect(() => {
+    const nextMblNo = mblQuery.data?.mblNo ?? '';
+    const current = form.getValues('mblNo') ?? '';
+    if (nextMblNo !== current) {
+      form.setValue('mblNo', nextMblNo, { shouldDirty: false });
+    }
+  }, [mblQuery.data?.mblNo, form]);
+
+  useEffect(() => {
+    const nextHblNo = hblQuery.data?.hblNo ?? '';
+    const current = form.getValues('hblNo') ?? '';
+    if (nextHblNo !== current) {
+      form.setValue('hblNo', nextHblNo, { shouldDirty: false });
+    }
+  }, [hblQuery.data?.hblNo, form]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -211,6 +255,14 @@ export function ReceiptDetailEditView({
         payload.internalRemarks = data.internalRemarks;
       }
 
+      const nextMblNo = (data.mblNo ?? '').trim();
+      const prevMblNo = (mblQuery.data?.mblNo ?? '').trim();
+      const hasMblNoChange = nextMblNo !== prevMblNo;
+
+      const nextHblNo = (data.hblNo ?? '').trim();
+      const prevHblNo = (hblQuery.data?.hblNo ?? '').trim();
+      const hasHblNoChange = nextHblNo !== prevHblNo;
+
       // Employee assignments - Note: Backend fields not yet implemented
       // These will be sent to API but won't be persisted until backend is ready
       if (data.salesEmployeeId) {
@@ -249,14 +301,43 @@ export function ReceiptDetailEditView({
         payload.customsAgentId = data.customsAgentId;
       }
 
-      if (Object.keys(payload).length === 0) {
+      if (
+        Object.keys(payload).length === 0 &&
+        !hasMblNoChange &&
+        !hasHblNoChange
+      ) {
         toast.info('没有需要保存的更改');
         return;
       }
 
-      await updateMutation.mutateAsync(payload);
+      if (Object.keys(payload).length > 0) {
+        await updateMutation.mutateAsync(payload);
+      }
+
+      if (hasMblNoChange) {
+        const mblNo = nextMblNo || null;
+        if (mblQuery.data) {
+          await updateMblMutation.mutateAsync({ mblNo });
+        } else if (mblNo) {
+          await createMblMutation.mutateAsync({ mblNo });
+        }
+      }
+
+      if (hasHblNoChange) {
+        const hblNo = nextHblNo || null;
+        if (hblQuery.data) {
+          await updateHblMutation.mutateAsync({ hblNo });
+        } else if (hblNo) {
+          await createHblMutation.mutateAsync({ hblNo });
+        }
+      }
+
       toast.success(t('receiptActions.updateSuccess'));
-      form.reset(data);
+      form.reset({
+        ...data,
+        mblNo: nextMblNo,
+        hblNo: nextHblNo,
+      });
     } catch (error) {
       const message = getFreightApiErrorMessage(error);
       toast.error(message);
@@ -285,13 +366,9 @@ export function ReceiptDetailEditView({
           )}
         </div>
 
-        <Button
-          type="submit"
-          disabled={updateMutation.isPending || !isDirty}
-          size="sm"
-        >
+        <Button type="submit" disabled={isSaving || !isDirty} size="sm">
           <Save className="mr-2 size-4" />
-          {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
+          {isSaving ? tCommon('saving') : tCommon('save')}
         </Button>
 
         <DropdownMenu>
@@ -321,6 +398,26 @@ export function ReceiptDetailEditView({
                 {t('receipt.fields.receiptNo')}
               </Label>
               <div className="text-lg font-semibold">{receipt.receiptNo}</div>
+            </div>
+
+            {/* MBL No */}
+            <div className="space-y-2">
+              <Label htmlFor="mblNo">{t('receipt.fields.mblNo')}</Label>
+              <Input
+                id="mblNo"
+                placeholder={t('receipt.fields.mblNoPlaceholder')}
+                {...form.register('mblNo')}
+              />
+            </div>
+
+            {/* HBL No */}
+            <div className="space-y-2">
+              <Label htmlFor="hblNo">{t('receipt.fields.hblNo')}</Label>
+              <Input
+                id="hblNo"
+                placeholder={t('receipt.fields.hblNoPlaceholder')}
+                {...form.register('hblNo')}
+              />
             </div>
 
             {/* 单核状态 */}
@@ -739,13 +836,9 @@ export function ReceiptDetailEditView({
 
       {/* 底部固定保存按钮 */}
       <div className="sticky bottom-0 bg-background border-t pt-4 flex justify-end">
-        <Button
-          type="submit"
-          disabled={updateMutation.isPending || !isDirty}
-          size="lg"
-        >
+        <Button type="submit" disabled={isSaving || !isDirty} size="lg">
           <Save className="mr-2 size-4" />
-          {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
+          {isSaving ? tCommon('saving') : tCommon('save')}
         </Button>
       </div>
 
