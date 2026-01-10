@@ -86,6 +86,7 @@ const receiptFormSchema = z.object({
   documentationEmployeeId: z.string().optional(),
   financeEmployeeId: z.string().optional(),
   bookingEmployeeId: z.string().optional(),
+  reviewerEmployeeId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -152,6 +153,7 @@ export function ReceiptDetailEditView({
       documentationEmployeeId: '',
       financeEmployeeId: '',
       bookingEmployeeId: '',
+      reviewerEmployeeId: '',
     },
   });
 
@@ -220,6 +222,9 @@ export function ReceiptDetailEditView({
       }
       if (data.bookingEmployeeId) {
         payload.bookingEmployeeId = data.bookingEmployeeId;
+      }
+      if (data.reviewerEmployeeId) {
+        payload.reviewerEmployeeId = data.reviewerEmployeeId;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -601,6 +606,7 @@ export function ReceiptDetailEditView({
               documentationEmployeeId={form.watch('documentationEmployeeId')}
               financeEmployeeId={form.watch('financeEmployeeId')}
               bookingEmployeeId={form.watch('bookingEmployeeId')}
+              reviewerEmployeeId={form.watch('reviewerEmployeeId')}
               onSalesEmployeeChange={(value) =>
                 form.setValue('salesEmployeeId', value ?? '', { shouldDirty: true })
               }
@@ -629,6 +635,9 @@ export function ReceiptDetailEditView({
               }
               onBookingEmployeeChange={(value) =>
                 form.setValue('bookingEmployeeId', value ?? '', { shouldDirty: true })
+              }
+              onReviewerEmployeeChange={(value) =>
+                form.setValue('reviewerEmployeeId', value ?? '', { shouldDirty: true })
               }
             />
 

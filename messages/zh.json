@@ -820,7 +820,8 @@
             "operations": "操作",
             "documentation": "文件",
             "finance": "财务",
-            "booking": "订舱工作"
+            "booking": "订舱工作",
+            "reviewer": "审核员"
           }
         },
         "inboundTime": "入库时间",

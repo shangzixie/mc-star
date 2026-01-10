@@ -13,6 +13,7 @@ interface EmployeeAssignmentsSectionProps {
   documentationEmployeeId?: string;
   financeEmployeeId?: string;
   bookingEmployeeId?: string;
+  reviewerEmployeeId?: string;
   onSalesEmployeeChange: (value: string | undefined) => void;
   onCustomerServiceEmployeeChange: (value: string | undefined) => void;
   onOverseasCsEmployeeChange: (value: string | undefined) => void;
@@ -20,6 +21,7 @@ interface EmployeeAssignmentsSectionProps {
   onDocumentationEmployeeChange: (value: string | undefined) => void;
   onFinanceEmployeeChange: (value: string | undefined) => void;
   onBookingEmployeeChange: (value: string | undefined) => void;
+  onReviewerEmployeeChange: (value: string | undefined) => void;
 }
 
 export function EmployeeAssignmentsSection({
@@ -30,6 +32,7 @@ export function EmployeeAssignmentsSection({
   documentationEmployeeId,
   financeEmployeeId,
   bookingEmployeeId,
+  reviewerEmployeeId,
   onSalesEmployeeChange,
   onCustomerServiceEmployeeChange,
   onOverseasCsEmployeeChange,
@@ -37,6 +40,7 @@ export function EmployeeAssignmentsSection({
   onDocumentationEmployeeChange,
   onFinanceEmployeeChange,
   onBookingEmployeeChange,
+  onReviewerEmployeeChange,
 }: EmployeeAssignmentsSectionProps) {
   const t = useTranslations('Dashboard.freight.inbound');
 
@@ -121,6 +125,18 @@ export function EmployeeAssignmentsSection({
           <EmployeeCombobox
             value={bookingEmployeeId}
             onValueChange={onBookingEmployeeChange}
+            placeholder={t('employees.selectEmployee')}
+          />
+        </div>
+
+        {/* 审核员 - Reviewer */}
+        <div className="space-y-2">
+          <Label htmlFor="reviewerEmployee">
+            {t('employees.roles.reviewer')}
+          </Label>
+          <EmployeeCombobox
+            value={reviewerEmployeeId}
+            onValueChange={onReviewerEmployeeChange}
             placeholder={t('employees.selectEmployee')}
           />
         </div>

@@ -820,7 +820,8 @@
             "operations": "Operations",
             "documentation": "Documentation",
             "finance": "Finance",
-            "booking": "Booking"
+            "booking": "Booking",
+            "reviewer": "Reviewer"
           }
         },
         "inboundTime": "Inbound Time",
