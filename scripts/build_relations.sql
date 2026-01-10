@@ -170,6 +170,21 @@ CREATE TABLE master_bills_of_lading (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 分提单表 (House Bill of Lading) - 与 warehouse_receipts 一对一关系
+CREATE TABLE house_bills_of_lading (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    receipt_id UUID NOT NULL UNIQUE REFERENCES warehouse_receipts(id) ON DELETE CASCADE, -- 一对一关系
+
+    -- 运输节点（港口/机场/车站等）改为存 transport_nodes.id，保证一致性和可关联查询
+    place_of_receipt_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL,    -- 收货地
+    port_of_loading_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL,     -- 起运港
+    port_of_discharge_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL,   -- 卸货港
+    port_of_destination_id UUID REFERENCES transport_nodes(id) ON DELETE SET NULL, -- 目的港
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 入库商品明细
 CREATE TABLE inventory_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -300,6 +315,7 @@ CREATE INDEX idx_warehouse_receipts_warehouse ON warehouse_receipts(warehouse_id
 CREATE INDEX idx_warehouse_receipts_customer ON warehouse_receipts(customer_id);
 CREATE INDEX idx_inventory_items_receipt ON inventory_items(receipt_id);
 CREATE INDEX idx_mbl_receipt_id ON master_bills_of_lading(receipt_id);
+CREATE INDEX idx_hbl_receipt_id ON house_bills_of_lading(receipt_id);
 
 -- 常用索引（员工侧）
 CREATE INDEX idx_employees_user_id ON employees(user_id);
