@@ -5,7 +5,6 @@ import {
   integer,
   jsonb,
   numeric,
-  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -179,51 +178,8 @@ export const creditTransaction = pgTable("credit_transaction", {
 // Freight Forwarding / Warehouse outbound-loading relations (scripts/build_relations.sql)
 // -----------------------------------------------------------------------------
 
-export const warehouseReceiptTransportType = pgEnum(
-  'warehouse_receipt_transport_type',
-  [
-    // 运输类型（存储英文枚举码；UI 通过 i18n 显示中文）
-    // SEA_FCL: 海运整柜
-    // AIR_FREIGHT: 航空货运
-    // SEA_LCL: 海运拼箱
-    // DOMESTIC_TRANSPORT: 内贸运输
-    // WAREHOUSING: 仓储服务
-    // ROAD_FTL: 陆路运输（整车）
-    // ROAD_LTL: 陆路运输（拼车）
-    // EXPRESS_LINEHAUL: 快递/专线
-    // FBA_SEA: FBA海运
-    // FBA_AIR: FBA空运
-    // FBA_RAIL: FBA铁路
-    // BULK_CARGO: 散杂货船
-    // RAIL_FREIGHT: 铁路运输
-    'SEA_FCL',
-    'AIR_FREIGHT',
-    'SEA_LCL',
-    'DOMESTIC_TRANSPORT',
-    'WAREHOUSING',
-    'ROAD_FTL',
-    'ROAD_LTL',
-    'EXPRESS_LINEHAUL',
-    'FBA_SEA',
-    'FBA_AIR',
-    'FBA_RAIL',
-    'BULK_CARGO',
-    'RAIL_FREIGHT',
-  ]
-);
-
-export const warehouseReceiptCustomsDeclarationType = pgEnum(
-  'warehouse_receipt_customs_declaration_type',
-  [
-    // 报关类型（存储英文枚举码；UI 通过 i18n 显示中文）
-    // NO_DECLARATION: 不报关
-    // BUY_ORDER: 买单
-    // FORMAL_DECLARATION: 正报
-    'NO_DECLARATION',
-    'BUY_ORDER',
-    'FORMAL_DECLARATION',
-  ]
-);
+// NOTE: We intentionally avoid Postgres `ENUM` types.
+// Persist enum *codes* as strings; validate allowed values in the application layer.
 
 export const parties = pgTable(
   'parties',
@@ -288,10 +244,8 @@ export const warehouseReceipts = pgTable(
     receiptNo: varchar('receipt_no', { length: 30 }).notNull().unique(),
     warehouseId: uuid('warehouse_id').references(() => warehouses.id),
     customerId: uuid('customer_id').references(() => parties.id),
-    transportType: warehouseReceiptTransportType('transport_type'),
-    customsDeclarationType: warehouseReceiptCustomsDeclarationType(
-      'customs_declaration_type'
-    ),
+    transportType: varchar('transport_type', { length: 30 }),
+    customsDeclarationType: varchar('customs_declaration_type', { length: 30 }),
     status: varchar('status', { length: 20 }).notNull().default('RECEIVED'),
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),

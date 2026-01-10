@@ -59,9 +59,7 @@ import type {
   FreightInventoryItem,
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
-import {
-  WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
-} from '@/lib/freight/constants';
+import { WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES } from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
