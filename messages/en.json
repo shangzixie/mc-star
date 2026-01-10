@@ -808,6 +808,21 @@
         "noCustomerFound": "No customer found",
         "addNewCustomer": "Add New Customer",
         "loading": "Loading...",
+        "employees": {
+          "title": "Employee Assignments",
+          "selectEmployee": "Select employee",
+          "searchEmployee": "Search employee name...",
+          "noEmployeeFound": "No employee found",
+          "roles": {
+            "sales": "Sales Representative",
+            "customerService": "Customer Service",
+            "overseasCs": "Overseas Customer Service",
+            "operations": "Operations",
+            "documentation": "Documentation",
+            "finance": "Finance",
+            "booking": "Booking"
+          }
+        },
         "inboundTime": "Inbound Time",
         "remarks": "Remarks",
         "internalRemarks": "Internal Remarks",

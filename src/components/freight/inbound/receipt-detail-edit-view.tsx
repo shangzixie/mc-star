@@ -1,5 +1,6 @@
 'use client';
 
+import { EmployeeAssignmentsSection } from '@/components/freight/inbound/employee-assignments-section';
 import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
@@ -77,6 +78,14 @@ const receiptFormSchema = z.object({
   inboundTime: z.string().min(1, '入库时间必填'),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
+  // Employee assignments
+  salesEmployeeId: z.string().optional(),
+  customerServiceEmployeeId: z.string().optional(),
+  overseasCsEmployeeId: z.string().optional(),
+  operationsEmployeeId: z.string().optional(),
+  documentationEmployeeId: z.string().optional(),
+  financeEmployeeId: z.string().optional(),
+  bookingEmployeeId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -135,6 +144,14 @@ export function ReceiptDetailEditView({
       inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
+      // Employee assignments - will be populated when backend is ready
+      salesEmployeeId: '',
+      customerServiceEmployeeId: '',
+      overseasCsEmployeeId: '',
+      operationsEmployeeId: '',
+      documentationEmployeeId: '',
+      financeEmployeeId: '',
+      bookingEmployeeId: '',
     },
   });
 
@@ -179,6 +196,30 @@ export function ReceiptDetailEditView({
       }
       if (data.internalRemarks !== (receipt.internalRemarks ?? '')) {
         payload.internalRemarks = data.internalRemarks;
+      }
+
+      // Employee assignments - Note: Backend fields not yet implemented
+      // These will be sent to API but won't be persisted until backend is ready
+      if (data.salesEmployeeId) {
+        payload.salesEmployeeId = data.salesEmployeeId;
+      }
+      if (data.customerServiceEmployeeId) {
+        payload.customerServiceEmployeeId = data.customerServiceEmployeeId;
+      }
+      if (data.overseasCsEmployeeId) {
+        payload.overseasCsEmployeeId = data.overseasCsEmployeeId;
+      }
+      if (data.operationsEmployeeId) {
+        payload.operationsEmployeeId = data.operationsEmployeeId;
+      }
+      if (data.documentationEmployeeId) {
+        payload.documentationEmployeeId = data.documentationEmployeeId;
+      }
+      if (data.financeEmployeeId) {
+        payload.financeEmployeeId = data.financeEmployeeId;
+      }
+      if (data.bookingEmployeeId) {
+        payload.bookingEmployeeId = data.bookingEmployeeId;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -550,8 +591,48 @@ export function ReceiptDetailEditView({
           <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
-          <div className="grid gap-4 lg:grid-cols-2">
-            {/* 左侧：联系资料 */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* 左侧：雇员分配 */}
+            <EmployeeAssignmentsSection
+              salesEmployeeId={form.watch('salesEmployeeId')}
+              customerServiceEmployeeId={form.watch('customerServiceEmployeeId')}
+              overseasCsEmployeeId={form.watch('overseasCsEmployeeId')}
+              operationsEmployeeId={form.watch('operationsEmployeeId')}
+              documentationEmployeeId={form.watch('documentationEmployeeId')}
+              financeEmployeeId={form.watch('financeEmployeeId')}
+              bookingEmployeeId={form.watch('bookingEmployeeId')}
+              onSalesEmployeeChange={(value) =>
+                form.setValue('salesEmployeeId', value ?? '', { shouldDirty: true })
+              }
+              onCustomerServiceEmployeeChange={(value) =>
+                form.setValue('customerServiceEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
+              }
+              onOverseasCsEmployeeChange={(value) =>
+                form.setValue('overseasCsEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
+              }
+              onOperationsEmployeeChange={(value) =>
+                form.setValue('operationsEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
+              }
+              onDocumentationEmployeeChange={(value) =>
+                form.setValue('documentationEmployeeId', value ?? '', {
+                  shouldDirty: true,
+                })
+              }
+              onFinanceEmployeeChange={(value) =>
+                form.setValue('financeEmployeeId', value ?? '', { shouldDirty: true })
+              }
+              onBookingEmployeeChange={(value) =>
+                form.setValue('bookingEmployeeId', value ?? '', { shouldDirty: true })
+              }
+            />
+
+            {/* 中间：联系资料 */}
             <FreightSection title={t('detailSections.contact')}>
               <div className="grid gap-4">
                 {/* 客户选择 */}

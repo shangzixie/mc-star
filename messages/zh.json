@@ -808,6 +808,21 @@
         "noCustomerFound": "未找到客户",
         "addNewCustomer": "新增客户",
         "loading": "加载中...",
+        "employees": {
+          "title": "雇员分配",
+          "selectEmployee": "选择雇员",
+          "searchEmployee": "搜索雇员姓名...",
+          "noEmployeeFound": "未找到雇员",
+          "roles": {
+            "sales": "业务员",
+            "customerService": "客服",
+            "overseasCs": "海外客服",
+            "operations": "操作",
+            "documentation": "文件",
+            "finance": "财务",
+            "booking": "订舱工作"
+          }
+        },
         "inboundTime": "入库时间",
         "remarks": "备注",
         "internalRemarks": "内部备注",
