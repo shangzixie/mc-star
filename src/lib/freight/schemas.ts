@@ -184,3 +184,18 @@ export const updateMasterBillOfLadingSchema = z.object({
   portOfLoadingId: uuidSchema.optional(),
   placeOfReceiptId: uuidSchema.optional(),
 });
+
+// House Bill of Lading (HBL) schemas
+export const createHouseBillOfLadingSchema = z.object({
+  portOfDestinationId: uuidSchema.optional(),
+  portOfDischargeId: uuidSchema.optional(),
+  portOfLoadingId: uuidSchema.optional(),
+  placeOfReceiptId: uuidSchema.optional(),
+});
+
+export const updateHouseBillOfLadingSchema = z.object({
+  portOfDestinationId: uuidSchema.optional(),
+  portOfDischargeId: uuidSchema.optional(),
+  portOfLoadingId: uuidSchema.optional(),
+  placeOfReceiptId: uuidSchema.optional(),
+});

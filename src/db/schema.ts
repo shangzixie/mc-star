@@ -527,3 +527,45 @@ export const masterBillsOfLading = pgTable(
     ),
   })
 );
+
+export const houseBillsOfLading = pgTable(
+  'house_bills_of_lading',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    receiptId: uuid('receipt_id')
+      .references(() => warehouseReceipts.id, { onDelete: 'cascade' })
+      .notNull()
+      .unique(),
+    portOfDestinationId: uuid('port_of_destination_id').references(
+      () => transportNodes.id,
+      { onDelete: 'set null' }
+    ),
+    portOfDischargeId: uuid('port_of_discharge_id').references(
+      () => transportNodes.id,
+      { onDelete: 'set null' }
+    ),
+    portOfLoadingId: uuid('port_of_loading_id').references(() => transportNodes.id, {
+      onDelete: 'set null',
+    }),
+    placeOfReceiptId: uuid('place_of_receipt_id').references(() => transportNodes.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    idxHblReceiptId: index('idx_hbl_receipt_id').on(table.receiptId),
+    idxHblPortOfDestinationId: index('idx_hbl_port_of_destination_id').on(
+      table.portOfDestinationId
+    ),
+    idxHblPortOfDischargeId: index('idx_hbl_port_of_discharge_id').on(
+      table.portOfDischargeId
+    ),
+    idxHblPortOfLoadingId: index('idx_hbl_port_of_loading_id').on(
+      table.portOfLoadingId
+    ),
+    idxHblPlaceOfReceiptId: index('idx_hbl_place_of_receipt_id').on(
+      table.placeOfReceiptId
+    ),
+  })
+);

@@ -290,6 +290,38 @@ export type FreightMasterBillOfLading = z.infer<
   typeof freightMasterBillOfLadingSchema
 >;
 
+export const freightHouseBillOfLadingSchema = z
+  .object({
+    id: z.union([uuidSchema, z.string()]), // UUID or string (handles Drizzle's UUID conversion)
+    receiptId: z.union([uuidSchema, z.string()]),
+    portOfDestinationId: z.union([uuidSchema, z.string(), z.null()]),
+    portOfDischargeId: z.union([uuidSchema, z.string(), z.null()]),
+    portOfLoadingId: z.union([uuidSchema, z.string(), z.null()]),
+    placeOfReceiptId: z.union([uuidSchema, z.string(), z.null()]),
+    createdAt: z.union([isoDateTimeSchema, z.string(), z.null()]), // Handle timestamp objects
+    updatedAt: z.union([isoDateTimeSchema, z.string(), z.null()]),
+  })
+  .passthrough()
+  .transform((data) => ({
+    ...data,
+    id: String(data.id),
+    receiptId: String(data.receiptId),
+    portOfDestinationId: data.portOfDestinationId
+      ? String(data.portOfDestinationId)
+      : null,
+    portOfDischargeId: data.portOfDischargeId
+      ? String(data.portOfDischargeId)
+      : null,
+    portOfLoadingId: data.portOfLoadingId ? String(data.portOfLoadingId) : null,
+    placeOfReceiptId: data.placeOfReceiptId
+      ? String(data.placeOfReceiptId)
+      : null,
+    createdAt: data.createdAt ? String(data.createdAt) : null,
+    updatedAt: data.updatedAt ? String(data.updatedAt) : null,
+  }));
+
+export type FreightHouseBillOfLading = z.infer<typeof freightHouseBillOfLadingSchema>;
+
 export const transportNodeSchema = z
   .object({
     id: uuidSchema,

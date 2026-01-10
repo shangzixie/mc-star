@@ -155,7 +155,7 @@ CREATE TABLE warehouse_receipts (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 主提单表 (Master Bill of Lading) - 与 warehouse_receipts 一对一关系
+-- 主提单表 (Master Bill of Lading) - 与 warehouse_receipts 一对一关系。 当去船运公司拿空柜子时候，船运公司给的单子，里面记载了什么时候要把柜子返回给船运公司等信息
 CREATE TABLE master_bills_of_lading (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_id UUID NOT NULL UNIQUE REFERENCES warehouse_receipts(id) ON DELETE CASCADE, -- 一对一关系
@@ -170,7 +170,7 @@ CREATE TABLE master_bills_of_lading (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 分提单表 (House Bill of Lading) - 与 warehouse_receipts 一对一关系
+-- 分提单表 (House Bill of Lading) - 与 warehouse_receipts 一对一关系。 船运公司运输时候给的单，有此单才能去目的地找船运公司取货。
 CREATE TABLE house_bills_of_lading (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     receipt_id UUID NOT NULL UNIQUE REFERENCES warehouse_receipts(id) ON DELETE CASCADE, -- 一对一关系
