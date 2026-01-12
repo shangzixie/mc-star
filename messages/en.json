@@ -804,6 +804,38 @@
         "itemsList": {
           "title": "Items List"
         },
+        "summaryPanel": {
+          "title": "Charges & Weight Summary",
+          "rows": {
+            "settings": "Settings",
+            "prealert": "Pre-alert",
+            "measured": "Inbound / Measured",
+            "billing": "Chargeable / Billing"
+          },
+          "fields": {
+            "divisor": "Volumetric divisor",
+            "bubbleSplitPercent": "Bubble split %",
+            "totalVolumetricWeight": "Total volumetric weight (kg)",
+            "prealertPieces": "Pre-alert pieces",
+            "prealertWeight": "Pre-alert weight (kg)",
+            "prealertVolume": "Pre-alert volume (m³)",
+            "packaging": "Packaging",
+            "measuredPieces": "Inbound pieces",
+            "measuredGrossWeight": "Gross weight (KGS)",
+            "measuredVolume": "Volume (CBM)",
+            "billingPieces": "Chargeable pieces",
+            "billingWeight": "Chargeable weight (kg)",
+            "billingVolume": "Chargeable volume (m³)",
+            "lock": "Lock"
+          }
+        },
+        "itemsSummary": {
+          "title": "Totals",
+          "totalPieces": "Total pieces",
+          "totalWeight": "Total weight (kg)",
+          "totalVolume": "Total volume (m³)",
+          "chargeableWeight": "Chargeable weight (kg)"
+        },
         "warehouse": "Warehouse",
         "customer": "Customer",
         "selectWarehouse": "Select warehouse",

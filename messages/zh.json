@@ -804,6 +804,38 @@
         "itemsList": {
           "title": "入库明细列表"
         },
+        "summaryPanel": {
+          "title": "费用与重量汇总",
+          "rows": {
+            "settings": "计算参数",
+            "prealert": "预报数据",
+            "measured": "入仓实测",
+            "billing": "计费数据"
+          },
+          "fields": {
+            "divisor": "材积系数",
+            "bubbleSplitPercent": "分泡比例%",
+            "totalVolumetricWeight": "总材积重(kg)",
+            "prealertPieces": "预报件数",
+            "prealertWeight": "预报重量(kg)",
+            "prealertVolume": "预报体积(m³)",
+            "packaging": "包装类型",
+            "measuredPieces": "入仓件数",
+            "measuredGrossWeight": "实重(KGS)",
+            "measuredVolume": "体积(CBM)",
+            "billingPieces": "计费件数",
+            "billingWeight": "计费重(kg)",
+            "billingVolume": "计费体积(m³)",
+            "lock": "锁定"
+          }
+        },
+        "itemsSummary": {
+          "title": "计算结果",
+          "totalPieces": "总件数",
+          "totalWeight": "总重量(kg)",
+          "totalVolume": "总体积(m³)",
+          "chargeableWeight": "结算重(kg)"
+        },
         "warehouse": "仓库",
         "customer": "客户",
         "selectWarehouse": "选择仓库",

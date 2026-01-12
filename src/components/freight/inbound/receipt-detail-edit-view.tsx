@@ -2,6 +2,7 @@
 
 import { EmployeeAssignmentsSection } from '@/components/freight/inbound/employee-assignments-section';
 import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
+import { ReceiptSummaryPanel } from '@/components/freight/inbound/receipt-summary-panel';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
@@ -130,6 +131,7 @@ export function ReceiptDetailEditView({
   onDeleteItem: (item: FreightInventoryItem) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
+  const tSummaryPanel = useTranslations('Dashboard.freight.inbound.summaryPanel');
   const tCommon = useTranslations('Common');
   const tCustomerFields = useTranslations(
     'Dashboard.freight.settings.customers.fields'
@@ -506,171 +508,182 @@ export function ReceiptDetailEditView({
           </div>
         </FreightSection>
 
-        {/* 右侧：商品明细表格 */}
-        <FreightTableSection
-          title={t('itemsList.title')}
-          icon={Package}
-          actions={
-            <Button onClick={onAddItem} size="sm" type="button">
-              <Plus className="mr-2 size-4" />
-              {t('items.create')}
-            </Button>
-          }
-        >
-          <Table>
-            <TableHeader className="bg-muted">
-              <TableRow>
-                <TableHead>{t('items.columns.commodity')}</TableHead>
-                <TableHead>{t('items.columns.sku')}</TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.initialQty')}
-                </TableHead>
-                <TableHead>{t('items.columns.unit')}</TableHead>
-                <TableHead>{t('items.columns.location')}</TableHead>
-                <TableHead className="text-right">
-                  {t('items.fields.weightPerUnit')}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.totalWeight')}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t('items.columns.totalVolume')}
-                </TableHead>
-                <TableHead className="w-[72px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {itemsQuery.isLoading ? (
-                Array.from({ length: 3 }).map((_, idx) => (
-                  <TableRow key={`sk-${idx}`} className="h-14">
-                    {Array.from({ length: 9 }).map((__, cIdx) => (
-                      <TableCell key={`sk-${idx}-${cIdx}`}>
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : itemsQuery.error ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center">
-                    <Empty>
-                      <EmptyHeader>
-                        <EmptyTitle>{t('items.error')}</EmptyTitle>
-                        <EmptyDescription>
-                          {getFreightApiErrorMessage(itemsQuery.error)}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </TableCell>
-                </TableRow>
-              ) : renderedItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center">
-                    <Empty>
-                      <EmptyHeader>
-                        <EmptyTitle>{t('items.empty')}</EmptyTitle>
-                        <EmptyDescription>
-                          {t('items.emptyHint')}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                renderedItems.map((item) => {
-                  const weightPerUnit =
-                    item.weightPerUnit != null
-                      ? Number(item.weightPerUnit)
-                      : undefined;
-                  const totalWeightKg =
-                    weightPerUnit != null && Number.isFinite(weightPerUnit)
-                      ? weightPerUnit * item.initialQty
-                      : undefined;
+        {/* 右侧：汇总 + 商品明细表格 */}
+        <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+          <FreightSection title={tSummaryPanel('title')}>
+            <ReceiptSummaryPanel
+              items={items}
+              transportType={receipt.transportType ?? null}
+            />
+          </FreightSection>
 
-                  const lengthCm =
-                    item.lengthCm != null ? Number(item.lengthCm) : undefined;
-                  const widthCm =
-                    item.widthCm != null ? Number(item.widthCm) : undefined;
-                  const heightCm =
-                    item.heightCm != null ? Number(item.heightCm) : undefined;
-                  const totalVolumeM3 =
-                    lengthCm != null &&
-                    widthCm != null &&
-                    heightCm != null &&
-                    Number.isFinite(lengthCm) &&
-                    Number.isFinite(widthCm) &&
-                    Number.isFinite(heightCm)
-                      ? (lengthCm * widthCm * heightCm * item.initialQty) /
-                        1_000_000
-                      : undefined;
-
-                  return (
-                    <TableRow key={item.id} className="h-14">
-                      <TableCell className="font-medium">
-                        {item.commodityName ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.skuCode ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums font-medium">
-                        {item.initialQty}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.unit ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.binLocation ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {weightPerUnit != null
-                          ? formatCeilFixed(weightPerUnit, 3)
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {totalWeightKg != null
-                          ? formatCeilFixed(totalWeightKg, 2)
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {totalVolumeM3 != null
-                          ? formatCeilFixed(totalVolumeM3, 3)
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              type="button"
-                            >
-                              <MoreHorizontal className="size-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditItem(item)}>
-                              <Edit className="mr-2 size-4" />
-                              {t('itemActions.edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => onDeleteItem(item)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 size-4" />
-                              {t('itemActions.delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+          <FreightTableSection
+            title={t('itemsList.title')}
+            icon={Package}
+            actions={
+              <Button onClick={onAddItem} size="sm" type="button">
+                <Plus className="mr-2 size-4" />
+                {t('items.create')}
+              </Button>
+            }
+          >
+            <Table>
+              <TableHeader className="bg-muted">
+                <TableRow>
+                  <TableHead>{t('items.columns.commodity')}</TableHead>
+                  <TableHead>{t('items.columns.sku')}</TableHead>
+                  <TableHead className="text-right">
+                    {t('items.columns.initialQty')}
+                  </TableHead>
+                  <TableHead>{t('items.columns.unit')}</TableHead>
+                  <TableHead>{t('items.columns.location')}</TableHead>
+                  <TableHead className="text-right">
+                    {t('items.fields.weightPerUnit')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t('items.columns.totalWeight')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t('items.columns.totalVolume')}
+                  </TableHead>
+                  <TableHead className="w-[72px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {itemsQuery.isLoading ? (
+                  Array.from({ length: 3 }).map((_, idx) => (
+                    <TableRow key={`sk-${idx}`} className="h-14">
+                      {Array.from({ length: 9 }).map((__, cIdx) => (
+                        <TableCell key={`sk-${idx}-${cIdx}`}>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </FreightTableSection>
+                  ))
+                ) : itemsQuery.error ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-32 text-center">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle>{t('items.error')}</EmptyTitle>
+                          <EmptyDescription>
+                            {getFreightApiErrorMessage(itemsQuery.error)}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
+                    </TableCell>
+                  </TableRow>
+                ) : renderedItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-32 text-center">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle>{t('items.empty')}</EmptyTitle>
+                          <EmptyDescription>
+                            {t('items.emptyHint')}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  renderedItems.map((item) => {
+                    const weightPerUnit =
+                      item.weightPerUnit != null
+                        ? Number(item.weightPerUnit)
+                        : undefined;
+                    const totalWeightKg =
+                      weightPerUnit != null && Number.isFinite(weightPerUnit)
+                        ? weightPerUnit * item.initialQty
+                        : undefined;
+
+                    const lengthCm =
+                      item.lengthCm != null ? Number(item.lengthCm) : undefined;
+                    const widthCm =
+                      item.widthCm != null ? Number(item.widthCm) : undefined;
+                    const heightCm =
+                      item.heightCm != null ? Number(item.heightCm) : undefined;
+                    const totalVolumeM3 =
+                      lengthCm != null &&
+                      widthCm != null &&
+                      heightCm != null &&
+                      Number.isFinite(lengthCm) &&
+                      Number.isFinite(widthCm) &&
+                      Number.isFinite(heightCm)
+                        ? (lengthCm * widthCm * heightCm * item.initialQty) /
+                          1_000_000
+                        : undefined;
+
+                    return (
+                      <TableRow key={item.id} className="h-14">
+                        <TableCell className="font-medium">
+                          {item.commodityName ?? '-'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.skuCode ?? '-'}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums font-medium">
+                          {item.initialQty}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.unit ?? '-'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.binLocation ?? '-'}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {weightPerUnit != null
+                            ? formatCeilFixed(weightPerUnit, 3)
+                            : '-'}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {totalWeightKg != null
+                            ? formatCeilFixed(totalWeightKg, 2)
+                            : '-'}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {totalVolumeM3 != null
+                            ? formatCeilFixed(totalVolumeM3, 3)
+                            : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                type="button"
+                              >
+                                <MoreHorizontal className="size-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => onEditItem(item)}
+                              >
+                                <Edit className="mr-2 size-4" />
+                                {t('itemActions.edit')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => onDeleteItem(item)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 size-4" />
+                                {t('itemActions.delete')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </FreightTableSection>
+        </div>
       </div>
 
       {/* 备注区域 */}
