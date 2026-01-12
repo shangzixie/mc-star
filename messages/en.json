@@ -899,7 +899,7 @@
         "noCustomsAgentFound": "No customs agent found",
         "loading": "Loading...",
         "employees": {
-          "title": "Employee Assignments",
+          "title": "Internal Information",
           "selectEmployee": "Select employee",
           "searchEmployee": "Search employee name...",
           "noEmployeeFound": "No employee found",

@@ -899,7 +899,7 @@
         "noCustomsAgentFound": "未找到清关代理",
         "loading": "加载中...",
         "employees": {
-          "title": "雇员分配",
+          "title": "内部资料",
           "selectEmployee": "选择雇员",
           "searchEmployee": "搜索雇员姓名...",
           "noEmployeeFound": "未找到雇员",

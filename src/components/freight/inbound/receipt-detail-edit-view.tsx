@@ -830,7 +830,7 @@ export function ReceiptDetailEditView({
         </TabsList>
         <TabsContent value="basic">
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-            {/* 左侧：雇员分配 */}
+            {/* 左侧：内部资料 */}
             <EmployeeAssignmentsSection
               salesEmployeeId={form.watch('salesEmployeeId')}
               customerServiceEmployeeId={form.watch(
