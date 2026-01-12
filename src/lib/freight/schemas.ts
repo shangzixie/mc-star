@@ -58,6 +58,30 @@ export const createWarehouseReceiptSchema = z.object({
   inboundTime: z.string().datetime().optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
+  // Contact information
+  shipperId: uuidSchema.nullable().optional(),
+  bookingAgentId: uuidSchema.nullable().optional(),
+  customsAgentId: uuidSchema.nullable().optional(),
+  // Employee assignments
+  salesEmployeeId: uuidSchema.nullable().optional(),
+  customerServiceEmployeeId: uuidSchema.nullable().optional(),
+  overseasCsEmployeeId: uuidSchema.nullable().optional(),
+  operationsEmployeeId: uuidSchema.nullable().optional(),
+  documentationEmployeeId: uuidSchema.nullable().optional(),
+  financeEmployeeId: uuidSchema.nullable().optional(),
+  bookingEmployeeId: uuidSchema.nullable().optional(),
+  reviewerEmployeeId: uuidSchema.nullable().optional(),
+  // Transport schedule (stored in DB; yyyy-mm-dd)
+  airCarrier: z.string().max(200).nullable().optional(),
+  airFlightNo: z.string().max(100).nullable().optional(),
+  airFlightDate: z.string().max(20).nullable().optional(),
+  airArrivalDateE: z.string().max(20).nullable().optional(),
+  airOperationLocation: z.string().max(200).nullable().optional(),
+  airOperationNode: z.string().max(30).nullable().optional(),
+  seaCarrierRoute: z.string().max(200).nullable().optional(),
+  seaVesselVoyage: z.string().max(200).nullable().optional(),
+  seaEtdE: z.string().max(20).nullable().optional(),
+  seaEtaE: z.string().max(20).nullable().optional(),
 });
 
 export const addInventoryItemSchema = z.object({

@@ -1,0 +1,23 @@
+ALTER TABLE "warehouse_receipts"
+ADD COLUMN "shipper_id" uuid REFERENCES "parties"("id") ON DELETE SET NULL,
+ADD COLUMN "booking_agent_id" uuid REFERENCES "parties"("id") ON DELETE SET NULL,
+ADD COLUMN "customs_agent_id" uuid REFERENCES "parties"("id") ON DELETE SET NULL,
+ADD COLUMN "sales_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "customer_service_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "overseas_cs_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "operations_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "documentation_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "finance_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "booking_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "reviewer_employee_id" uuid REFERENCES "employees"("id") ON DELETE SET NULL,
+ADD COLUMN "air_carrier" varchar(200),
+ADD COLUMN "air_flight_no" varchar(100),
+ADD COLUMN "air_flight_date" varchar(20),
+ADD COLUMN "air_arrival_date_e" varchar(20),
+ADD COLUMN "air_operation_location" varchar(200),
+ADD COLUMN "air_operation_node" varchar(30),
+ADD COLUMN "sea_carrier_route" varchar(200),
+ADD COLUMN "sea_vessel_voyage" varchar(200),
+ADD COLUMN "sea_etd_e" varchar(20),
+ADD COLUMN "sea_eta_e" varchar(20);
+

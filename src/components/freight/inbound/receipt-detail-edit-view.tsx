@@ -62,12 +62,7 @@ import type {
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
 import { WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES } from '@/lib/freight/constants';
-import {
-  AIR_OPERATION_NODES,
-  getReceiptTransportScheduleFromStorage,
-  isSameReceiptTransportSchedule,
-  setReceiptTransportScheduleToStorage,
-} from '@/lib/freight/local-receipt-transport-schedule';
+import { AIR_OPERATION_NODES } from '@/lib/freight/local-receipt-transport-schedule';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -96,7 +91,7 @@ const receiptFormSchema = z.object({
   hblNo: z.string().max(50).optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
-  // Transport schedule (frontend-only, persisted to localStorage)
+  // Transport schedule (stored in DB)
   airCarrier: z.string().max(200).optional(),
   airFlightNo: z.string().max(100).optional(),
   airFlightDate: z.string().max(20).optional(),
@@ -179,6 +174,14 @@ export function ReceiptDetailEditView({
   const items = itemsQuery.data ?? [];
   const renderedItems = useMemo(() => items, [items]);
 
+  const defaultAirOperationNode = useMemo(() => {
+    const node = receipt.airOperationNode ?? undefined;
+    if (!node) return undefined;
+    return AIR_OPERATION_NODES.includes(node as any)
+      ? (node as any)
+      : undefined;
+  }, [receipt.airOperationNode]);
+
   const form = useForm<ReceiptFormData>({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
@@ -190,30 +193,30 @@ export function ReceiptDetailEditView({
       hblNo: '',
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
-      // Transport schedule (frontend-only)
-      airCarrier: '',
-      airFlightNo: '',
-      airFlightDate: '',
-      airArrivalDateE: '',
-      airOperationLocation: '',
-      airOperationNode: undefined,
-      seaCarrierRoute: '',
-      seaVesselVoyage: '',
-      seaEtdE: '',
-      seaEtaE: '',
-      // Employee assignments - will be populated when backend is ready
-      salesEmployeeId: '',
-      customerServiceEmployeeId: '',
-      overseasCsEmployeeId: '',
-      operationsEmployeeId: '',
-      documentationEmployeeId: '',
-      financeEmployeeId: '',
-      bookingEmployeeId: '',
-      reviewerEmployeeId: '',
-      // Contact information - parties (frontend only for now)
-      shipperId: '',
-      bookingAgentId: '',
-      customsAgentId: '',
+      // Transport schedule (stored in DB)
+      airCarrier: receipt.airCarrier ?? '',
+      airFlightNo: receipt.airFlightNo ?? '',
+      airFlightDate: receipt.airFlightDate ?? '',
+      airArrivalDateE: receipt.airArrivalDateE ?? '',
+      airOperationLocation: receipt.airOperationLocation ?? '',
+      airOperationNode: defaultAirOperationNode,
+      seaCarrierRoute: receipt.seaCarrierRoute ?? '',
+      seaVesselVoyage: receipt.seaVesselVoyage ?? '',
+      seaEtdE: receipt.seaEtdE ?? '',
+      seaEtaE: receipt.seaEtaE ?? '',
+      // Employee assignments (stored in DB)
+      salesEmployeeId: receipt.salesEmployeeId ?? '',
+      customerServiceEmployeeId: receipt.customerServiceEmployeeId ?? '',
+      overseasCsEmployeeId: receipt.overseasCsEmployeeId ?? '',
+      operationsEmployeeId: receipt.operationsEmployeeId ?? '',
+      documentationEmployeeId: receipt.documentationEmployeeId ?? '',
+      financeEmployeeId: receipt.financeEmployeeId ?? '',
+      bookingEmployeeId: receipt.bookingEmployeeId ?? '',
+      reviewerEmployeeId: receipt.reviewerEmployeeId ?? '',
+      // Contact information - parties (stored in DB)
+      shipperId: receipt.shipperId ?? '',
+      bookingAgentId: receipt.bookingAgentId ?? '',
+      customsAgentId: receipt.customsAgentId ?? '',
     },
   });
 
@@ -261,38 +264,6 @@ export function ReceiptDetailEditView({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // Load transport schedule from localStorage (frontend-only)
-  useEffect(() => {
-    const stored = getReceiptTransportScheduleFromStorage(receipt.id);
-    if (!stored) return;
-    form.setValue('airCarrier', stored.airCarrier ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('airFlightNo', stored.airFlightNo ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('airFlightDate', stored.airFlightDate ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('airArrivalDateE', stored.airArrivalDateE ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('airOperationLocation', stored.airOperationLocation ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('airOperationNode', stored.airOperationNode ?? undefined, {
-      shouldDirty: false,
-    });
-    form.setValue('seaCarrierRoute', stored.seaCarrierRoute ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('seaVesselVoyage', stored.seaVesselVoyage ?? '', {
-      shouldDirty: false,
-    });
-    form.setValue('seaEtdE', stored.seaEtdE ?? '', { shouldDirty: false });
-    form.setValue('seaEtaE', stored.seaEtaE ?? '', { shouldDirty: false });
-  }, [receipt.id, form]);
-
   const handleSave = async (data: ReceiptFormData) => {
     try {
       const payload: Record<string, any> = {};
@@ -316,6 +287,87 @@ export function ReceiptDetailEditView({
         payload.internalRemarks = data.internalRemarks;
       }
 
+      // Contact information (nullable - allow clearing)
+      const nextShipperId = (data.shipperId ?? '').trim();
+      const prevShipperId = (receipt.shipperId ?? '').trim();
+      if (nextShipperId !== prevShipperId) {
+        payload.shipperId = nextShipperId || null;
+      }
+
+      const nextBookingAgentId = (data.bookingAgentId ?? '').trim();
+      const prevBookingAgentId = (receipt.bookingAgentId ?? '').trim();
+      if (nextBookingAgentId !== prevBookingAgentId) {
+        payload.bookingAgentId = nextBookingAgentId || null;
+      }
+
+      const nextCustomsAgentId = (data.customsAgentId ?? '').trim();
+      const prevCustomsAgentId = (receipt.customsAgentId ?? '').trim();
+      if (nextCustomsAgentId !== prevCustomsAgentId) {
+        payload.customsAgentId = nextCustomsAgentId || null;
+      }
+
+      // Employee assignments (nullable - allow clearing)
+      const nextSalesEmployeeId = (data.salesEmployeeId ?? '').trim();
+      const prevSalesEmployeeId = (receipt.salesEmployeeId ?? '').trim();
+      if (nextSalesEmployeeId !== prevSalesEmployeeId) {
+        payload.salesEmployeeId = nextSalesEmployeeId || null;
+      }
+
+      const nextCustomerServiceEmployeeId = (
+        data.customerServiceEmployeeId ?? ''
+      ).trim();
+      const prevCustomerServiceEmployeeId = (
+        receipt.customerServiceEmployeeId ?? ''
+      ).trim();
+      if (nextCustomerServiceEmployeeId !== prevCustomerServiceEmployeeId) {
+        payload.customerServiceEmployeeId =
+          nextCustomerServiceEmployeeId || null;
+      }
+
+      const nextOverseasCsEmployeeId = (data.overseasCsEmployeeId ?? '').trim();
+      const prevOverseasCsEmployeeId = (
+        receipt.overseasCsEmployeeId ?? ''
+      ).trim();
+      if (nextOverseasCsEmployeeId !== prevOverseasCsEmployeeId) {
+        payload.overseasCsEmployeeId = nextOverseasCsEmployeeId || null;
+      }
+
+      const nextOperationsEmployeeId = (data.operationsEmployeeId ?? '').trim();
+      const prevOperationsEmployeeId = (
+        receipt.operationsEmployeeId ?? ''
+      ).trim();
+      if (nextOperationsEmployeeId !== prevOperationsEmployeeId) {
+        payload.operationsEmployeeId = nextOperationsEmployeeId || null;
+      }
+
+      const nextDocumentationEmployeeId = (
+        data.documentationEmployeeId ?? ''
+      ).trim();
+      const prevDocumentationEmployeeId = (
+        receipt.documentationEmployeeId ?? ''
+      ).trim();
+      if (nextDocumentationEmployeeId !== prevDocumentationEmployeeId) {
+        payload.documentationEmployeeId = nextDocumentationEmployeeId || null;
+      }
+
+      const nextFinanceEmployeeId = (data.financeEmployeeId ?? '').trim();
+      const prevFinanceEmployeeId = (receipt.financeEmployeeId ?? '').trim();
+      if (nextFinanceEmployeeId !== prevFinanceEmployeeId) {
+        payload.financeEmployeeId = nextFinanceEmployeeId || null;
+      }
+
+      const nextBookingEmployeeId = (data.bookingEmployeeId ?? '').trim();
+      const prevBookingEmployeeId = (receipt.bookingEmployeeId ?? '').trim();
+      if (nextBookingEmployeeId !== prevBookingEmployeeId) {
+        payload.bookingEmployeeId = nextBookingEmployeeId || null;
+      }
+
+      const nextReviewerEmployeeId = (data.reviewerEmployeeId ?? '').trim();
+      const prevReviewerEmployeeId = (receipt.reviewerEmployeeId ?? '').trim();
+      if (nextReviewerEmployeeId !== prevReviewerEmployeeId) {
+        payload.reviewerEmployeeId = nextReviewerEmployeeId || null;
+      }
+
       const nextMblNo = (data.mblNo ?? '').trim();
       const prevMblNo = (mblQuery.data?.mblNo ?? '').trim();
       const hasMblNoChange = nextMblNo !== prevMblNo;
@@ -328,70 +380,74 @@ export function ReceiptDetailEditView({
       const prevHblNo = (hblQuery.data?.hblNo ?? '').trim();
       const hasHblNoChange = nextHblNo !== prevHblNo;
 
-      const nextTransportSchedule = {
-        airCarrier: (data.airCarrier ?? '').trim(),
-        airFlightNo: (data.airFlightNo ?? '').trim(),
-        airFlightDate: (data.airFlightDate ?? '').trim(),
-        airArrivalDateE: (data.airArrivalDateE ?? '').trim(),
-        airOperationLocation: (data.airOperationLocation ?? '').trim(),
-        airOperationNode: data.airOperationNode ?? undefined,
-        seaCarrierRoute: (data.seaCarrierRoute ?? '').trim(),
-        seaVesselVoyage: (data.seaVesselVoyage ?? '').trim(),
-        seaEtdE: (data.seaEtdE ?? '').trim(),
-        seaEtaE: (data.seaEtaE ?? '').trim(),
-      };
-      const prevTransportSchedule = getReceiptTransportScheduleFromStorage(
-        receipt.id
-      );
-      const hasTransportScheduleChange = !isSameReceiptTransportSchedule(
-        prevTransportSchedule,
-        nextTransportSchedule
-      );
-
-      // Employee assignments - Note: Backend fields not yet implemented
-      // These will be sent to API but won't be persisted until backend is ready
-      if (data.salesEmployeeId) {
-        payload.salesEmployeeId = data.salesEmployeeId;
-      }
-      if (data.customerServiceEmployeeId) {
-        payload.customerServiceEmployeeId = data.customerServiceEmployeeId;
-      }
-      if (data.overseasCsEmployeeId) {
-        payload.overseasCsEmployeeId = data.overseasCsEmployeeId;
-      }
-      if (data.operationsEmployeeId) {
-        payload.operationsEmployeeId = data.operationsEmployeeId;
-      }
-      if (data.documentationEmployeeId) {
-        payload.documentationEmployeeId = data.documentationEmployeeId;
-      }
-      if (data.financeEmployeeId) {
-        payload.financeEmployeeId = data.financeEmployeeId;
-      }
-      if (data.bookingEmployeeId) {
-        payload.bookingEmployeeId = data.bookingEmployeeId;
-      }
-      if (data.reviewerEmployeeId) {
-        payload.reviewerEmployeeId = data.reviewerEmployeeId;
+      // Transport schedule (nullable - allow clearing)
+      const nextAirCarrier = (data.airCarrier ?? '').trim();
+      const prevAirCarrier = (receipt.airCarrier ?? '').trim();
+      if (nextAirCarrier !== prevAirCarrier) {
+        payload.airCarrier = nextAirCarrier || null;
       }
 
-      // Contact information - parties (frontend only, backend not yet implemented)
-      if (data.shipperId) {
-        payload.shipperId = data.shipperId;
+      const nextAirFlightNo = (data.airFlightNo ?? '').trim();
+      const prevAirFlightNo = (receipt.airFlightNo ?? '').trim();
+      if (nextAirFlightNo !== prevAirFlightNo) {
+        payload.airFlightNo = nextAirFlightNo || null;
       }
-      if (data.bookingAgentId) {
-        payload.bookingAgentId = data.bookingAgentId;
+
+      const nextAirFlightDate = (data.airFlightDate ?? '').trim();
+      const prevAirFlightDate = (receipt.airFlightDate ?? '').trim();
+      if (nextAirFlightDate !== prevAirFlightDate) {
+        payload.airFlightDate = nextAirFlightDate || null;
       }
-      if (data.customsAgentId) {
-        payload.customsAgentId = data.customsAgentId;
+
+      const nextAirArrivalDateE = (data.airArrivalDateE ?? '').trim();
+      const prevAirArrivalDateE = (receipt.airArrivalDateE ?? '').trim();
+      if (nextAirArrivalDateE !== prevAirArrivalDateE) {
+        payload.airArrivalDateE = nextAirArrivalDateE || null;
+      }
+
+      const nextAirOperationLocation = (data.airOperationLocation ?? '').trim();
+      const prevAirOperationLocation = (
+        receipt.airOperationLocation ?? ''
+      ).trim();
+      if (nextAirOperationLocation !== prevAirOperationLocation) {
+        payload.airOperationLocation = nextAirOperationLocation || null;
+      }
+
+      const nextAirOperationNode = (data.airOperationNode ?? '').trim();
+      const prevAirOperationNode = (receipt.airOperationNode ?? '').trim();
+      if (nextAirOperationNode !== prevAirOperationNode) {
+        payload.airOperationNode = nextAirOperationNode || null;
+      }
+
+      const nextSeaCarrierRoute = (data.seaCarrierRoute ?? '').trim();
+      const prevSeaCarrierRoute = (receipt.seaCarrierRoute ?? '').trim();
+      if (nextSeaCarrierRoute !== prevSeaCarrierRoute) {
+        payload.seaCarrierRoute = nextSeaCarrierRoute || null;
+      }
+
+      const nextSeaVesselVoyage = (data.seaVesselVoyage ?? '').trim();
+      const prevSeaVesselVoyage = (receipt.seaVesselVoyage ?? '').trim();
+      if (nextSeaVesselVoyage !== prevSeaVesselVoyage) {
+        payload.seaVesselVoyage = nextSeaVesselVoyage || null;
+      }
+
+      const nextSeaEtdE = (data.seaEtdE ?? '').trim();
+      const prevSeaEtdE = (receipt.seaEtdE ?? '').trim();
+      if (nextSeaEtdE !== prevSeaEtdE) {
+        payload.seaEtdE = nextSeaEtdE || null;
+      }
+
+      const nextSeaEtaE = (data.seaEtaE ?? '').trim();
+      const prevSeaEtaE = (receipt.seaEtaE ?? '').trim();
+      if (nextSeaEtaE !== prevSeaEtaE) {
+        payload.seaEtaE = nextSeaEtaE || null;
       }
 
       if (
         Object.keys(payload).length === 0 &&
         !hasMblNoChange &&
         !hasSoNoChange &&
-        !hasHblNoChange &&
-        !hasTransportScheduleChange
+        !hasHblNoChange
       ) {
         toast.info('没有需要保存的更改');
         return;
@@ -426,11 +482,6 @@ export function ReceiptDetailEditView({
         } else if (hblNo) {
           await createHblMutation.mutateAsync({ hblNo });
         }
-      }
-
-      // Frontend-only: persist transport schedule to localStorage
-      if (hasTransportScheduleChange) {
-        setReceiptTransportScheduleToStorage(receipt.id, nextTransportSchedule);
       }
 
       toast.success(t('receiptActions.updateSuccess'));
@@ -600,7 +651,7 @@ export function ReceiptDetailEditView({
           </div>
         </FreightSection>
 
-        {/* 中间：航班/船期（前端暂存，随顶部保存一起保存） */}
+        {/* 中间：航班/船期（随保存写入数据库） */}
         <FreightSection
           title={
             receipt.transportType === 'AIR_FREIGHT'

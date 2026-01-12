@@ -162,6 +162,30 @@ export const freightWarehouseReceiptSchema = z
     inboundTime: isoDateTimeSchema.nullable(),
     remarks: z.string().nullable(),
     internalRemarks: z.string().nullable(),
+    // Contact information
+    shipperId: uuidSchema.nullable().optional(),
+    bookingAgentId: uuidSchema.nullable().optional(),
+    customsAgentId: uuidSchema.nullable().optional(),
+    // Employee assignments
+    salesEmployeeId: uuidSchema.nullable().optional(),
+    customerServiceEmployeeId: uuidSchema.nullable().optional(),
+    overseasCsEmployeeId: uuidSchema.nullable().optional(),
+    operationsEmployeeId: uuidSchema.nullable().optional(),
+    documentationEmployeeId: uuidSchema.nullable().optional(),
+    financeEmployeeId: uuidSchema.nullable().optional(),
+    bookingEmployeeId: uuidSchema.nullable().optional(),
+    reviewerEmployeeId: uuidSchema.nullable().optional(),
+    // Transport schedule (yyyy-mm-dd)
+    airCarrier: z.string().nullable().optional(),
+    airFlightNo: z.string().nullable().optional(),
+    airFlightDate: z.string().nullable().optional(),
+    airArrivalDateE: z.string().nullable().optional(),
+    airOperationLocation: z.string().nullable().optional(),
+    airOperationNode: z.string().nullable().optional(),
+    seaCarrierRoute: z.string().nullable().optional(),
+    seaVesselVoyage: z.string().nullable().optional(),
+    seaEtdE: z.string().nullable().optional(),
+    seaEtaE: z.string().nullable().optional(),
     createdAt: isoDateTimeSchema.nullable(),
   })
   .passthrough();

@@ -250,6 +250,56 @@ export const warehouseReceipts = pgTable(
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),
     internalRemarks: text('internal_remarks'),
+    // Contact information
+    shipperId: uuid('shipper_id').references(() => parties.id, {
+      onDelete: 'set null',
+    }),
+    bookingAgentId: uuid('booking_agent_id').references(() => parties.id, {
+      onDelete: 'set null',
+    }),
+    customsAgentId: uuid('customs_agent_id').references(() => parties.id, {
+      onDelete: 'set null',
+    }),
+    // Employee assignments
+    salesEmployeeId: uuid('sales_employee_id').references(() => employees.id, {
+      onDelete: 'set null',
+    }),
+    customerServiceEmployeeId: uuid('customer_service_employee_id').references(
+      () => employees.id,
+      { onDelete: 'set null' }
+    ),
+    overseasCsEmployeeId: uuid('overseas_cs_employee_id').references(
+      () => employees.id,
+      { onDelete: 'set null' }
+    ),
+    operationsEmployeeId: uuid('operations_employee_id').references(
+      () => employees.id,
+      { onDelete: 'set null' }
+    ),
+    documentationEmployeeId: uuid('documentation_employee_id').references(
+      () => employees.id,
+      { onDelete: 'set null' }
+    ),
+    financeEmployeeId: uuid('finance_employee_id').references(() => employees.id, {
+      onDelete: 'set null',
+    }),
+    bookingEmployeeId: uuid('booking_employee_id').references(() => employees.id, {
+      onDelete: 'set null',
+    }),
+    reviewerEmployeeId: uuid('reviewer_employee_id').references(() => employees.id, {
+      onDelete: 'set null',
+    }),
+    // Transport schedule (stored in DB)
+    airCarrier: varchar('air_carrier', { length: 200 }),
+    airFlightNo: varchar('air_flight_no', { length: 100 }),
+    airFlightDate: varchar('air_flight_date', { length: 20 }), // yyyy-mm-dd
+    airArrivalDateE: varchar('air_arrival_date_e', { length: 20 }), // yyyy-mm-dd
+    airOperationLocation: varchar('air_operation_location', { length: 200 }),
+    airOperationNode: varchar('air_operation_node', { length: 30 }),
+    seaCarrierRoute: varchar('sea_carrier_route', { length: 200 }),
+    seaVesselVoyage: varchar('sea_vessel_voyage', { length: 200 }),
+    seaEtdE: varchar('sea_etd_e', { length: 20 }), // yyyy-mm-dd
+    seaEtaE: varchar('sea_eta_e', { length: 20 }), // yyyy-mm-dd
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({

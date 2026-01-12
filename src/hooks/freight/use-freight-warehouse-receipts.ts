@@ -137,6 +137,27 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       inboundTime?: string;
       remarks?: string;
       internalRemarks?: string;
+      shipperId?: string | null;
+      bookingAgentId?: string | null;
+      customsAgentId?: string | null;
+      salesEmployeeId?: string | null;
+      customerServiceEmployeeId?: string | null;
+      overseasCsEmployeeId?: string | null;
+      operationsEmployeeId?: string | null;
+      documentationEmployeeId?: string | null;
+      financeEmployeeId?: string | null;
+      bookingEmployeeId?: string | null;
+      reviewerEmployeeId?: string | null;
+      airCarrier?: string | null;
+      airFlightNo?: string | null;
+      airFlightDate?: string | null;
+      airArrivalDateE?: string | null;
+      airOperationLocation?: string | null;
+      airOperationNode?: string | null;
+      seaCarrierRoute?: string | null;
+      seaVesselVoyage?: string | null;
+      seaEtdE?: string | null;
+      seaEtaE?: string | null;
     }) => {
       const { updateWarehouseReceipt } = await import(
         '@/lib/freight/api-client'
