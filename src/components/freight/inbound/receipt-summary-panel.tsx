@@ -1,10 +1,10 @@
 'use client';
 
-import type { FreightInventoryItem } from '@/lib/freight/api-types';
-import { formatCeilFixed } from '@/lib/freight/math';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { FreightInventoryItem } from '@/lib/freight/api-types';
+import { formatCeilFixed } from '@/lib/freight/math';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -24,7 +24,8 @@ function getDefaultDivisor(transportType: string | null | undefined): number {
   // Common industry defaults (cm-based divisor):
   // - Air: 6000  => 1 m³ ≈ 166.67 kg
   // - Sea: 1000  => 1 m³ = 1000 kg (W/M: 1 CBM == 1 TON)
-  if (transportType === 'AIR_FREIGHT' || transportType === 'FBA_AIR') return 6000;
+  if (transportType === 'AIR_FREIGHT' || transportType === 'FBA_AIR')
+    return 6000;
   if (
     transportType === 'SEA_FCL' ||
     transportType === 'SEA_LCL' ||
@@ -79,7 +80,12 @@ export function ReceiptSummaryPanel({
     setDivisorInput((prev) => {
       const prevDefault = String(getDefaultDivisor(undefined));
       // If user hasn't interacted (still a "known default"), follow transportType.
-      if (prev === '6000' || prev === '5000' || prev === '1000' || prev === prevDefault) {
+      if (
+        prev === '6000' ||
+        prev === '5000' ||
+        prev === '1000' ||
+        prev === prevDefault
+      ) {
         return nextDefault;
       }
       return prev;
@@ -335,7 +341,10 @@ export function ReceiptSummaryPanel({
             <Input
               value={billingDisplay.pieces}
               onChange={(e) =>
-                setManualBilling((prev) => ({ ...prev, pieces: e.target.value }))
+                setManualBilling((prev) => ({
+                  ...prev,
+                  pieces: e.target.value,
+                }))
               }
               readOnly={!billingLocked}
               inputMode="numeric"
@@ -349,7 +358,10 @@ export function ReceiptSummaryPanel({
             <Input
               value={billingDisplay.weightKg}
               onChange={(e) =>
-                setManualBilling((prev) => ({ ...prev, weightKg: e.target.value }))
+                setManualBilling((prev) => ({
+                  ...prev,
+                  weightKg: e.target.value,
+                }))
               }
               readOnly={!billingLocked}
               inputMode="decimal"
@@ -364,7 +376,9 @@ export function ReceiptSummaryPanel({
               <Label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Checkbox
                   checked={billingLocked}
-                  onCheckedChange={(checked) => setBillingLocked(Boolean(checked))}
+                  onCheckedChange={(checked) =>
+                    setBillingLocked(Boolean(checked))
+                  }
                 />
                 {t('fields.lock')}
               </Label>
@@ -372,7 +386,10 @@ export function ReceiptSummaryPanel({
             <Input
               value={billingDisplay.volumeM3}
               onChange={(e) =>
-                setManualBilling((prev) => ({ ...prev, volumeM3: e.target.value }))
+                setManualBilling((prev) => ({
+                  ...prev,
+                  volumeM3: e.target.value,
+                }))
               }
               readOnly={!billingLocked}
               inputMode="decimal"
@@ -384,4 +401,3 @@ export function ReceiptSummaryPanel({
     </div>
   );
 }
-

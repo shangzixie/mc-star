@@ -178,7 +178,7 @@ export function ShipperCombobox({
                     {selectedShipper.address}
                   </div>
                 )}
-                {selectedShipper.contactInfo &&
+                {!!selectedShipper.contactInfo &&
                   typeof selectedShipper.contactInfo === 'object' &&
                   selectedShipper.contactInfo !== null && (
                     <div>

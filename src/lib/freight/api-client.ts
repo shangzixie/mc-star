@@ -24,7 +24,7 @@ export class FreightApiError extends Error {
 }
 
 async function parseApiError(
-  response: Response
+  response: globalThis.Response
 ): Promise<{ code: string; message: string; details?: unknown }> {
   const fallback = {
     code: `HTTP_${response.status}`,
@@ -232,7 +232,7 @@ interface RequestConfig {
   data?: unknown;
 }
 
-interface Response<T = unknown> {
+interface ApiClientResponse<T = unknown> {
   data: T;
   status: number;
   statusText: string;
@@ -242,7 +242,7 @@ class FreightApiClient {
   async get<T = unknown>(
     url: string,
     config?: RequestConfig
-  ): Promise<Response<T>> {
+  ): Promise<ApiClientResponse<T>> {
     const params = new URLSearchParams();
     if (config?.params) {
       for (const [key, value] of Object.entries(config.params)) {
@@ -271,7 +271,7 @@ class FreightApiClient {
     url: string,
     data?: unknown,
     config?: RequestConfig
-  ): Promise<Response<T>> {
+  ): Promise<ApiClientResponse<T>> {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -293,7 +293,7 @@ class FreightApiClient {
     url: string,
     data?: unknown,
     config?: RequestConfig
-  ): Promise<Response<T>> {
+  ): Promise<ApiClientResponse<T>> {
     const response = await fetch(url, {
       method: 'PATCH',
       headers: {

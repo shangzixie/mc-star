@@ -687,6 +687,48 @@
           "contact": "Contact",
           "mbl": "Master Bill of Lading (MBL)"
         },
+        "transportSchedule": {
+          "unsupported": "-",
+          "air": {
+            "title": "Flight",
+            "fields": {
+              "carrierAndFlight": "Airline / Flight",
+              "flightDateE": "Flight date (E)",
+              "arrivalDateE": "Arrival date (E)",
+              "operationLocation": "Operation location",
+              "operationNode": "Operation node"
+            },
+            "placeholders": {
+              "carrier": "Airline",
+              "flightNo": "Flight",
+              "operationLocation": "Enter operation location",
+              "operationNode": "Select operation node"
+            },
+            "operationNodes": {
+              "SPACE_BOOKED": "Space Booked",
+              "PICKING_UP_GOODS": "Picking up goods",
+              "IN_PROCESSING": "In processing / Operating",
+              "WEIGHT_CONFIRMED": "Weight confirmed / Weighed",
+              "CUSTOMS_DECLARATION_IN_PROGRESS": "Customs declaration in progress",
+              "CUSTOMS_CLEARED": "Customs cleared",
+              "RECEIPT_RETURNED": "Receipt returned",
+              "COMPLETED": "Completed"
+            }
+          },
+          "sea": {
+            "title": "Vessel schedule",
+            "fields": {
+              "carrierRoute": "Carrier / Route",
+              "vesselVoyage": "Vessel / Voyage",
+              "etdE": "ETD (E)",
+              "etaE": "ETA (E)"
+            },
+            "placeholders": {
+              "carrierRoute": "Carrier / Route",
+              "vesselVoyage": "Vessel / Voyage"
+            }
+          }
+        },
         "mbl": {
           "title": "Master Bill of Lading (MBL)",
           "description": "Master Bill of Lading information",

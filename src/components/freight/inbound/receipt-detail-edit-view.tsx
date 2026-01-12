@@ -3,6 +3,7 @@
 import { EmployeeAssignmentsSection } from '@/components/freight/inbound/employee-assignments-section';
 import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { ReceiptSummaryPanel } from '@/components/freight/inbound/receipt-summary-panel';
+import { ReceiptTransportScheduleSection } from '@/components/freight/inbound/receipt-transport-schedule-section';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
@@ -61,6 +62,12 @@ import type {
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
 import { WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES } from '@/lib/freight/constants';
+import {
+  AIR_OPERATION_NODES,
+  getReceiptTransportScheduleFromStorage,
+  isSameReceiptTransportSchedule,
+  setReceiptTransportScheduleToStorage,
+} from '@/lib/freight/local-receipt-transport-schedule';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -89,6 +96,17 @@ const receiptFormSchema = z.object({
   hblNo: z.string().max(50).optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
+  // Transport schedule (frontend-only, persisted to localStorage)
+  airCarrier: z.string().max(200).optional(),
+  airFlightNo: z.string().max(100).optional(),
+  airFlightDate: z.string().max(20).optional(),
+  airArrivalDateE: z.string().max(20).optional(),
+  airOperationLocation: z.string().max(200).optional(),
+  airOperationNode: z.enum(AIR_OPERATION_NODES).optional(),
+  seaCarrierRoute: z.string().max(200).optional(),
+  seaVesselVoyage: z.string().max(200).optional(),
+  seaEtdE: z.string().max(20).optional(),
+  seaEtaE: z.string().max(20).optional(),
   // Employee assignments
   salesEmployeeId: z.string().optional(),
   customerServiceEmployeeId: z.string().optional(),
@@ -131,7 +149,9 @@ export function ReceiptDetailEditView({
   onDeleteItem: (item: FreightInventoryItem) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
-  const tSummaryPanel = useTranslations('Dashboard.freight.inbound.summaryPanel');
+  const tSummaryPanel = useTranslations(
+    'Dashboard.freight.inbound.summaryPanel'
+  );
   const tCommon = useTranslations('Common');
   const tCustomerFields = useTranslations(
     'Dashboard.freight.settings.customers.fields'
@@ -170,6 +190,17 @@ export function ReceiptDetailEditView({
       hblNo: '',
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
+      // Transport schedule (frontend-only)
+      airCarrier: '',
+      airFlightNo: '',
+      airFlightDate: '',
+      airArrivalDateE: '',
+      airOperationLocation: '',
+      airOperationNode: undefined,
+      seaCarrierRoute: '',
+      seaVesselVoyage: '',
+      seaEtdE: '',
+      seaEtaE: '',
       // Employee assignments - will be populated when backend is ready
       salesEmployeeId: '',
       customerServiceEmployeeId: '',
@@ -230,6 +261,38 @@ export function ReceiptDetailEditView({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
+  // Load transport schedule from localStorage (frontend-only)
+  useEffect(() => {
+    const stored = getReceiptTransportScheduleFromStorage(receipt.id);
+    if (!stored) return;
+    form.setValue('airCarrier', stored.airCarrier ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('airFlightNo', stored.airFlightNo ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('airFlightDate', stored.airFlightDate ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('airArrivalDateE', stored.airArrivalDateE ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('airOperationLocation', stored.airOperationLocation ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('airOperationNode', stored.airOperationNode ?? undefined, {
+      shouldDirty: false,
+    });
+    form.setValue('seaCarrierRoute', stored.seaCarrierRoute ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('seaVesselVoyage', stored.seaVesselVoyage ?? '', {
+      shouldDirty: false,
+    });
+    form.setValue('seaEtdE', stored.seaEtdE ?? '', { shouldDirty: false });
+    form.setValue('seaEtaE', stored.seaEtaE ?? '', { shouldDirty: false });
+  }, [receipt.id, form]);
+
   const handleSave = async (data: ReceiptFormData) => {
     try {
       const payload: Record<string, any> = {};
@@ -264,6 +327,26 @@ export function ReceiptDetailEditView({
       const nextHblNo = (data.hblNo ?? '').trim();
       const prevHblNo = (hblQuery.data?.hblNo ?? '').trim();
       const hasHblNoChange = nextHblNo !== prevHblNo;
+
+      const nextTransportSchedule = {
+        airCarrier: (data.airCarrier ?? '').trim(),
+        airFlightNo: (data.airFlightNo ?? '').trim(),
+        airFlightDate: (data.airFlightDate ?? '').trim(),
+        airArrivalDateE: (data.airArrivalDateE ?? '').trim(),
+        airOperationLocation: (data.airOperationLocation ?? '').trim(),
+        airOperationNode: data.airOperationNode ?? undefined,
+        seaCarrierRoute: (data.seaCarrierRoute ?? '').trim(),
+        seaVesselVoyage: (data.seaVesselVoyage ?? '').trim(),
+        seaEtdE: (data.seaEtdE ?? '').trim(),
+        seaEtaE: (data.seaEtaE ?? '').trim(),
+      };
+      const prevTransportSchedule = getReceiptTransportScheduleFromStorage(
+        receipt.id
+      );
+      const hasTransportScheduleChange = !isSameReceiptTransportSchedule(
+        prevTransportSchedule,
+        nextTransportSchedule
+      );
 
       // Employee assignments - Note: Backend fields not yet implemented
       // These will be sent to API but won't be persisted until backend is ready
@@ -307,7 +390,8 @@ export function ReceiptDetailEditView({
         Object.keys(payload).length === 0 &&
         !hasMblNoChange &&
         !hasSoNoChange &&
-        !hasHblNoChange
+        !hasHblNoChange &&
+        !hasTransportScheduleChange
       ) {
         toast.info('没有需要保存的更改');
         return;
@@ -342,6 +426,11 @@ export function ReceiptDetailEditView({
         } else if (hblNo) {
           await createHblMutation.mutateAsync({ hblNo });
         }
+      }
+
+      // Frontend-only: persist transport schedule to localStorage
+      if (hasTransportScheduleChange) {
+        setReceiptTransportScheduleToStorage(receipt.id, nextTransportSchedule);
       }
 
       toast.success(t('receiptActions.updateSuccess'));
@@ -401,7 +490,7 @@ export function ReceiptDetailEditView({
       </div>
 
       {/* 主要内容区域 */}
-      <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[420px_420px_1fr]">
         {/* 左侧：基本信息表单 */}
         <FreightSection title={t('receipt.fields.receiptNo')}>
           <div className="space-y-4">
@@ -506,6 +595,20 @@ export function ReceiptDetailEditView({
               )}
             </div>
           </div>
+        </FreightSection>
+
+        {/* 中间：航班/船期（前端暂存，随顶部保存一起保存） */}
+        <FreightSection
+          title={
+            receipt.transportType === 'AIR_FREIGHT'
+              ? t('transportSchedule.air.title')
+              : t('transportSchedule.sea.title')
+          }
+        >
+          <ReceiptTransportScheduleSection
+            transportType={receipt.transportType ?? null}
+            form={form as any}
+          />
         </FreightSection>
 
         {/* 右侧：汇总 + 商品明细表格 */}

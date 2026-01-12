@@ -53,7 +53,7 @@ export function PortCombobox({
   // Find selected port to display its label
   const selectedPort = useMemo(() => {
     if (!value) return null;
-    return ports.find((p) => p.id === value) ?? null;
+    return ports.find((p: TransportNode) => p.id === value) ?? null;
   }, [value, ports]);
 
   const getPortDisplayName = (port: TransportNode) => {
@@ -102,7 +102,7 @@ export function PortCombobox({
             </CommandEmpty>
             {ports && ports.length > 0 && (
               <CommandGroup>
-                {ports.map((port) => (
+                {ports.map((port: TransportNode) => (
                   <CommandItem
                     key={port.id}
                     value={port.id}

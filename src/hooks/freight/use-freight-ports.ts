@@ -1,6 +1,7 @@
-import { freightApiClient } from '@/lib/freight/api-client';
-import type { TransportNode } from '@/lib/freight/api-types';
+import { freightFetch, freightQueryString } from '@/lib/freight/api-client';
+import { transportNodeSchema } from '@/lib/freight/api-types';
 import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 
 export const PORTS_QUERY_KEY = 'freight-ports';
 
@@ -11,10 +12,12 @@ export function useFreightPorts(query: string) {
   return useQuery({
     queryKey: [PORTS_QUERY_KEY, query],
     queryFn: async () => {
-      const response = await freightApiClient.get('/api/freight/ports', {
-        params: { q: query },
-      });
-      return response.data?.data || [];
+      return freightFetch(
+        `/api/freight/ports${freightQueryString({ q: query })}`,
+        {
+          schema: z.array(transportNodeSchema),
+        }
+      );
     },
     enabled: query.length > 0,
   });

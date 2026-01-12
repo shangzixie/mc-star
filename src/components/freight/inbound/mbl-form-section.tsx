@@ -100,7 +100,6 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
   return (
     <FreightSection
       title={t('title')}
-      description={t('description')}
       actions={
         <Button
           type="button"
@@ -114,6 +113,7 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
         </Button>
       }
     >
+      <p className="text-sm text-muted-foreground">{t('description')}</p>
       <div className="space-y-4">
         {/* 目的港 */}
         <div className="space-y-2">

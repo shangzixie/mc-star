@@ -687,6 +687,48 @@
           "contact": "联系资料",
           "mbl": "提单信息 (MBL)"
         },
+        "transportSchedule": {
+          "unsupported": "-",
+          "air": {
+            "title": "航班",
+            "fields": {
+              "carrierAndFlight": "航空公司 / 航班",
+              "flightDateE": "航班日期(E)",
+              "arrivalDateE": "到达日期(E)",
+              "operationLocation": "操作地点",
+              "operationNode": "操作节点"
+            },
+            "placeholders": {
+              "carrier": "航空公司",
+              "flightNo": "航班",
+              "operationLocation": "请输入操作地点",
+              "operationNode": "请选择操作节点"
+            },
+            "operationNodes": {
+              "SPACE_BOOKED": "已订舱",
+              "PICKING_UP_GOODS": "提货中",
+              "IN_PROCESSING": "操作中",
+              "WEIGHT_CONFIRMED": "已出重",
+              "CUSTOMS_DECLARATION_IN_PROGRESS": "报关中",
+              "CUSTOMS_CLEARED": "已报关",
+              "RECEIPT_RETURNED": "已回单",
+              "COMPLETED": "已完成"
+            }
+          },
+          "sea": {
+            "title": "船期",
+            "fields": {
+              "carrierRoute": "承运人 / 航线",
+              "vesselVoyage": "船名 / 航次",
+              "etdE": "离港日期(E)",
+              "etaE": "到港日期(E)"
+            },
+            "placeholders": {
+              "carrierRoute": "承运人 / 航线",
+              "vesselVoyage": "船名 / 航次"
+            }
+          }
+        },
         "mbl": {
           "title": "提单信息 (MBL)",
           "description": "Master Bill of Lading 主提单信息",

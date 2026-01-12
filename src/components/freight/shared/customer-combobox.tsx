@@ -197,7 +197,7 @@ export function CustomerCombobox({
                     {selectedCustomer.address}
                   </div>
                 )}
-                {selectedCustomer.contactInfo &&
+                {!!selectedCustomer.contactInfo &&
                   typeof selectedCustomer.contactInfo === 'object' &&
                   selectedCustomer.contactInfo !== null && (
                     <div>

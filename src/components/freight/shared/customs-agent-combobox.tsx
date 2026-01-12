@@ -178,7 +178,7 @@ export function CustomsAgentCombobox({
                     {selectedAgent.address}
                   </div>
                 )}
-                {selectedAgent.contactInfo &&
+                {!!selectedAgent.contactInfo &&
                   typeof selectedAgent.contactInfo === 'object' &&
                   selectedAgent.contactInfo !== null && (
                     <div>
