@@ -127,6 +127,34 @@ CREATE TABLE warehouse_receipts (
 
     remarks TEXT, -- 打印时候给顾客看到的
     internal_remarks TEXT, -- 内部自己看到的
+
+    -- 联系信息 (Contact Information)
+    shipper_id UUID REFERENCES parties(id) ON DELETE SET NULL,
+    booking_agent_id UUID REFERENCES parties(id) ON DELETE SET NULL,
+    customs_agent_id UUID REFERENCES parties(id) ON DELETE SET NULL,
+
+    -- 内部资料 / 人员分配 (Employee Assignments)
+    sales_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    customer_service_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    overseas_cs_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    operations_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    documentation_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    finance_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    booking_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+    reviewer_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+
+    -- 航班/船期信息 (Transport Schedule)
+    air_carrier VARCHAR(200),
+    air_flight_no VARCHAR(100),
+    air_flight_date VARCHAR(20),      -- yyyy-mm-dd
+    air_arrival_date_e VARCHAR(20),   -- yyyy-mm-dd
+    air_operation_location VARCHAR(200),
+    air_operation_node VARCHAR(30),
+    sea_carrier_route VARCHAR(200),
+    sea_vessel_voyage VARCHAR(200),
+    sea_etd_e VARCHAR(20),            -- yyyy-mm-dd
+    sea_eta_e VARCHAR(20),            -- yyyy-mm-dd
+
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
