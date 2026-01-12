@@ -198,13 +198,13 @@ export function ReceiptSummaryPanel({
   return (
     <div className="rounded-md border text-sm">
       {/* Row 1: Settings */}
-      <div className="flex items-start gap-2 border-b p-2">
-        <div className="w-20 pt-1 text-xs font-semibold text-muted-foreground">
+      <div className="flex flex-col gap-2 border-b p-2 sm:flex-row sm:items-start">
+        <div className="w-full pt-0 text-xs font-semibold text-muted-foreground sm:w-20 sm:pt-1">
           {t('rows.settings')}
         </div>
-        <div className="grid flex-1 grid-cols-12 gap-2">
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-12">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.divisor')}
             </Label>
             <Input
@@ -215,8 +215,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.bubbleSplitPercent')}
             </Label>
             <Input
@@ -227,8 +227,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.totalVolumetricWeight')}
             </Label>
             <Input
@@ -241,13 +241,13 @@ export function ReceiptSummaryPanel({
       </div>
 
       {/* Row 2: Pre-alert */}
-      <div className="flex items-start gap-2 border-b p-2">
-        <div className="w-20 pt-1 text-xs font-semibold text-muted-foreground">
+      <div className="flex flex-col gap-2 border-b p-2 sm:flex-row sm:items-start">
+        <div className="w-full pt-0 text-xs font-semibold text-muted-foreground sm:w-20 sm:pt-1">
           {t('rows.prealert')}
         </div>
-        <div className="grid flex-1 grid-cols-12 gap-2">
-          <div className="col-span-3 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-12">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-3 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.prealertPieces')}
             </Label>
             <Input
@@ -257,8 +257,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-3 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-3 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.prealertWeight')}
             </Label>
             <Input
@@ -268,8 +268,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-3 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-3 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.prealertVolume')}
             </Label>
             <Input
@@ -279,8 +279,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-3 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-3 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.packaging')}
             </Label>
             <Input
@@ -294,19 +294,19 @@ export function ReceiptSummaryPanel({
       </div>
 
       {/* Row 3: Inbound / Measured */}
-      <div className="flex items-start gap-2 border-b p-2">
-        <div className="w-20 pt-1 text-xs font-semibold text-muted-foreground">
+      <div className="flex flex-col gap-2 border-b p-2 sm:flex-row sm:items-start">
+        <div className="w-full pt-0 text-xs font-semibold text-muted-foreground sm:w-20 sm:pt-1">
           {t('rows.measured')}
         </div>
-        <div className="grid flex-1 grid-cols-12 gap-2">
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-12">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.measuredPieces')}
             </Label>
             <Input value={String(measured.pieces)} readOnly className="h-7" />
           </div>
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.measuredGrossWeight')}
             </Label>
             <Input
@@ -315,8 +315,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.measuredVolume')}
             </Label>
             <Input
@@ -329,13 +329,13 @@ export function ReceiptSummaryPanel({
       </div>
 
       {/* Row 4: Chargeable / Billing */}
-      <div className="flex items-start gap-2 p-2">
-        <div className="w-20 pt-1 text-xs font-semibold text-muted-foreground">
+      <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-start">
+        <div className="w-full pt-0 text-xs font-semibold text-muted-foreground sm:w-20 sm:pt-1">
           {t('rows.billing')}
         </div>
-        <div className="grid flex-1 grid-cols-12 gap-2">
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-12">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.billingPieces')}
             </Label>
             <Input
@@ -351,8 +351,8 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
-            <Label className="text-xs text-muted-foreground">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
+            <Label className="text-xs text-muted-foreground min-[480px]:truncate">
               {t('fields.billingWeight')}
             </Label>
             <Input
@@ -368,9 +368,9 @@ export function ReceiptSummaryPanel({
               className="h-7"
             />
           </div>
-          <div className="col-span-4 grid grid-cols-[84px_1fr] items-center gap-1">
+          <div className="grid min-w-0 gap-1 sm:col-span-6 lg:col-span-4 xl:col-span-12 min-[480px]:grid-cols-[84px_1fr] min-[480px]:items-center">
             <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-xs text-muted-foreground min-[480px]:truncate">
                 {t('fields.billingVolume')}
               </Label>
               <Label className="flex items-center gap-2 text-xs text-muted-foreground">

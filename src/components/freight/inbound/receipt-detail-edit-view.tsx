@@ -490,9 +490,12 @@ export function ReceiptDetailEditView({
       </div>
 
       {/* 主要内容区域 */}
-      <div className="grid gap-4 lg:grid-cols-[420px_420px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,360px)_minmax(0,360px)_minmax(0,1fr)]">
         {/* 左侧：基本信息表单 */}
-        <FreightSection title={t('receipt.fields.receiptNo')}>
+        <FreightSection
+          title={t('receipt.fields.receiptNo')}
+          className="min-w-0"
+        >
           <div className="space-y-4">
             {/* 入库单号（只读） */}
             <div className="space-y-2">
@@ -604,6 +607,7 @@ export function ReceiptDetailEditView({
               ? t('transportSchedule.air.title')
               : t('transportSchedule.sea.title')
           }
+          className="min-w-0"
         >
           <ReceiptTransportScheduleSection
             transportType={receipt.transportType ?? null}
@@ -612,7 +616,7 @@ export function ReceiptDetailEditView({
         </FreightSection>
 
         {/* 右侧：汇总 + 商品明细表格 */}
-        <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+        <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-1 2xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
           <FreightSection title={tSummaryPanel('title')}>
             <ReceiptSummaryPanel
               items={items}
@@ -630,23 +634,31 @@ export function ReceiptDetailEditView({
               </Button>
             }
           >
-            <Table>
+            <Table className="min-w-[980px]">
               <TableHeader className="bg-muted">
                 <TableRow>
-                  <TableHead>{t('items.columns.commodity')}</TableHead>
-                  <TableHead>{t('items.columns.sku')}</TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="w-[240px]">
+                    {t('items.columns.commodity')}
+                  </TableHead>
+                  <TableHead className="w-[160px]">
+                    {t('items.columns.sku')}
+                  </TableHead>
+                  <TableHead className="w-[96px] text-right">
                     {t('items.columns.initialQty')}
                   </TableHead>
-                  <TableHead>{t('items.columns.unit')}</TableHead>
-                  <TableHead>{t('items.columns.location')}</TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="w-[96px]">
+                    {t('items.columns.unit')}
+                  </TableHead>
+                  <TableHead className="w-[160px]">
+                    {t('items.columns.location')}
+                  </TableHead>
+                  <TableHead className="w-[120px] text-right">
                     {t('items.fields.weightPerUnit')}
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="w-[120px] text-right">
                     {t('items.columns.totalWeight')}
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="w-[120px] text-right">
                     {t('items.columns.totalVolume')}
                   </TableHead>
                   <TableHead className="w-[72px]" />
@@ -719,32 +731,32 @@ export function ReceiptDetailEditView({
 
                     return (
                       <TableRow key={item.id} className="h-14">
-                        <TableCell className="font-medium">
+                        <TableCell className="max-w-[240px] truncate font-medium">
                           {item.commodityName ?? '-'}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="max-w-[160px] truncate text-muted-foreground">
                           {item.skuCode ?? '-'}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums font-medium">
+                        <TableCell className="w-[96px] text-right tabular-nums font-medium">
                           {item.initialQty}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="w-[96px] text-muted-foreground">
                           {item.unit ?? '-'}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="max-w-[160px] truncate text-muted-foreground">
                           {item.binLocation ?? '-'}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
                           {weightPerUnit != null
                             ? formatCeilFixed(weightPerUnit, 3)
                             : '-'}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
                           {totalWeightKg != null
                             ? formatCeilFixed(totalWeightKg, 2)
                             : '-'}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
                           {totalVolumeM3 != null
                             ? formatCeilFixed(totalVolumeM3, 3)
                             : '-'}
@@ -817,7 +829,7 @@ export function ReceiptDetailEditView({
           <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             {/* 左侧：雇员分配 */}
             <EmployeeAssignmentsSection
               salesEmployeeId={form.watch('salesEmployeeId')}

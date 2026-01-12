@@ -28,12 +28,14 @@ export function ReceiptTransportScheduleSection({
         {/* 航空公司 / 航班 */}
         <div className="space-y-2">
           <Label>{t('air.fields.carrierAndFlight')}</Label>
-          <div className="grid grid-cols-[1fr_18px_1fr] items-center gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_18px_1fr] sm:items-center">
             <Input
               placeholder={t('air.placeholders.carrier')}
               {...form.register('airCarrier')}
             />
-            <div className="text-center text-muted-foreground">/</div>
+            <div className="hidden text-center text-muted-foreground sm:block">
+              /
+            </div>
             <Input
               placeholder={t('air.placeholders.flightNo')}
               {...form.register('airFlightNo')}
