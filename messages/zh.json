@@ -824,6 +824,7 @@
             "binLocationPlaceholder": "请输入库位",
             "weightTotal": "总重",
             "weightPerUnit": "单件重量(kg)",
+            "volumePerUnit": "单件体积(m³)",
             "lengthCm": "长(cm)",
             "widthCm": "宽(cm)",
             "heightCm": "高(cm)"

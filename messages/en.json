@@ -821,6 +821,7 @@
             "binLocationPlaceholder": "Enter bin location",
             "weightTotal": "Weight total",
             "weightPerUnit": "Weight per unit (kg)",
+            "volumePerUnit": "Volume per unit (m³)",
             "lengthCm": "Length (cm)",
             "widthCm": "Width (cm)",
             "heightCm": "Height (cm)"

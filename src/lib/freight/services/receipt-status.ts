@@ -105,8 +105,11 @@ export async function getReceiptStats(
       totalItems: sql<number>`count(*)::int`,
       totalInitialQty: sql<number>`coalesce(sum(${inventoryItems.initialQty}), 0)::int`,
       totalCurrentQty: sql<number>`coalesce(sum(${inventoryItems.currentQty}), 0)::int`,
-      totalWeight: sql<string>`sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty})::text`,
-      totalVolume: sql<string>`(sum(coalesce(${inventoryItems.lengthCm}, 0) * coalesce(${inventoryItems.widthCm}, 0) * coalesce(${inventoryItems.heightCm}, 0) * ${inventoryItems.initialQty}) / 1000000)::text`,
+      // totalWeight: ceil(totalWeight, 2) where totalWeight = sum(weightPerUnit * qty)
+      totalWeight: sql<string>`(ceiling(sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty}) * 100) / 100)::text`,
+      // totalVolume: sum(ceil(unitVolumeM3, 2) * qty)
+      // unitVolumeM3 = (L*W*H)/1_000_000 where L/W/H are in cm
+      totalVolume: sql<string>`(sum(ceiling(((coalesce(${inventoryItems.lengthCm}, 0) * coalesce(${inventoryItems.widthCm}, 0) * coalesce(${inventoryItems.heightCm}, 0)) / 1000000) * 100) * ${inventoryItems.initialQty}) / 100)::text`,
     })
     .from(inventoryItems)
     .where(eq(inventoryItems.receiptId, receiptId));

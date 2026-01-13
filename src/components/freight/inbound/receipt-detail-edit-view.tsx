@@ -46,6 +46,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   useCreateFreightHBL,
   useFreightHBL,
   useUpdateFreightHBL,
@@ -64,7 +69,11 @@ import type {
 } from '@/lib/freight/api-types';
 import { WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES } from '@/lib/freight/constants';
 import { AIR_OPERATION_NODES } from '@/lib/freight/local-receipt-transport-schedule';
-import { formatCeilFixed } from '@/lib/freight/math';
+import {
+  ceilToScaledInt,
+  formatCeilFixed,
+  formatScaledInt,
+} from '@/lib/freight/math';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import {
@@ -826,10 +835,7 @@ export function ReceiptDetailEditView({
                     {t('items.fields.weightPerUnit')}
                   </TableHead>
                   <TableHead className="w-[120px] text-right">
-                    {t('items.columns.totalWeight')}
-                  </TableHead>
-                  <TableHead className="w-[120px] text-right">
-                    {t('items.columns.totalVolume')}
+                    {t('items.fields.volumePerUnit')}
                   </TableHead>
                   <TableHead className="w-[72px]" />
                 </TableRow>
@@ -838,7 +844,7 @@ export function ReceiptDetailEditView({
                 {itemsQuery.isLoading ? (
                   Array.from({ length: 3 }).map((_, idx) => (
                     <TableRow key={`sk-${idx}`} className="h-14">
-                      {Array.from({ length: 9 }).map((__, cIdx) => (
+                      {Array.from({ length: 8 }).map((__, cIdx) => (
                         <TableCell key={`sk-${idx}-${cIdx}`}>
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
@@ -847,7 +853,7 @@ export function ReceiptDetailEditView({
                   ))
                 ) : itemsQuery.error ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-32 text-center">
+                    <TableCell colSpan={8} className="h-32 text-center">
                       <Empty>
                         <EmptyHeader>
                           <EmptyTitle>{t('items.error')}</EmptyTitle>
@@ -860,7 +866,7 @@ export function ReceiptDetailEditView({
                   </TableRow>
                 ) : renderedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-32 text-center">
+                    <TableCell colSpan={8} className="h-32 text-center">
                       <Empty>
                         <EmptyHeader>
                           <EmptyTitle>{t('items.empty')}</EmptyTitle>
@@ -888,15 +894,23 @@ export function ReceiptDetailEditView({
                       item.widthCm != null ? Number(item.widthCm) : undefined;
                     const heightCm =
                       item.heightCm != null ? Number(item.heightCm) : undefined;
-                    const totalVolumeM3 =
+                    const volumePerUnitM3 =
                       lengthCm != null &&
                       widthCm != null &&
                       heightCm != null &&
                       Number.isFinite(lengthCm) &&
                       Number.isFinite(widthCm) &&
                       Number.isFinite(heightCm)
-                        ? (lengthCm * widthCm * heightCm * item.initialQty) /
-                          1_000_000
+                        ? (lengthCm * widthCm * heightCm) / 1_000_000
+                        : undefined;
+                    const volumePerUnitScaled =
+                      volumePerUnitM3 != null &&
+                      Number.isFinite(volumePerUnitM3)
+                        ? ceilToScaledInt(volumePerUnitM3, 2)
+                        : undefined;
+                    const totalVolumeScaled =
+                      volumePerUnitScaled != null
+                        ? volumePerUnitScaled * item.initialQty
                         : undefined;
 
                     return (
@@ -917,19 +931,86 @@ export function ReceiptDetailEditView({
                           {item.binLocation ?? '-'}
                         </TableCell>
                         <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                          {weightPerUnit != null
-                            ? formatCeilFixed(weightPerUnit, 3)
-                            : '-'}
+                          {weightPerUnit != null &&
+                          Number.isFinite(weightPerUnit) &&
+                          totalWeightKg != null ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block w-full cursor-help text-right tabular-nums">
+                                  {formatCeilFixed(weightPerUnit, 3)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                sideOffset={6}
+                                className="max-w-[320px]"
+                              >
+                                <div className="space-y-1">
+                                  <div className="font-medium">
+                                    {t('items.columns.totalWeight')}
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {t('items.columns.totalWeight')} ={' '}
+                                    {t('items.fields.weightPerUnit')} ×{' '}
+                                    {t('items.columns.initialQty')}
+                                  </div>
+                                  <div className="font-mono tabular-nums">
+                                    {formatCeilFixed(weightPerUnit, 3)} ×{' '}
+                                    {item.initialQty} ={' '}
+                                    {formatCeilFixed(totalWeightKg, 2)}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '-'
+                          )}
                         </TableCell>
                         <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                          {totalWeightKg != null
-                            ? formatCeilFixed(totalWeightKg, 2)
-                            : '-'}
-                        </TableCell>
-                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                          {totalVolumeM3 != null
-                            ? formatCeilFixed(totalVolumeM3, 3)
-                            : '-'}
+                          {volumePerUnitScaled != null &&
+                          totalVolumeScaled != null ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block w-full cursor-help text-right tabular-nums">
+                                  {formatScaledInt(volumePerUnitScaled, 2)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                sideOffset={6}
+                                className="max-w-[360px]"
+                              >
+                                <div className="space-y-1">
+                                  <div className="font-medium">
+                                    {t('items.columns.totalVolume')}
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {t('items.fields.volumePerUnit')} = L × W ×
+                                    H ÷ 1,000,000
+                                  </div>
+                                  <div className="font-mono tabular-nums">
+                                    {formatCeilFixed(lengthCm ?? 0, 2)} ×{' '}
+                                    {formatCeilFixed(widthCm ?? 0, 2)} ×{' '}
+                                    {formatCeilFixed(heightCm ?? 0, 2)} ÷
+                                    1,000,000 ={' '}
+                                    {formatScaledInt(volumePerUnitScaled, 2)}
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {t('items.columns.totalVolume')} ={' '}
+                                    {t('items.fields.volumePerUnit')} ×{' '}
+                                    {t('items.columns.initialQty')}
+                                  </div>
+                                  <div className="font-mono tabular-nums">
+                                    {formatScaledInt(volumePerUnitScaled, 2)} ×{' '}
+                                    {item.initialQty} ={' '}
+                                    {formatScaledInt(totalVolumeScaled, 2)}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '-'
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>

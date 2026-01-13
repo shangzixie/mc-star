@@ -85,11 +85,11 @@ export async function GET(request: Request) {
                 'totalCurrentQty'
               ),
             totalWeight:
-              sql<string>`sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty})::text`.as(
+              sql<string>`(ceiling(sum(coalesce(${inventoryItems.weightPerUnit}, 0) * ${inventoryItems.initialQty}) * 100) / 100)::text`.as(
                 'totalWeight'
               ),
             totalVolume:
-              sql<string>`(sum(coalesce(${inventoryItems.lengthCm}, 0) * coalesce(${inventoryItems.widthCm}, 0) * coalesce(${inventoryItems.heightCm}, 0) * ${inventoryItems.initialQty}) / 1000000)::text`.as(
+              sql<string>`(sum(ceiling(((coalesce(${inventoryItems.lengthCm}, 0) * coalesce(${inventoryItems.widthCm}, 0) * coalesce(${inventoryItems.heightCm}, 0)) / 1000000) * 100) * ${inventoryItems.initialQty}) / 100)::text`.as(
                 'totalVolume'
               ),
           })

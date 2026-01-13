@@ -4,7 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FreightInventoryItem } from '@/lib/freight/api-types';
-import { formatCeilFixed } from '@/lib/freight/math';
+import {
+  ceilToScaledInt,
+  formatCeilFixed,
+  formatScaledInt,
+} from '@/lib/freight/math';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -96,6 +100,7 @@ export function ReceiptSummaryPanel({
     let pieces = 0;
     let grossWeightKg = 0;
     let volumeCm3 = 0;
+    let volumeM3Scaled = 0;
 
     for (const item of items) {
       const qty = Number(item.initialQty ?? 0);
@@ -122,6 +127,13 @@ export function ReceiptSummaryPanel({
         qty > 0
       ) {
         volumeCm3 += lengthCm * widthCm * heightCm * qty;
+
+        // New rule: total volume = sum(ceil(unitVolumeM3, 2) * qty)
+        const unitVolumeM3Raw = (lengthCm * widthCm * heightCm) / 1_000_000;
+        const unitVolumeScaled = ceilToScaledInt(unitVolumeM3Raw, 2);
+        if (Number.isFinite(unitVolumeScaled)) {
+          volumeM3Scaled += unitVolumeScaled * qty;
+        }
       }
     }
 
@@ -129,7 +141,8 @@ export function ReceiptSummaryPanel({
       pieces,
       grossWeightKg,
       volumeCm3,
-      volumeM3: volumeCm3 / 1_000_000, // cm³ → m³
+      volumeM3Scaled,
+      volumeM3: volumeM3Scaled / 100, // (m³ * 100) → m³
     };
   }, [items]);
 
@@ -179,9 +192,9 @@ export function ReceiptSummaryPanel({
     setManualBilling({
       pieces: String(computedBilling.pieces),
       weightKg: formatCeilFixed(computedBilling.weightKg, 2),
-      volumeM3: formatCeilFixed(computedBilling.volumeM3, 3),
+      volumeM3: formatScaledInt(measured.volumeM3Scaled, 2),
     });
-  }, [billingLocked, computedBilling]);
+  }, [billingLocked, computedBilling, measured.volumeM3Scaled]);
 
   const billingDisplay = billingLocked
     ? {
@@ -192,7 +205,7 @@ export function ReceiptSummaryPanel({
     : {
         pieces: String(computedBilling.pieces),
         weightKg: formatCeilFixed(computedBilling.weightKg, 2),
-        volumeM3: formatCeilFixed(computedBilling.volumeM3, 3),
+        volumeM3: formatScaledInt(measured.volumeM3Scaled, 2),
       };
 
   return (
@@ -320,7 +333,7 @@ export function ReceiptSummaryPanel({
               {t('fields.measuredVolume')}
             </Label>
             <Input
-              value={formatCeilFixed(measured.volumeM3, 3)}
+              value={formatScaledInt(measured.volumeM3Scaled, 2)}
               readOnly
               className="h-7"
             />
