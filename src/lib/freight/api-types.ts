@@ -131,6 +131,40 @@ export const freightPartySchema = z
 
 export type FreightParty = z.infer<typeof freightPartySchema>;
 
+export const freightWarehouseReceiptFeeSchema = z
+  .object({
+    id: uuidSchema,
+    receiptId: uuidSchema,
+    feeType: z.string(),
+    feeName: z.string(),
+    unit: z.string().nullable(),
+    currency: z.string().nullable(),
+    price: z.string().nullable(),
+    quantity: z.string().nullable(),
+    originalAmount: z.string().nullable(),
+    settledCurrency: z.string().nullable(),
+    exchangeRate: z.string().nullable(),
+    settledAmount: z.string().nullable(),
+    paymentMethod: z.string().nullable(),
+    partyId: uuidSchema.nullable(),
+    remarks: z.string().nullable(),
+    createdAt: isoDateTimeSchema.nullable(),
+    updatedAt: isoDateTimeSchema.nullable(),
+    party: z
+      .object({
+        id: uuidSchema.nullable(),
+        code: z.string().nullable(),
+        nameCn: z.string().nullable(),
+        nameEn: z.string().nullable(),
+      })
+      .optional(),
+  })
+  .passthrough();
+
+export type FreightWarehouseReceiptFee = z.infer<
+  typeof freightWarehouseReceiptFeeSchema
+>;
+
 export const freightWarehouseSchema = z
   .object({
     id: uuidSchema,

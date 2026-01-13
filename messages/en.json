@@ -681,7 +681,8 @@
         "detailTabs": {
           "basic": "Basic",
           "contact": "Contact Information",
-          "remarks": "Remarks"
+          "remarks": "Remarks",
+          "fees": "Fee Management"
         },
         "detailSections": {
           "contact": "Contact",

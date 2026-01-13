@@ -1,6 +1,7 @@
 'use client';
 
 import { EmployeeAssignmentsSection } from '@/components/freight/inbound/employee-assignments-section';
+import { ReceiptFeeManagementTab } from '@/components/freight/inbound/receipt-fee-management-tab';
 import { ReceiptSummaryPanel } from '@/components/freight/inbound/receipt-summary-panel';
 import { ReceiptTransportScheduleSection } from '@/components/freight/inbound/receipt-transport-schedule-section';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
@@ -267,15 +268,17 @@ export function ReceiptDetailEditView({
   useEffect(() => {
     if (mblQuery.data) {
       const updates: Record<string, any> = {};
-      
+
       const nextPortOfDestinationId = mblQuery.data.portOfDestinationId ?? '';
-      const currentPortOfDestinationId = form.getValues('portOfDestinationId') ?? '';
+      const currentPortOfDestinationId =
+        form.getValues('portOfDestinationId') ?? '';
       if (nextPortOfDestinationId !== currentPortOfDestinationId) {
         updates.portOfDestinationId = nextPortOfDestinationId;
       }
 
       const nextPortOfDischargeId = mblQuery.data.portOfDischargeId ?? '';
-      const currentPortOfDischargeId = form.getValues('portOfDischargeId') ?? '';
+      const currentPortOfDischargeId =
+        form.getValues('portOfDischargeId') ?? '';
       if (nextPortOfDischargeId !== currentPortOfDischargeId) {
         updates.portOfDischargeId = nextPortOfDischargeId;
       }
@@ -510,13 +513,17 @@ export function ReceiptDetailEditView({
 
       // Check for MBL port changes
       const nextPortOfDestinationId = (data.portOfDestinationId ?? '').trim();
-      const prevPortOfDestinationId = (mblQuery.data?.portOfDestinationId ?? '').trim();
+      const prevPortOfDestinationId = (
+        mblQuery.data?.portOfDestinationId ?? ''
+      ).trim();
       if (nextPortOfDestinationId !== prevPortOfDestinationId) {
         mblPatch.portOfDestinationId = nextPortOfDestinationId || undefined;
       }
 
       const nextPortOfDischargeId = (data.portOfDischargeId ?? '').trim();
-      const prevPortOfDischargeId = (mblQuery.data?.portOfDischargeId ?? '').trim();
+      const prevPortOfDischargeId = (
+        mblQuery.data?.portOfDischargeId ?? ''
+      ).trim();
       if (nextPortOfDischargeId !== prevPortOfDischargeId) {
         mblPatch.portOfDischargeId = nextPortOfDischargeId || undefined;
       }
@@ -528,7 +535,9 @@ export function ReceiptDetailEditView({
       }
 
       const nextPlaceOfReceiptId = (data.placeOfReceiptId ?? '').trim();
-      const prevPlaceOfReceiptId = (mblQuery.data?.placeOfReceiptId ?? '').trim();
+      const prevPlaceOfReceiptId = (
+        mblQuery.data?.placeOfReceiptId ?? ''
+      ).trim();
       if (nextPlaceOfReceiptId !== prevPlaceOfReceiptId) {
         mblPatch.placeOfReceiptId = nextPlaceOfReceiptId || undefined;
       }
@@ -988,6 +997,7 @@ export function ReceiptDetailEditView({
       <Tabs defaultValue="basic" className="space-y-3">
         <TabsList>
           <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
+          <TabsTrigger value="fees">{t('detailTabs.fees')}</TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -1180,6 +1190,9 @@ export function ReceiptDetailEditView({
               </div>
             </FreightSection>
           </div>
+        </TabsContent>
+        <TabsContent value="fees">
+          <ReceiptFeeManagementTab receiptId={receipt.id} />
         </TabsContent>
       </Tabs>
 

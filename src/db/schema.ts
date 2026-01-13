@@ -312,6 +312,41 @@ export const warehouseReceipts = pgTable(
   })
 );
 
+export const warehouseReceiptFees = pgTable(
+  'warehouse_receipt_fees',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    receiptId: uuid('receipt_id')
+      .notNull()
+      .references(() => warehouseReceipts.id, { onDelete: 'cascade' }),
+    feeType: varchar('fee_type', { length: 10 }).notNull(), // AR / AP
+    feeName: text('fee_name').notNull(),
+    unit: varchar('unit', { length: 20 }),
+    currency: varchar('currency', { length: 10 }),
+    price: numeric('price', { precision: 18, scale: 6 }),
+    quantity: numeric('quantity', { precision: 18, scale: 6 }),
+    originalAmount: numeric('original_amount', { precision: 18, scale: 2 }),
+    settledCurrency: varchar('settled_currency', { length: 10 }),
+    exchangeRate: numeric('exchange_rate', { precision: 18, scale: 6 }),
+    settledAmount: numeric('settled_amount', { precision: 18, scale: 2 }),
+    paymentMethod: varchar('payment_method', { length: 10 }), // PPD / CCT
+    partyId: uuid('party_id').references(() => parties.id, {
+      onDelete: 'set null',
+    }),
+    remarks: text('remarks'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    warehouseReceiptFeesReceiptIdIdx: index(
+      'idx_warehouse_receipt_fees_receipt_id'
+    ).on(table.receiptId),
+    warehouseReceiptFeesReceiptTypeIdx: index(
+      'idx_warehouse_receipt_fees_receipt_id_fee_type'
+    ).on(table.receiptId, table.feeType),
+  })
+);
+
 export const inventoryItems = pgTable(
   'inventory_items',
   {

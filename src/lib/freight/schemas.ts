@@ -97,6 +97,25 @@ export const addInventoryItemSchema = z.object({
   heightCm: z.number().optional(),
 });
 
+export const warehouseReceiptFeeCreateSchema = z.object({
+  feeType: z.enum(['AR', 'AP']),
+  feeName: z.string().min(1),
+  unit: z.string().max(20).optional(),
+  currency: z.string().max(10).optional(),
+  price: z.number().optional(),
+  quantity: z.number().optional(),
+  originalAmount: z.number().optional(),
+  settledCurrency: z.string().max(10).optional(),
+  exchangeRate: z.number().optional(),
+  settledAmount: z.number().optional(),
+  paymentMethod: z.enum(['PPD', 'CCT']).optional(),
+  partyId: uuidSchema.optional(),
+  remarks: z.string().optional(),
+});
+
+export const warehouseReceiptFeeUpdateSchema =
+  warehouseReceiptFeeCreateSchema.partial();
+
 export const createShipmentSchema = z.object({
   jobNo: z.string().min(1).max(30),
   mblNo: z.string().max(50).optional(),

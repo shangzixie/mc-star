@@ -44,6 +44,10 @@ export const freightKeys = {
   inventoryItemAllocations: (itemId: string) =>
     [...freightKeys.inventoryItems(), 'allocations', itemId] as const,
 
+  receiptFees: () => [...freightKeys.all, 'warehouse-receipt-fees'] as const,
+  receiptFeesByReceipt: (receiptId: string) =>
+    [...freightKeys.receiptFees(), 'by-receipt', receiptId] as const,
+
   attachments: () => [...freightKeys.all, 'attachments'] as const,
   attachmentsByShipment: (shipmentId: string) =>
     [...freightKeys.attachments(), 'by-shipment', shipmentId] as const,

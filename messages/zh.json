@@ -681,7 +681,8 @@
         "detailTabs": {
           "basic": "基本",
           "contact": "联系信息",
-          "remarks": "备注"
+          "remarks": "备注",
+          "fees": "费用管理"
         },
         "detailSections": {
           "contact": "联系资料",
