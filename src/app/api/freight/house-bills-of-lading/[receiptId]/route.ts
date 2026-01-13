@@ -79,23 +79,28 @@ export async function POST(
       });
     }
 
-    const [existingHbl] = await db
-      .select()
-      .from(houseBillsOfLading)
-      .where(eq(houseBillsOfLading.receiptId, validReceiptId));
-
-    if (existingHbl) {
-      throw new ApiError({
-        status: 409,
-        code: 'HBL_ALREADY_EXISTS',
-        message: 'House Bill of Lading already exists for this receipt',
-      });
-    }
-
     const body = await parseJson(request, createHouseBillOfLadingSchema);
     const data = { ...body, receiptId: validReceiptId };
 
-    const [newHbl] = await db
+    // Idempotent upsert: if row exists for receipt, update provided fields.
+    const updateData: Record<string, any> = {
+      updatedAt: new Date(),
+    };
+    if (data.hblNo !== undefined) updateData.hblNo = data.hblNo ?? null;
+    if (data.portOfDestinationId !== undefined) {
+      updateData.portOfDestinationId = data.portOfDestinationId;
+    }
+    if (data.portOfDischargeId !== undefined) {
+      updateData.portOfDischargeId = data.portOfDischargeId;
+    }
+    if (data.portOfLoadingId !== undefined) {
+      updateData.portOfLoadingId = data.portOfLoadingId;
+    }
+    if (data.placeOfReceiptId !== undefined) {
+      updateData.placeOfReceiptId = data.placeOfReceiptId;
+    }
+
+    const [upserted] = await db
       .insert(houseBillsOfLading)
       .values({
         receiptId: data.receiptId as any,
@@ -105,9 +110,13 @@ export async function POST(
         portOfLoadingId: data.portOfLoadingId as any,
         placeOfReceiptId: data.placeOfReceiptId as any,
       })
+      .onConflictDoUpdate({
+        target: houseBillsOfLading.receiptId,
+        set: updateData,
+      })
       .returning();
 
-    return jsonOk({ data: newHbl }, { status: 201 });
+    return jsonOk({ data: upserted }, { status: 201 });
   } catch (error) {
     return jsonError(error as Error);
   }

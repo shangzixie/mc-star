@@ -1,13 +1,13 @@
 'use client';
 
 import { EmployeeAssignmentsSection } from '@/components/freight/inbound/employee-assignments-section';
-import { MBLFormSection } from '@/components/freight/inbound/mbl-form-section';
 import { ReceiptSummaryPanel } from '@/components/freight/inbound/receipt-summary-panel';
 import { ReceiptTransportScheduleSection } from '@/components/freight/inbound/receipt-transport-schedule-section';
 import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dialog';
 import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
 import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-combobox';
+import { PortCombobox } from '@/components/freight/shared/port-combobox';
 import { ShipperCombobox } from '@/components/freight/shared/shipper-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
@@ -78,7 +78,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -115,6 +115,11 @@ const receiptFormSchema = z.object({
   shipperId: z.string().optional(),
   bookingAgentId: z.string().optional(),
   customsAgentId: z.string().optional(),
+  // MBL port information (unified)
+  portOfDestinationId: z.string().optional(),
+  portOfDischargeId: z.string().optional(),
+  portOfLoadingId: z.string().optional(),
+  placeOfReceiptId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -147,6 +152,7 @@ export function ReceiptDetailEditView({
   const tSummaryPanel = useTranslations(
     'Dashboard.freight.inbound.summaryPanel'
   );
+  const tMbl = useTranslations('Dashboard.freight.inbound.mbl');
   const tCommon = useTranslations('Common');
   const tCustomerFields = useTranslations(
     'Dashboard.freight.settings.customers.fields'
@@ -217,6 +223,11 @@ export function ReceiptDetailEditView({
       shipperId: receipt.shipperId ?? '',
       bookingAgentId: receipt.bookingAgentId ?? '',
       customsAgentId: receipt.customsAgentId ?? '',
+      // MBL port information (will be loaded from query)
+      portOfDestinationId: '',
+      portOfDischargeId: '',
+      portOfLoadingId: '',
+      placeOfReceiptId: '',
     },
   });
 
@@ -251,6 +262,43 @@ export function ReceiptDetailEditView({
       form.setValue('hblNo', nextHblNo, { shouldDirty: false });
     }
   }, [hblQuery.data?.hblNo, form]);
+
+  // Sync MBL port information from query
+  useEffect(() => {
+    if (mblQuery.data) {
+      const updates: Record<string, any> = {};
+      
+      const nextPortOfDestinationId = mblQuery.data.portOfDestinationId ?? '';
+      const currentPortOfDestinationId = form.getValues('portOfDestinationId') ?? '';
+      if (nextPortOfDestinationId !== currentPortOfDestinationId) {
+        updates.portOfDestinationId = nextPortOfDestinationId;
+      }
+
+      const nextPortOfDischargeId = mblQuery.data.portOfDischargeId ?? '';
+      const currentPortOfDischargeId = form.getValues('portOfDischargeId') ?? '';
+      if (nextPortOfDischargeId !== currentPortOfDischargeId) {
+        updates.portOfDischargeId = nextPortOfDischargeId;
+      }
+
+      const nextPortOfLoadingId = mblQuery.data.portOfLoadingId ?? '';
+      const currentPortOfLoadingId = form.getValues('portOfLoadingId') ?? '';
+      if (nextPortOfLoadingId !== currentPortOfLoadingId) {
+        updates.portOfLoadingId = nextPortOfLoadingId;
+      }
+
+      const nextPlaceOfReceiptId = mblQuery.data.placeOfReceiptId ?? '';
+      const currentPlaceOfReceiptId = form.getValues('placeOfReceiptId') ?? '';
+      if (nextPlaceOfReceiptId !== currentPlaceOfReceiptId) {
+        updates.placeOfReceiptId = nextPlaceOfReceiptId;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        Object.entries(updates).forEach(([key, value]) => {
+          form.setValue(key as any, value, { shouldDirty: false });
+        });
+      }
+    }
+  }, [mblQuery.data, form]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -443,10 +491,51 @@ export function ReceiptDetailEditView({
         payload.seaEtaE = nextSeaEtaE || null;
       }
 
+      // Build comprehensive MBL patch with all fields
+      const mblPatch: Partial<{
+        mblNo: string | null;
+        soNo: string | null;
+        portOfDestinationId?: string;
+        portOfDischargeId?: string;
+        portOfLoadingId?: string;
+        placeOfReceiptId?: string;
+      }> = {};
+
+      if (hasMblNoChange) {
+        mblPatch.mblNo = nextMblNo || null;
+      }
+      if (hasSoNoChange) {
+        mblPatch.soNo = nextSoNo || null;
+      }
+
+      // Check for MBL port changes
+      const nextPortOfDestinationId = (data.portOfDestinationId ?? '').trim();
+      const prevPortOfDestinationId = (mblQuery.data?.portOfDestinationId ?? '').trim();
+      if (nextPortOfDestinationId !== prevPortOfDestinationId) {
+        mblPatch.portOfDestinationId = nextPortOfDestinationId || undefined;
+      }
+
+      const nextPortOfDischargeId = (data.portOfDischargeId ?? '').trim();
+      const prevPortOfDischargeId = (mblQuery.data?.portOfDischargeId ?? '').trim();
+      if (nextPortOfDischargeId !== prevPortOfDischargeId) {
+        mblPatch.portOfDischargeId = nextPortOfDischargeId || undefined;
+      }
+
+      const nextPortOfLoadingId = (data.portOfLoadingId ?? '').trim();
+      const prevPortOfLoadingId = (mblQuery.data?.portOfLoadingId ?? '').trim();
+      if (nextPortOfLoadingId !== prevPortOfLoadingId) {
+        mblPatch.portOfLoadingId = nextPortOfLoadingId || undefined;
+      }
+
+      const nextPlaceOfReceiptId = (data.placeOfReceiptId ?? '').trim();
+      const prevPlaceOfReceiptId = (mblQuery.data?.placeOfReceiptId ?? '').trim();
+      if (nextPlaceOfReceiptId !== prevPlaceOfReceiptId) {
+        mblPatch.placeOfReceiptId = nextPlaceOfReceiptId || undefined;
+      }
+
       if (
         Object.keys(payload).length === 0 &&
-        !hasMblNoChange &&
-        !hasSoNoChange &&
+        Object.keys(mblPatch).length === 0 &&
         !hasHblNoChange
       ) {
         toast.info('没有需要保存的更改');
@@ -457,21 +546,42 @@ export function ReceiptDetailEditView({
         await updateMutation.mutateAsync(payload);
       }
 
-      if (hasMblNoChange) {
-        const mblNo = nextMblNo || null;
+      // MBL: merge all changes into a single request to avoid multiple concurrent requests
+      if (Object.keys(mblPatch).length > 0) {
         if (mblQuery.data) {
-          await updateMblMutation.mutateAsync({ mblNo });
-        } else if (mblNo) {
-          await createMblMutation.mutateAsync({ mblNo });
-        }
-      }
+          await updateMblMutation.mutateAsync(mblPatch);
+        } else {
+          // Create payload must not include nulls or undefined for ports
+          const createPayload: Partial<{
+            mblNo?: string;
+            soNo?: string;
+            portOfDestinationId?: string;
+            portOfDischargeId?: string;
+            portOfLoadingId?: string;
+            placeOfReceiptId?: string;
+          }> = {};
+          if (typeof mblPatch.mblNo === 'string' && mblPatch.mblNo.trim()) {
+            createPayload.mblNo = mblPatch.mblNo;
+          }
+          if (typeof mblPatch.soNo === 'string' && mblPatch.soNo.trim()) {
+            createPayload.soNo = mblPatch.soNo;
+          }
+          if (mblPatch.portOfDestinationId) {
+            createPayload.portOfDestinationId = mblPatch.portOfDestinationId;
+          }
+          if (mblPatch.portOfDischargeId) {
+            createPayload.portOfDischargeId = mblPatch.portOfDischargeId;
+          }
+          if (mblPatch.portOfLoadingId) {
+            createPayload.portOfLoadingId = mblPatch.portOfLoadingId;
+          }
+          if (mblPatch.placeOfReceiptId) {
+            createPayload.placeOfReceiptId = mblPatch.placeOfReceiptId;
+          }
 
-      if (hasSoNoChange) {
-        const soNo = nextSoNo || null;
-        if (mblQuery.data) {
-          await updateMblMutation.mutateAsync({ soNo });
-        } else if (soNo) {
-          await createMblMutation.mutateAsync({ soNo });
+          if (Object.keys(createPayload).length > 0) {
+            await createMblMutation.mutateAsync(createPayload);
+          }
         }
       }
 
@@ -994,7 +1104,81 @@ export function ReceiptDetailEditView({
             </FreightSection>
 
             {/* 右侧：提单信息 */}
-            <MBLFormSection receiptId={receipt.id} />
+            <FreightSection title={tMbl('title')} className="min-w-0">
+              <div className="grid gap-4">
+                {/* 目的港 */}
+                <div className="space-y-2">
+                  <Label htmlFor="portOfDestinationId">
+                    {tMbl('portOfDestination')}
+                  </Label>
+                  <Controller
+                    control={form.control}
+                    name="portOfDestinationId"
+                    render={({ field }) => (
+                      <PortCombobox
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={tMbl('portOfDestinationPlaceholder')}
+                      />
+                    )}
+                  />
+                </div>
+
+                {/* 卸货港 */}
+                <div className="space-y-2">
+                  <Label htmlFor="portOfDischargeId">
+                    {tMbl('portOfDischarge')}
+                  </Label>
+                  <Controller
+                    control={form.control}
+                    name="portOfDischargeId"
+                    render={({ field }) => (
+                      <PortCombobox
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={tMbl('portOfDischargePlaceholder')}
+                      />
+                    )}
+                  />
+                </div>
+
+                {/* 起运港 */}
+                <div className="space-y-2">
+                  <Label htmlFor="portOfLoadingId">
+                    {tMbl('portOfLoading')}
+                  </Label>
+                  <Controller
+                    control={form.control}
+                    name="portOfLoadingId"
+                    render={({ field }) => (
+                      <PortCombobox
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={tMbl('portOfLoadingPlaceholder')}
+                      />
+                    )}
+                  />
+                </div>
+
+                {/* 收货地 */}
+                <div className="space-y-2">
+                  <Label htmlFor="placeOfReceiptId">
+                    {tMbl('placeOfReceipt')}
+                  </Label>
+                  <Controller
+                    control={form.control}
+                    name="placeOfReceiptId"
+                    render={({ field }) => (
+                      <PortCombobox
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={tMbl('placeOfReceiptPlaceholder')}
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </FreightSection>
           </div>
         </TabsContent>
       </Tabs>

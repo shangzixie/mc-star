@@ -82,24 +82,30 @@ export async function POST(
       });
     }
 
-    // Check if MBL already exists
-    const [existingMbl] = await db
-      .select()
-      .from(masterBillsOfLading)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId));
-
-    if (existingMbl) {
-      throw new ApiError({
-        status: 409,
-        code: 'MBL_ALREADY_EXISTS',
-        message: 'Master Bill of Lading already exists for this receipt',
-      });
-    }
-
     const body = await parseJson(request, createMasterBillOfLadingSchema);
     const data = { ...body, receiptId: validReceiptId };
 
-    const [newMbl] = await db
+    // Idempotent upsert: if row exists for receipt, update provided fields.
+    // This avoids 409s when concurrent saves attempt to create the same receipt's MBL.
+    const updateData: Record<string, any> = {
+      updatedAt: new Date(),
+    };
+    if (data.mblNo !== undefined) updateData.mblNo = data.mblNo ?? null;
+    if (data.soNo !== undefined) updateData.soNo = data.soNo ?? null;
+    if (data.portOfDestinationId !== undefined) {
+      updateData.portOfDestinationId = data.portOfDestinationId;
+    }
+    if (data.portOfDischargeId !== undefined) {
+      updateData.portOfDischargeId = data.portOfDischargeId;
+    }
+    if (data.portOfLoadingId !== undefined) {
+      updateData.portOfLoadingId = data.portOfLoadingId;
+    }
+    if (data.placeOfReceiptId !== undefined) {
+      updateData.placeOfReceiptId = data.placeOfReceiptId;
+    }
+
+    const [upserted] = await db
       .insert(masterBillsOfLading)
       .values({
         receiptId: data.receiptId as any,
@@ -110,9 +116,13 @@ export async function POST(
         portOfLoadingId: data.portOfLoadingId as any,
         placeOfReceiptId: data.placeOfReceiptId as any,
       })
+      .onConflictDoUpdate({
+        target: masterBillsOfLading.receiptId,
+        set: updateData,
+      })
       .returning();
 
-    return jsonOk({ data: newMbl }, { status: 201 });
+    return jsonOk({ data: upserted }, { status: 201 });
   } catch (error) {
     return jsonError(error as Error);
   }

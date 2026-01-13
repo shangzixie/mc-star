@@ -1,0 +1,59 @@
+# Cursor ignore file — reduces indexing/context size (token + latency).
+# Keep source/config files readable; ignore generated, cache, and large non-code dirs.
+
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Turborepo / tooling caches
+.turbo/
+.cache/
+.swc/
+.parcel-cache/
+
+# Vercel / Cloudflare / OpenNext artifacts
+.vercel/
+.wrangler/
+.open-next/
+.opennext/
+.output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local env / secrets (keep examples readable)
+.env
+.env.*
+!.env.example
+!env.example
+*.pem
+*.key
+*.p12
+
+# OS / editor junk
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+.idea/
+.vscode/
+
+# Large non-code content (optional but big token saver)
+content/
+docs/
+public/
+
+# Allowlist: files that code/scripts explicitly depend on
+!docs/transport_nodes_info.json
+!public/svg/
