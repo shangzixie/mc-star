@@ -75,7 +75,6 @@ import {
   formatScaledInt,
 } from '@/lib/freight/math';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
 import {
   AlertCircle,
   ArrowLeft,
@@ -95,7 +94,6 @@ import { z } from 'zod';
 const receiptFormSchema = z.object({
   customerId: z.string().optional(),
   customsDeclarationType: z.string().optional(),
-  inboundTime: z.string().min(1, '入库时间必填'),
   mblNo: z.string().max(50).optional(),
   soNo: z.string().max(50).optional(),
   hblNo: z.string().max(50).optional(),
@@ -133,15 +131,6 @@ const receiptFormSchema = z.object({
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
-
-function formatDateTimeLocalValue(value: string | null | undefined) {
-  if (!value) return '';
-  try {
-    return format(new Date(value), "yyyy-MM-dd'T'HH:mm");
-  } catch {
-    return '';
-  }
-}
 
 export function ReceiptDetailEditView({
   receipt,
@@ -203,7 +192,6 @@ export function ReceiptDetailEditView({
     defaultValues: {
       customerId: receipt.customerId ?? '',
       customsDeclarationType: receipt.customsDeclarationType ?? '',
-      inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
       mblNo: '',
       soNo: '',
       hblNo: '',
@@ -336,9 +324,6 @@ export function ReceiptDetailEditView({
       ) {
         payload.customsDeclarationType =
           data.customsDeclarationType || undefined;
-      }
-      if (data.inboundTime !== formatDateTimeLocalValue(receipt.inboundTime)) {
-        payload.inboundTime = data.inboundTime;
       }
       if (data.remarks !== (receipt.remarks ?? '')) {
         payload.remarks = data.remarks;
@@ -669,7 +654,7 @@ export function ReceiptDetailEditView({
       </div>
 
       {/* 主要内容区域 */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,360px)_minmax(0,360px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,1fr)]">
         {/* 左侧：基本信息表单 */}
         <FreightSection
           title={t('receipt.fields.receiptNo')}
@@ -681,12 +666,14 @@ export function ReceiptDetailEditView({
               <Label className="text-base font-semibold">
                 {t('receipt.fields.receiptNo')}
               </Label>
-              <div className="text-lg font-semibold">
-                {receipt.receiptNo}
+              <div className="flex min-w-0 items-baseline gap-2">
+                <div className="min-w-0 truncate text-base font-semibold">
+                  {receipt.receiptNo}
+                </div>
                 {mblQuery.data?.soNo ? (
-                  <span className="ml-2 text-base font-medium text-muted-foreground">
+                  <div className="shrink-0 text-sm font-medium text-muted-foreground">
                     / SO {mblQuery.data.soNo}
-                  </span>
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -758,24 +745,6 @@ export function ReceiptDetailEditView({
                 </SelectContent>
               </Select>
             </div>
-
-            {/* 入库时间 */}
-            <div className="space-y-2">
-              <Label htmlFor="inboundTime">
-                {t('inboundTime')}
-                <span className="ml-1 text-destructive">*</span>
-              </Label>
-              <Input
-                id="inboundTime"
-                type="datetime-local"
-                {...form.register('inboundTime')}
-              />
-              {form.formState.errors.inboundTime && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.inboundTime.message}
-                </p>
-              )}
-            </div>
           </div>
         </FreightSection>
 
@@ -795,7 +764,7 @@ export function ReceiptDetailEditView({
         </FreightSection>
 
         {/* 右侧：汇总 + 商品明细表格 */}
-        <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-1 2xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-1 2xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
           <FreightSection title={tSummaryPanel('title')}>
             <ReceiptSummaryPanel
               items={items}

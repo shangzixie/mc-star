@@ -77,29 +77,93 @@ export async function PATCH(
 
     const db = await getDb();
 
-    const [updated] = await db
-      .update(inventoryItems)
-      .set({
-        commodityName: body.commodityName,
-        skuCode: body.skuCode,
-        unit: body.unit,
-        binLocation: body.binLocation,
-        weightPerUnit:
-          body.weightPerUnit != null ? `${body.weightPerUnit}` : undefined,
-        lengthCm: body.lengthCm != null ? `${body.lengthCm}` : undefined,
-        widthCm: body.widthCm != null ? `${body.widthCm}` : undefined,
-        heightCm: body.heightCm != null ? `${body.heightCm}` : undefined,
-      })
-      .where(eq(inventoryItems.id, itemId))
-      .returning();
+    const updated = await db.transaction(async (tx) => {
+      const [item] = await tx
+        .select()
+        .from(inventoryItems)
+        .where(eq(inventoryItems.id, itemId));
 
-    if (!updated) {
-      throw new ApiError({
-        status: 404,
-        code: 'INVENTORY_ITEM_NOT_FOUND',
-        message: 'Inventory item not found',
-      });
-    }
+      if (!item) {
+        throw new ApiError({
+          status: 404,
+          code: 'INVENTORY_ITEM_NOT_FOUND',
+          message: 'Inventory item not found',
+        });
+      }
+
+      // If updating quantity, only allow when:
+      // - no allocations exist
+      // - no shipments happened (currentQty === initialQty)
+      let qtyDelta: number | null = null;
+      let nextInitialQty: number | undefined;
+
+      if (body.initialQty != null) {
+        nextInitialQty = body.initialQty;
+
+        const [allocationCount] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(inventoryAllocations)
+          .where(eq(inventoryAllocations.inventoryItemId, itemId));
+
+        if (allocationCount && allocationCount.count > 0) {
+          throw new ApiError({
+            status: 400,
+            code: 'VALIDATION_ERROR',
+            message: 'Cannot change inbound quantity: item has allocations',
+          });
+        }
+
+        if (item.currentQty !== item.initialQty) {
+          throw new ApiError({
+            status: 400,
+            code: 'VALIDATION_ERROR',
+            message: 'Cannot change inbound quantity: item has been shipped',
+          });
+        }
+
+        qtyDelta = nextInitialQty - item.initialQty;
+      }
+
+      const [next] = await tx
+        .update(inventoryItems)
+        .set({
+          commodityName: body.commodityName,
+          skuCode: body.skuCode,
+          initialQty: nextInitialQty,
+          currentQty:
+            nextInitialQty != null && qtyDelta != null
+              ? nextInitialQty
+              : undefined,
+          unit: body.unit,
+          binLocation: body.binLocation,
+          weightPerUnit:
+            body.weightPerUnit != null ? `${body.weightPerUnit}` : undefined,
+          lengthCm: body.lengthCm != null ? `${body.lengthCm}` : undefined,
+          widthCm: body.widthCm != null ? `${body.widthCm}` : undefined,
+          heightCm: body.heightCm != null ? `${body.heightCm}` : undefined,
+        })
+        .where(eq(inventoryItems.id, itemId))
+        .returning();
+
+      if (!next) {
+        throw new ApiError({
+          status: 404,
+          code: 'INVENTORY_ITEM_NOT_FOUND',
+          message: 'Inventory item not found',
+        });
+      }
+
+      if (qtyDelta != null && qtyDelta !== 0) {
+        await tx.insert(inventoryMovements).values({
+          inventoryItemId: itemId,
+          refType: 'ADJUST',
+          refId: null,
+          qtyDelta,
+        });
+      }
+
+      return next;
+    });
 
     return jsonOk({ data: updated });
   } catch (error) {

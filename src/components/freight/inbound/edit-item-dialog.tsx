@@ -37,17 +37,23 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const editItemSchema = z.object({
+  initialQty: z
+    .union([z.string(), z.number()])
+    .transform((v) => Number(v))
+    .refine((v) => !Number.isNaN(v) && Number.isInteger(v) && v > 0, {
+      message: 'Must be a positive integer',
+    }),
   commodityName: z.string().optional(),
   skuCode: z.string().max(50).optional(),
   unit: z.string().max(10).optional(),
-  binLocation: z.string().max(50).optional(),
   weightPerUnit: z.number().optional(),
   lengthCm: z.number().optional(),
   widthCm: z.number().optional(),
   heightCm: z.number().optional(),
 });
 
-type EditItemFormData = z.infer<typeof editItemSchema>;
+type EditItemFormInput = z.input<typeof editItemSchema>;
+type EditItemFormOutput = z.output<typeof editItemSchema>;
 
 interface EditItemDialogProps {
   open: boolean;
@@ -62,14 +68,15 @@ export function EditItemDialog({
 }: EditItemDialogProps) {
   const t = useTranslations();
   const updateMutation = useUpdateFreightInventoryItem(item.id);
+  const canEditInitialQty = item.currentQty === item.initialQty;
 
-  const form = useForm<EditItemFormData>({
+  const form = useForm<EditItemFormInput, any, EditItemFormOutput>({
     resolver: zodResolver(editItemSchema),
     defaultValues: {
+      initialQty: item.initialQty,
       commodityName: item.commodityName ?? undefined,
       skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
-      binLocation: item.binLocation ?? undefined,
       weightPerUnit: item.weightPerUnit
         ? Number(item.weightPerUnit)
         : undefined,
@@ -82,10 +89,10 @@ export function EditItemDialog({
   // Reset form when item changes
   useEffect(() => {
     form.reset({
+      initialQty: item.initialQty,
       commodityName: item.commodityName ?? undefined,
       skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
-      binLocation: item.binLocation ?? undefined,
       weightPerUnit: item.weightPerUnit
         ? Number(item.weightPerUnit)
         : undefined,
@@ -95,7 +102,7 @@ export function EditItemDialog({
     });
   }, [item, form]);
 
-  const onSubmit = async (data: EditItemFormData) => {
+  const onSubmit = async (data: EditItemFormOutput) => {
     try {
       await updateMutation.mutateAsync(data);
       toast.success(t('Dashboard.freight.inbound.itemActions.updateSuccess'));
@@ -121,6 +128,34 @@ export function EditItemDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="initialQty"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('Dashboard.freight.inbound.itemActions.initialQty')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="1"
+                      inputMode="numeric"
+                      value={String(field.value ?? '')}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      disabled={!canEditInitialQty}
+                    />
+                  </FormControl>
+                  {!canEditInitialQty ? (
+                    <div className="text-xs text-muted-foreground">
+                      已出库或已调整库存，无法修改入库数量
+                    </div>
+                  ) : null}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="commodityName"
@@ -153,61 +188,39 @@ export function EditItemDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="unit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t('Dashboard.freight.inbound.itemActions.unit')}
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t(
-                              'Dashboard.freight.inbound.items.fields.unitPlaceholder'
-                            )}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {PACKAGING_UNITS.map((u) => (
-                          <SelectItem key={u} value={u}>
-                            {u}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="binLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t('Dashboard.freight.inbound.itemActions.binLocation')}
-                    </FormLabel>
+            <FormField
+              control={form.control}
+              name="unit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('Dashboard.freight.inbound.itemActions.unit')}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <Input
-                        {...field}
-                        maxLength={50}
-                        placeholder="e.g., A-01-02"
-                      />
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            'Dashboard.freight.inbound.items.fields.unitPlaceholder'
+                          )}
+                        />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      {PACKAGING_UNITS.map((u) => (
+                        <SelectItem key={u} value={u}>
+                          {u}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

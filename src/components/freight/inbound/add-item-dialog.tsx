@@ -30,7 +30,6 @@ const addItemFormSchema = z.object({
       message: 'Must be a positive integer',
     }),
   unit: z.string().optional(),
-  binLocation: z.string().optional(),
   weightPerUnit: z
     .union([z.string(), z.number(), z.null(), z.undefined()])
     .transform((v) => (v === '' || v == null ? undefined : Number(v)))
@@ -79,7 +78,6 @@ export function AddItemDialog({
       skuCode: '',
       initialQty: 1,
       unit: '',
-      binLocation: '',
     },
   });
 
@@ -90,7 +88,6 @@ export function AddItemDialog({
         commodityName: values.commodityName?.trim() || undefined,
         skuCode: values.skuCode?.trim() || undefined,
         unit: values.unit?.trim() || undefined,
-        binLocation: values.binLocation?.trim() || undefined,
       });
 
       await addItemMutation.mutateAsync(payload);
@@ -100,7 +97,6 @@ export function AddItemDialog({
         skuCode: '',
         initialQty: 1,
         unit: '',
-        binLocation: '',
       });
       onOpenChange(false);
     } catch (err) {
@@ -142,7 +138,9 @@ export function AddItemDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="initialQty">{t('items.fields.initialQty')}</Label>
+              <Label htmlFor="initialQty">
+                {t('items.columns.initialQty')}
+              </Label>
               <Input
                 id="initialQty"
                 type="number"
@@ -172,30 +170,17 @@ export function AddItemDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="binLocation">
-                {t('items.fields.binLocation')}
-              </Label>
-              <Input
-                id="binLocation"
-                autoComplete="off"
-                placeholder={t('items.fields.binLocationPlaceholder')}
-                {...form.register('binLocation')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="weightPerUnit">
-                {t('items.fields.weightPerUnit')}
-              </Label>
-              <Input
-                id="weightPerUnit"
-                type="number"
-                step="0.001"
-                placeholder="kg"
-                {...form.register('weightPerUnit')}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="weightPerUnit">
+              {t('items.fields.weightPerUnit')}
+            </Label>
+            <Input
+              id="weightPerUnit"
+              type="number"
+              step="0.001"
+              placeholder="kg"
+              {...form.register('weightPerUnit')}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4">

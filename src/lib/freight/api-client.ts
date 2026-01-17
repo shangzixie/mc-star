@@ -208,13 +208,14 @@ export async function getInventoryItem(itemId: string) {
 }
 
 /**
- * Update an inventory item (details only, not quantities)
+ * Update an inventory item
  */
 export async function updateInventoryItem(
   itemId: string,
   data: {
     commodityName?: string;
     skuCode?: string;
+    initialQty?: number;
     unit?: string;
     binLocation?: string;
     weightPerUnit?: number;

@@ -857,6 +857,8 @@
             "billing": "计费数据"
           },
           "fields": {
+            "weightConversionFactor": "重量换算系数",
+            "billingTons": "计费吨",
             "divisor": "材积系数",
             "bubbleSplitPercent": "分泡比例%",
             "totalVolumetricWeight": "总材积重(kg)",
@@ -870,7 +872,11 @@
             "billingPieces": "计费件数",
             "billingWeight": "计费重(kg)",
             "billingVolume": "计费体积(m³)",
-            "lock": "锁定"
+            "lock": "锁定",
+            "pieces": "件",
+            "weight": "重",
+            "volume": "体",
+            "settlementWeight": "结算重"
           }
         },
         "itemsSummary": {
@@ -1008,9 +1014,9 @@
           "length": "长度",
           "width": "宽度",
           "height": "高度",
-          "editNote": "注意：数量字段（初始数量、当前数量）不可直接修改，仅通过库存流水自动更新。",
+          "editNote": "注意：入库数量仅在未分配且未出库时可修改；当前库存仍通过库存流水自动更新。",
           "currentQty": "当前库存",
-          "initialQty": "初始数量",
+          "initialQty": "入库数量",
           "allocated": "已分配",
           "available": "可用",
           "actions": "操作"

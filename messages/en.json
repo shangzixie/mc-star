@@ -857,6 +857,8 @@
             "billing": "Chargeable / Billing"
           },
           "fields": {
+            "weightConversionFactor": "Weight conversion factor",
+            "billingTons": "Billing tons",
             "divisor": "Volumetric divisor",
             "bubbleSplitPercent": "Bubble split %",
             "totalVolumetricWeight": "Total volumetric weight (kg)",
@@ -870,7 +872,11 @@
             "billingPieces": "Chargeable pieces",
             "billingWeight": "Chargeable weight (kg)",
             "billingVolume": "Chargeable volume (m³)",
-            "lock": "Lock"
+            "lock": "Lock",
+            "pieces": "Pcs",
+            "weight": "Weight",
+            "volume": "Volume",
+            "settlementWeight": "Settlement weight"
           }
         },
         "itemsSummary": {
@@ -1008,9 +1014,9 @@
           "length": "Length",
           "width": "Width",
           "height": "Height",
-          "editNote": "Note: Quantity fields (initial qty, current qty) cannot be directly modified, only updated automatically through inventory movements.",
+          "editNote": "Note: Inbound quantity can only be edited when the item has no allocations and hasn't been shipped; current stock is still updated through inventory movements.",
           "currentQty": "Current Stock",
-          "initialQty": "Initial Quantity",
+          "initialQty": "Inbound Qty",
           "allocated": "Allocated",
           "available": "Available",
           "actions": "Actions"

@@ -43,6 +43,7 @@ export function useUpdateFreightInventoryItem(itemId: string) {
     mutationFn: async (input: {
       commodityName?: string;
       skuCode?: string;
+      initialQty?: number;
       unit?: string;
       binLocation?: string;
       weightPerUnit?: number;

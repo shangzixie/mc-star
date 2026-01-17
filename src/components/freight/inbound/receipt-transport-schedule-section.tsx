@@ -24,7 +24,7 @@ export function ReceiptTransportScheduleSection({
 
   if (transportType === 'AIR_FREIGHT') {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* 航空公司 / 航班 */}
         <div className="space-y-2">
           <Label>{t('air.fields.carrierAndFlight')}</Label>
@@ -106,7 +106,7 @@ export function ReceiptTransportScheduleSection({
 
   if (transportType === 'SEA_FCL' || transportType === 'SEA_LCL') {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* 承运人 / 航线 */}
         <div className="space-y-2">
           <Label htmlFor="seaCarrierRoute">

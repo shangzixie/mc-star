@@ -1,6 +1,8 @@
 export function ceilToDecimals(value: number, decimals: number): number {
   if (!Number.isFinite(value)) return value;
   if (!Number.isInteger(decimals) || decimals < 0) return value;
+  // Return 0 as-is to avoid ceiling zero up to 0.01
+  if (value === 0) return 0;
 
   const factor = 10 ** decimals;
   // EPSILON helps avoid cases like 1.005 * 100 === 100.499999999...

@@ -179,10 +179,11 @@ export const createAttachmentSchema = z.object({
 
 export const allocationStatusSchema = z.enum(ALLOCATION_STATUSES);
 
-// Inventory item update schema (cannot modify quantities directly)
+// Inventory item update schema
 export const updateInventoryItemSchema = z.object({
   commodityName: z.string().optional(),
   skuCode: z.string().max(50).optional(),
+  initialQty: z.number().int().positive().optional(),
   unit: z.string().max(10).optional(),
   binLocation: z.string().max(50).optional(),
   weightPerUnit: z.number().optional(),
