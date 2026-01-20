@@ -44,8 +44,7 @@ export function AddCustomerDialog({
   const form = useForm<FormValues>({
     resolver: zodResolver(createPartySchema),
     defaultValues: {
-      nameCn: '',
-      nameEn: '',
+      name: '',
       roles: ['CUSTOMER'],
       contactInfo: {
         phone: '',
@@ -61,8 +60,7 @@ export function AddCustomerDialog({
   useEffect(() => {
     if (open) {
       form.reset({
-        nameCn: '',
-        nameEn: '',
+        name: '',
         roles: ['CUSTOMER'],
         contactInfo: {
           phone: '',
@@ -112,32 +110,21 @@ export function AddCustomerDialog({
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Customer Name (Chinese) - Required */}
+            {/* Customer Name */}
             <div className="space-y-2">
-              <Label htmlFor="nameCn" className="flex items-center gap-1">
-                {t('customerFields.nameCn')}
-                <span className="text-destructive">*</span>
+              <Label htmlFor="name" className="flex items-center gap-1">
+                {t('customerFields.name')}
               </Label>
               <Input
-                id="nameCn"
-                {...form.register('nameCn')}
-                placeholder={t('customerFields.nameCnPlaceholder')}
+                id="name"
+                {...form.register('name')}
+                placeholder={t('customerFields.namePlaceholder')}
               />
-              {form.formState.errors.nameCn && (
+              {form.formState.errors.name && (
                 <p className="text-sm text-destructive">
-                  {form.formState.errors.nameCn.message}
+                  {form.formState.errors.name.message}
                 </p>
               )}
-            </div>
-
-            {/* Customer Name (English) */}
-            <div className="space-y-2">
-              <Label htmlFor="nameEn">{t('customerFields.nameEn')}</Label>
-              <Input
-                id="nameEn"
-                {...form.register('nameEn')}
-                placeholder={t('customerFields.nameEnPlaceholder')}
-              />
             </div>
 
             {/* Customer Code */}
@@ -162,7 +149,7 @@ export function AddCustomerDialog({
             </div>
 
             {/* Email */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="email">{t('customerFields.email')}</Label>
               <Input
                 id="email"

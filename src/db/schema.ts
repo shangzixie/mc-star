@@ -186,8 +186,7 @@ export const parties = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     code: varchar('code', { length: 50 }).unique(),
-    nameCn: text('name_cn').notNull(),
-    nameEn: text('name_en'),
+    name: text('name').notNull(),
     roles: varchar('roles', { length: 20 }).array().notNull(),
     taxNo: varchar('tax_no', { length: 50 }),
     contactInfo: jsonb('contact_info').notNull().default({}),

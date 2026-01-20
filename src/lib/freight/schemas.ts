@@ -13,19 +13,24 @@ export const uuidSchema = z.string().uuid();
 
 export const partyContactInfoSchema = z
   .object({
-    phone: z.string().max(50).optional(),
-    email: z.string().email().max(255).optional(),
+    phone: z.string().max(50).optional().or(z.literal('')),
+    email: z
+      .string()
+      .email()
+      .max(255)
+      .optional()
+      .or(z.literal(''))
+      .or(z.literal(null)),
   })
   .passthrough();
 
 export const createPartySchema = z.object({
-  code: z.string().max(50).optional(),
-  nameCn: z.string().min(1),
-  nameEn: z.string().optional(),
+  code: z.string().max(50).optional().or(z.literal('')),
+  name: z.string().min(1),
   roles: z.array(z.string().min(1).max(20)).min(1),
   contactInfo: partyContactInfoSchema.optional(),
-  address: z.string().optional(),
-  remarks: z.string().optional(),
+  address: z.string().optional().or(z.literal('')),
+  remarks: z.string().optional().or(z.literal('')),
   isActive: z.boolean().optional(),
 });
 

@@ -66,15 +66,12 @@ export function CustomerCombobox({
   const selectedCustomer = customers?.find((c) => c.id === value);
 
   const getCustomerDisplayName = (customer: FreightParty) => {
-    return customer.nameCn || customer.nameEn || customer.code || customer.id;
+    return customer.name || customer.code || customer.id;
   };
 
   const getCustomerSecondaryInfo = (customer: FreightParty) => {
     const parts: string[] = [];
     if (customer.code) parts.push(customer.code);
-    if (customer.nameEn && customer.nameEn !== customer.nameCn) {
-      parts.push(customer.nameEn);
-    }
     return parts.join(' • ');
   };
 
@@ -182,8 +179,7 @@ export function CustomerCombobox({
               <div className="space-y-2 text-sm">
                 <div>
                   <strong>{t('customerFields.name')}:</strong>{' '}
-                  {selectedCustomer.nameCn}
-                  {selectedCustomer.nameEn && ` (${selectedCustomer.nameEn})`}
+                  {selectedCustomer.name}
                 </div>
                 {selectedCustomer.code && (
                   <div>

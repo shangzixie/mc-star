@@ -67,9 +67,9 @@ import {
   useQueryStates,
 } from 'nuqs';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { FloatingActionButton } from './floating-action-button';
 import { ReceiptStatusBadge } from './receipt-status-badge';
-import { toast } from 'sonner';
 
 function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
   return (
@@ -259,7 +259,7 @@ export function ReceiptListView({
       },
       {
         id: 'customer',
-        accessorFn: (r) => r.customer?.nameCn ?? '',
+        accessorFn: (r) => r.customer?.name ?? '',
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}
@@ -270,7 +270,7 @@ export function ReceiptListView({
           const receipt = row.original;
           return (
             <span className="text-muted-foreground max-w-[140px] truncate block">
-              {receipt.customer?.nameCn ?? '-'}
+              {receipt.customer?.name ?? '-'}
             </span>
           );
         },
@@ -308,9 +308,7 @@ export function ReceiptListView({
                         : value === 'BULK_CARGO'
                           ? 'text-amber-600'
                           : 'text-muted-foreground';
-            return (
-              <span className={`font-medium ${colorClass}`}>{text}</span>
-            );
+            return <span className={`font-medium ${colorClass}`}>{text}</span>;
           };
           return (
             <TransportTypeCell

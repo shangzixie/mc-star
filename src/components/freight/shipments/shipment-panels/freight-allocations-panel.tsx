@@ -164,7 +164,7 @@ export function FreightAllocationsPanel({
                           }
                         >
                           <span className="truncate">
-                            {item.skuCode || item.commodityName || item.id}
+                            {item.commodityName || item.id}
                           </span>
                           <span className="text-muted-foreground">
                             {item.currentQty}/{item.initialQty}

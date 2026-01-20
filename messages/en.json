@@ -815,7 +815,7 @@
           "created": "Item added",
           "createFailed": "Failed to add item",
           "noReceipt": "Please select or create a receipt first",
-          "searchPlaceholder": "Search commodity / SKU...",
+          "searchPlaceholder": "Search commodity...",
           "cancel": "Cancel",
           "fields": {
             "receiptId": "Receipt ID",
@@ -964,10 +964,7 @@
         },
         "customerFields": {
           "name": "Customer Name",
-          "nameCn": "Customer Name (CN)",
-          "nameCnPlaceholder": "Enter customer Chinese name",
-          "nameEn": "Customer Name (EN)",
-          "nameEnPlaceholder": "Enter customer English name (optional)",
+          "namePlaceholder": "Enter customer name",
           "code": "Customer Code",
           "codePlaceholder": "Enter customer code (optional)",
           "contact": "Contact",
@@ -981,7 +978,7 @@
           "remarksPlaceholder": "Enter remarks",
           "createSuccess": "Customer created successfully",
           "createSuccessAndSelect": "Customer created successfully, please select from the list",
-          "addDescription": "Please fill in customer's basic information. Chinese name is required."
+          "addDescription": "Please fill in customer's basic information. Name is required."
         },
         "shipperFields": {
           "name": "Shipper Name",
@@ -1135,8 +1132,7 @@
             "freight": "Freight-related parties"
           },
           "fields": {
-            "nameCn": "Name (CN)",
-            "nameEn": "Name (EN)",
+            "name": "Name",
             "roles": "Roles",
             "phone": "Phone",
             "email": "Email",
@@ -1249,7 +1245,7 @@
             "qtyHint": "Allowed range: {min} - {max}",
             "fields": {
               "inventorySearch": "Find inventory item",
-              "inventorySearchPlaceholder": "Search SKU / commodity / bin...",
+              "inventorySearchPlaceholder": "Search commodity / bin...",
               "inventoryItemId": "Inventory item ID",
               "inventoryItemIdHint": "Tip: click an item above to populate the ID field.",
               "allocatedQty": "Allocated qty",

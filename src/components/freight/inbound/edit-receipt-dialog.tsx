@@ -190,7 +190,7 @@ export function EditReceiptDialog({
                     <SelectContent>
                       {customers?.map((customer) => (
                         <SelectItem key={customer.id} value={customer.id}>
-                          {customer.nameCn || customer.nameEn || customer.code}
+                          {customer.name || customer.code}
                         </SelectItem>
                       ))}
                     </SelectContent>

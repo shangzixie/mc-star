@@ -56,8 +56,7 @@ export async function GET(request: Request) {
             ilike(warehouseReceipts.internalRemarks, `%${q}%`),
             // allow searching warehouse / customer names
             ilike(warehouses.name, `%${q}%`),
-            ilike(parties.nameCn, `%${q}%`),
-            ilike(parties.nameEn, `%${q}%`),
+            ilike(parties.name, `%${q}%`),
             ilike(parties.code, `%${q}%`)
           )
         : undefined,
@@ -164,8 +163,7 @@ export async function GET(request: Request) {
         customer: {
           id: parties.id,
           code: parties.code,
-          nameCn: parties.nameCn,
-          nameEn: parties.nameEn,
+          name: parties.name,
           roles: parties.roles,
           taxNo: parties.taxNo,
           contactInfo: parties.contactInfo,

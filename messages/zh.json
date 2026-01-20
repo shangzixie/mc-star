@@ -815,7 +815,7 @@
           "created": "明细已新增",
           "createFailed": "新增明细失败",
           "noReceipt": "请先选择或创建一个入库单",
-          "searchPlaceholder": "搜索品名 / SKU...",
+          "searchPlaceholder": "搜索品名...",
           "cancel": "取消",
           "empty": "暂无明细",
           "emptyHint": "点击右下角 + 按钮添加明细",
@@ -964,10 +964,7 @@
         },
         "customerFields": {
           "name": "客户名称",
-          "nameCn": "客户中文名",
-          "nameCnPlaceholder": "请输入客户中文名称",
-          "nameEn": "客户英文名",
-          "nameEnPlaceholder": "请输入客户英文名称（可选）",
+          "namePlaceholder": "请输入客户名称",
           "code": "客户代码",
           "codePlaceholder": "请输入客户代码（可选）",
           "contact": "联系方式",
@@ -981,7 +978,7 @@
           "remarksPlaceholder": "请输入备注信息",
           "createSuccess": "客户创建成功",
           "createSuccessAndSelect": "客户创建成功，请在列表中选择",
-          "addDescription": "请填写客户的基本信息，中文名称为必填项"
+          "addDescription": "请填写客户的基本信息，名称为必填项"
         },
         "shipperFields": {
           "name": "发货人名称",
@@ -1135,8 +1132,7 @@
             "freight": "货代相关"
           },
           "fields": {
-            "nameCn": "中文名",
-            "nameEn": "英文名",
+            "name": "名称",
             "roles": "角色",
             "phone": "手机号",
             "email": "邮箱",
@@ -1248,9 +1244,9 @@
             "inventoryEmpty": "暂无库存条目",
             "qtyHint": "允许范围：{min} - {max}",
             "fields": {
-              "inventorySearch": "查找库存条目",
-              "inventorySearchPlaceholder": "搜索 SKU / 品名 / 库位...",
-              "inventoryItemId": "库存条目ID",
+            "inventorySearch": "查找库存条目",
+            "inventorySearchPlaceholder": "搜索品名 / 库位...",
+            "inventoryItemId": "库存条目ID",
               "inventoryItemIdHint": "提示：点击上方条目可自动填入 ID。",
               "allocatedQty": "分配数量",
               "pickedQty": "拣货数量",

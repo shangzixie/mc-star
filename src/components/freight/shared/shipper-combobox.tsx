@@ -64,15 +64,12 @@ export function ShipperCombobox({
   const selectedShipper = shippers?.find((s) => s.id === value);
 
   const getShipperDisplayName = (shipper: FreightParty) => {
-    return shipper.nameCn || shipper.nameEn || shipper.code || shipper.id;
+    return shipper.name || shipper.code || shipper.id;
   };
 
   const getShipperSecondaryInfo = (shipper: FreightParty) => {
     const parts: string[] = [];
     if (shipper.code) parts.push(shipper.code);
-    if (shipper.nameEn && shipper.nameEn !== shipper.nameCn) {
-      parts.push(shipper.nameEn);
-    }
     return parts.join(' • ');
   };
 
@@ -163,8 +160,7 @@ export function ShipperCombobox({
               <div className="space-y-2 text-sm">
                 <div>
                   <strong>{t('shipperFields.name')}:</strong>{' '}
-                  {selectedShipper.nameCn}
-                  {selectedShipper.nameEn && ` (${selectedShipper.nameEn})`}
+                  {selectedShipper.name}
                 </div>
                 {selectedShipper.code && (
                   <div>

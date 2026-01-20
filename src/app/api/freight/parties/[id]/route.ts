@@ -51,8 +51,7 @@ export async function PATCH(
     const [updated] = await db
       .update(parties)
       .set({
-        nameCn: body.nameCn,
-        nameEn: body.nameEn,
+        name: body.name,
         roles: body.roles,
         contactInfo: body.contactInfo as any,
         address: body.address,

@@ -147,7 +147,6 @@ export function ReceiptDetailView({
             <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead>{t('items.columns.commodity')}</TableHead>
-                <TableHead>{t('items.columns.sku')}</TableHead>
                 <TableHead className="text-right">
                   {t('items.columns.initialQty')}
                 </TableHead>
@@ -166,7 +165,7 @@ export function ReceiptDetailView({
               {itemsQuery.isLoading ? (
                 Array.from({ length: 3 }).map((_, idx) => (
                   <TableRow key={`sk-${idx}`} className="h-14">
-                    {Array.from({ length: 8 }).map((__, cIdx) => (
+                    {Array.from({ length: 7 }).map((__, cIdx) => (
                       <TableCell key={`sk-${idx}-${cIdx}`}>
                         <Skeleton className="h-4 w-24" />
                       </TableCell>
@@ -175,7 +174,7 @@ export function ReceiptDetailView({
                 ))
               ) : itemsQuery.error ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('items.error')}</EmptyTitle>
@@ -188,7 +187,7 @@ export function ReceiptDetailView({
                 </TableRow>
               ) : renderedItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('items.empty')}</EmptyTitle>
@@ -238,9 +237,6 @@ export function ReceiptDetailView({
                     <TableRow key={item.id} className="h-14">
                       <TableCell className="font-medium">
                         {item.commodityName ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.skuCode ?? '-'}
                       </TableCell>
                       <TableCell className="text-right tabular-nums font-medium">
                         {item.initialQty}
@@ -424,10 +420,7 @@ export function ReceiptDetailView({
               <div className="space-y-2">
                 <div className="text-sm font-semibold">{t('customer')}</div>
                 <div className="text-sm text-muted-foreground">
-                  {receipt.customer?.nameCn ??
-                    receipt.customer?.nameEn ??
-                    receipt.customer?.code ??
-                    '-'}
+                  {receipt.customer?.name ?? receipt.customer?.code ?? '-'}
                 </div>
                 <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1 text-sm">
                   <div className="text-muted-foreground">

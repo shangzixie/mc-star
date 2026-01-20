@@ -57,8 +57,7 @@ export async function GET(
         party: {
           id: parties.id,
           code: parties.code,
-          nameCn: parties.nameCn,
-          nameEn: parties.nameEn,
+          name: parties.name,
         },
       })
       .from(warehouseReceiptFees)

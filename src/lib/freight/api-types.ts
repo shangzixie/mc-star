@@ -116,8 +116,7 @@ export const freightPartySchema = z
   .object({
     id: uuidSchema,
     code: z.string().nullable(),
-    nameCn: z.string(),
-    nameEn: z.string().nullable(),
+    name: z.string(),
     roles: z.array(z.string()),
     taxNo: z.string().nullable(),
     contactInfo: z.unknown(),
@@ -154,8 +153,7 @@ export const freightWarehouseReceiptFeeSchema = z
       .object({
         id: uuidSchema.nullable(),
         code: z.string().nullable(),
-        nameCn: z.string().nullable(),
-        nameEn: z.string().nullable(),
+        name: z.string().nullable(),
       })
       .optional(),
   })

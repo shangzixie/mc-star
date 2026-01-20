@@ -3,7 +3,7 @@ import { parties } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import { createPartySchema } from '@/lib/freight/schemas';
-import { and, eq, ilike, or } from 'drizzle-orm';
+import { and, eq, ilike } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -20,9 +20,7 @@ export async function GET(request: Request) {
       ? undefined
       : eq(parties.isActive, true);
     const searchClause =
-      q && q.length > 0
-        ? or(ilike(parties.nameCn, `%${q}%`), ilike(parties.nameEn, `%${q}%`))
-        : undefined;
+      q && q.length > 0 ? ilike(parties.name, `%${q}%`) : undefined;
 
     const conditions = [activeClause, searchClause].filter(Boolean);
     const rows =
@@ -43,8 +41,7 @@ export async function POST(request: Request) {
     const [created] = await db
       .insert(parties)
       .values({
-        nameCn: body.nameCn,
-        nameEn: body.nameEn,
+        name: body.name,
         roles: body.roles,
         contactInfo: body.contactInfo ?? {},
         address: body.address,

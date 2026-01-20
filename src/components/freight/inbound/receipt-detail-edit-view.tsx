@@ -826,22 +826,19 @@ export function ReceiptDetailEditView({
               </Button>
             }
           >
-            <Table className="min-w-[980px]">
+            <Table className="min-w-[770px]">
               <TableHeader className="bg-muted">
                 <TableRow>
-                  <TableHead className="w-[240px]">
+                  <TableHead className="w-[200px]">
                     {t('items.columns.commodity')}
                   </TableHead>
-                  <TableHead className="w-[160px]">
-                    {t('items.columns.sku')}
-                  </TableHead>
-                  <TableHead className="w-[96px] text-right">
+                  <TableHead className="w-[80px] text-right">
                     {t('items.columns.initialQty')}
                   </TableHead>
-                  <TableHead className="w-[96px]">
+                  <TableHead className="w-[70px]">
                     {t('items.columns.unit')}
                   </TableHead>
-                  <TableHead className="w-[160px]">
+                  <TableHead className="w-[120px]">
                     {t('items.columns.location')}
                   </TableHead>
                   <TableHead className="w-[120px] text-right">
@@ -850,14 +847,14 @@ export function ReceiptDetailEditView({
                   <TableHead className="w-[120px] text-right">
                     {t('items.fields.volumePerUnit')}
                   </TableHead>
-                  <TableHead className="w-[72px]" />
+                  <TableHead className="w-[60px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {itemsQuery.isLoading ? (
                   Array.from({ length: 3 }).map((_, idx) => (
                     <TableRow key={`sk-${idx}`} className="h-14">
-                      {Array.from({ length: 8 }).map((__, cIdx) => (
+                      {Array.from({ length: 7 }).map((__, cIdx) => (
                         <TableCell key={`sk-${idx}-${cIdx}`}>
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
@@ -866,7 +863,7 @@ export function ReceiptDetailEditView({
                   ))
                 ) : itemsQuery.error ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
+                    <TableCell colSpan={7} className="h-32 text-center">
                       <Empty>
                         <EmptyHeader>
                           <EmptyTitle>{t('items.error')}</EmptyTitle>
@@ -879,7 +876,7 @@ export function ReceiptDetailEditView({
                   </TableRow>
                 ) : renderedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
+                    <TableCell colSpan={7} className="h-32 text-center">
                       <Empty>
                         <EmptyHeader>
                           <EmptyTitle>{t('items.empty')}</EmptyTitle>
@@ -928,19 +925,16 @@ export function ReceiptDetailEditView({
 
                     return (
                       <TableRow key={item.id} className="h-14">
-                        <TableCell className="max-w-[240px] truncate font-medium">
+                        <TableCell className="max-w-[200px] truncate font-medium">
                           {item.commodityName ?? '-'}
                         </TableCell>
-                        <TableCell className="max-w-[160px] truncate text-muted-foreground">
-                          {item.skuCode ?? '-'}
-                        </TableCell>
-                        <TableCell className="w-[96px] text-right tabular-nums font-medium">
+                        <TableCell className="w-[80px] text-right tabular-nums font-medium">
                           {item.initialQty}
                         </TableCell>
-                        <TableCell className="w-[96px] text-muted-foreground">
+                        <TableCell className="w-[70px] text-muted-foreground">
                           {item.unit ?? '-'}
                         </TableCell>
-                        <TableCell className="max-w-[160px] truncate text-muted-foreground">
+                        <TableCell className="max-w-[120px] truncate text-muted-foreground">
                           {item.binLocation ?? '-'}
                         </TableCell>
                         <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">

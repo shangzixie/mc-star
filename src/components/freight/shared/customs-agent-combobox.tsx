@@ -64,15 +64,12 @@ export function CustomsAgentCombobox({
   const selectedAgent = agents?.find((a) => a.id === value);
 
   const getAgentDisplayName = (agent: FreightParty) => {
-    return agent.nameCn || agent.nameEn || agent.code || agent.id;
+    return agent.name || agent.code || agent.id;
   };
 
   const getAgentSecondaryInfo = (agent: FreightParty) => {
     const parts: string[] = [];
     if (agent.code) parts.push(agent.code);
-    if (agent.nameEn && agent.nameEn !== agent.nameCn) {
-      parts.push(agent.nameEn);
-    }
     return parts.join(' • ');
   };
 
@@ -163,8 +160,7 @@ export function CustomsAgentCombobox({
               <div className="space-y-2 text-sm">
                 <div>
                   <strong>{t('customsAgentFields.name')}:</strong>{' '}
-                  {selectedAgent.nameCn}
-                  {selectedAgent.nameEn && ` (${selectedAgent.nameEn})`}
+                  {selectedAgent.name}
                 </div>
                 {selectedAgent.code && (
                   <div>

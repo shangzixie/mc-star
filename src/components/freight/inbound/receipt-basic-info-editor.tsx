@@ -62,10 +62,7 @@ export function ReceiptBasicInfoEditor({
         key: 'customerId',
         label: t('customer'),
         getDisplayValue: () =>
-          receipt.customer?.nameCn ??
-          receipt.customer?.nameEn ??
-          receipt.customer?.code ??
-          '-',
+          receipt.customer?.name ?? receipt.customer?.code ?? '-',
         getInitialDraftValue: () => receipt.customerId ?? '',
         renderEditor: ({ draft, setDraft, disabled }) => {
           const value = typeof draft === 'string' ? draft : '';

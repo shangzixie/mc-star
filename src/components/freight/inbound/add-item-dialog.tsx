@@ -23,7 +23,6 @@ import { z } from 'zod';
 
 const addItemFormSchema = z.object({
   commodityName: z.string().optional(),
-  skuCode: z.string().optional(),
   initialQty: z
     .union([z.string(), z.number()])
     .transform((v) => Number(v))
@@ -76,7 +75,6 @@ export function AddItemDialog({
     resolver: zodResolver(addItemFormSchema),
     defaultValues: {
       commodityName: '',
-      skuCode: '',
       initialQty: 1,
       unit: '',
     },
@@ -87,7 +85,6 @@ export function AddItemDialog({
     if (open) {
       form.reset({
         commodityName: '',
-        skuCode: '',
         initialQty: 1,
         unit: '',
         weightPerUnit: undefined,
@@ -103,7 +100,6 @@ export function AddItemDialog({
       const payload = addInventoryItemSchema.omit({ receiptId: true }).parse({
         ...values,
         commodityName: values.commodityName?.trim() || undefined,
-        skuCode: values.skuCode?.trim() || undefined,
         unit: values.unit?.trim() || undefined,
       });
 
@@ -124,27 +120,16 @@ export function AddItemDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="commodityName">
-                {t('items.fields.commodityName')}
-              </Label>
-              <Input
-                id="commodityName"
-                autoComplete="off"
-                placeholder={t('items.fields.commodityNamePlaceholder')}
-                {...form.register('commodityName')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="skuCode">{t('items.fields.skuCode')}</Label>
-              <Input
-                id="skuCode"
-                autoComplete="off"
-                placeholder={t('items.fields.skuCodePlaceholder')}
-                {...form.register('skuCode')}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="commodityName">
+              {t('items.fields.commodityName')}
+            </Label>
+            <Input
+              id="commodityName"
+              autoComplete="off"
+              placeholder={t('items.fields.commodityNamePlaceholder')}
+              {...form.register('commodityName')}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -34,7 +34,7 @@ import { toast } from 'sonner';
 function displayPartyName(fee: FreightWarehouseReceiptFee) {
   const party = fee.party;
   if (!party || !party.id) return '-';
-  return party.nameCn || party.nameEn || party.code || party.id;
+  return party.name || party.code || party.id;
 }
 
 function toStr(v: unknown) {

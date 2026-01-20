@@ -87,8 +87,7 @@ export async function GET(
         customer: {
           id: parties.id,
           code: parties.code,
-          nameCn: parties.nameCn,
-          nameEn: parties.nameEn,
+          name: parties.name,
           roles: parties.roles,
           taxNo: parties.taxNo,
           contactInfo: parties.contactInfo,

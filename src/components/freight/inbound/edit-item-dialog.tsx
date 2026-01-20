@@ -44,7 +44,6 @@ const editItemSchema = z.object({
       message: 'Must be a positive integer',
     }),
   commodityName: z.string().optional(),
-  skuCode: z.string().max(50).optional(),
   unit: z.string().max(10).optional(),
   weightPerUnit: z.number().optional(),
   lengthCm: z.number().optional(),
@@ -75,7 +74,6 @@ export function EditItemDialog({
     defaultValues: {
       initialQty: item.initialQty,
       commodityName: item.commodityName ?? undefined,
-      skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
       weightPerUnit: item.weightPerUnit
         ? Number(item.weightPerUnit)
@@ -91,7 +89,6 @@ export function EditItemDialog({
     form.reset({
       initialQty: item.initialQty,
       commodityName: item.commodityName ?? undefined,
-      skuCode: item.skuCode ?? undefined,
       unit: item.unit ?? undefined,
       weightPerUnit: item.weightPerUnit
         ? Number(item.weightPerUnit)
@@ -121,7 +118,6 @@ export function EditItemDialog({
           </DialogTitle>
           <DialogDescription>
             {item.commodityName ||
-              item.skuCode ||
               t('Dashboard.freight.inbound.itemActions.unnamed')}
           </DialogDescription>
         </DialogHeader>
@@ -166,22 +162,6 @@ export function EditItemDialog({
                   </FormLabel>
                   <FormControl>
                     <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="skuCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('Dashboard.freight.inbound.itemActions.skuCode')}
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} maxLength={50} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

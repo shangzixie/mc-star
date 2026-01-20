@@ -142,8 +142,7 @@ function CustomerUpsertDialog({
   const form = useForm<CreateCustomerFormValues>({
     resolver: zodResolver(createPartySchema),
     defaultValues: {
-      nameCn: initial?.nameCn ?? '',
-      nameEn: initial?.nameEn ?? '',
+      name: initial?.name ?? '',
       roles: initial?.roles?.length ? initial.roles : ['CUSTOMER'],
       contactInfo: {
         phone: initial ? getPartyPhone(initial) : '',
@@ -159,8 +158,7 @@ function CustomerUpsertDialog({
     try {
       const body: CreateCustomerFormValues = {
         ...values,
-        nameCn: values.nameCn.trim(),
-        nameEn: values.nameEn?.trim() || undefined,
+        name: values.name.trim(),
         address: values.address?.trim() || undefined,
         remarks: values.remarks?.trim() || undefined,
         roles:
@@ -219,26 +217,17 @@ function CustomerUpsertDialog({
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="customer-nameCn">{t('fields.nameCn')}</Label>
+            <Label htmlFor="customer-name">{t('fields.name')}</Label>
             <Input
-              id="customer-nameCn"
+              id="customer-name"
               autoComplete="off"
-              {...form.register('nameCn')}
+              {...form.register('name')}
             />
-            {form.formState.errors.nameCn?.message ? (
+            {form.formState.errors.name?.message ? (
               <p className="text-sm text-destructive">
-                {form.formState.errors.nameCn.message}
+                {form.formState.errors.name.message}
               </p>
             ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="customer-nameEn">{t('fields.nameEn')}</Label>
-            <Input
-              id="customer-nameEn"
-              autoComplete="off"
-              {...form.register('nameEn')}
-            />
           </div>
 
           <div className="space-y-2">
@@ -946,19 +935,12 @@ function PartiesTable({
     () => [
       {
         id: 'name',
-        accessorFn: (p) => `${p.nameCn ?? ''} ${p.nameEn ?? ''}`.trim(),
+        accessorFn: (p) => p.name ?? '',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} label={t('columns.name')} />
         ),
         cell: ({ row }) => (
-          <div className="font-medium">
-            {row.original.nameCn}
-            {row.original.nameEn ? (
-              <span className="ml-2 text-muted-foreground text-xs">
-                {row.original.nameEn}
-              </span>
-            ) : null}
-          </div>
+          <div className="font-medium">{row.original.name}</div>
         ),
         meta: { label: t('columns.name') },
         minSize: 200,
@@ -1209,11 +1191,9 @@ export function FreightSettingsPageClient() {
     return parties.filter((p) => {
       const phone = getPartyPhone(p).toLowerCase();
       const email = getPartyEmail(p).toLowerCase();
-      const nameCn = (p.nameCn ?? '').toLowerCase();
-      const nameEn = (p.nameEn ?? '').toLowerCase();
+      const name = (p.name ?? '').toLowerCase();
       return (
-        nameCn.includes(q) ||
-        nameEn.includes(q) ||
+        name.includes(q) ||
         phone.includes(q) ||
         email.includes(q)
       );

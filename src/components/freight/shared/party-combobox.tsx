@@ -59,15 +59,12 @@ export function PartyCombobox({
   const selectedParty = allParties?.find((p) => p.id === value);
 
   const getPartyDisplayName = (party: FreightParty) => {
-    return party.nameCn || party.nameEn || party.code || party.id;
+    return party.name || party.code || party.id;
   };
 
   const getPartySecondaryInfo = (party: FreightParty) => {
     const parts: string[] = [];
     if (party.code) parts.push(party.code);
-    if (party.nameEn && party.nameEn !== party.nameCn) {
-      parts.push(party.nameEn);
-    }
     return parts.join(' • ');
   };
 
