@@ -62,6 +62,7 @@ import {
   useUpdateFreightMBL,
 } from '@/hooks/freight/use-freight-mbl';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
+import { useLocaleRouter } from '@/i18n/navigation';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
   FreightInventoryItem,
@@ -161,6 +162,7 @@ export function ReceiptDetailEditView({
   const tCustomerColumns = useTranslations(
     'Dashboard.freight.settings.customers.columns'
   );
+  const router = useLocaleRouter();
 
   const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
@@ -620,6 +622,8 @@ export function ReceiptDetailEditView({
         soNo: nextSoNo,
         hblNo: nextHblNo,
       });
+      // Redirect back to inbound list with size=50 after save
+      router.push('/freight/inbound?size=50');
     } catch (error) {
       const message = getFreightApiErrorMessage(error);
       toast.error(message);

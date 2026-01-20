@@ -113,7 +113,7 @@ export function ReceiptListView({
 
   const [{ page, size, q, status, sort }, setQueryStates] = useQueryStates({
     page: parseAsIndex.withDefault(0),
-    size: parseAsInteger.withDefault(10),
+    size: parseAsInteger.withDefault(50),
     q: parseAsString.withDefault(''),
     status: parseAsString.withDefault(''),
     sort: getSortingStateParser<FreightWarehouseReceiptWithRelations>(
