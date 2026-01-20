@@ -847,7 +847,7 @@
             "location": "Location",
             "weight": "Weight",
             "totalWeight": "Total Weight (kg)",
-            "dimensions": "Dimensions",
+            "dimensions": "L × W × H (cm)",
             "totalVolume": "Total Volume (m³)",
             "actions": "Actions"
           },

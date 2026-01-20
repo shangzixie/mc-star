@@ -156,7 +156,7 @@ export function ReceiptDetailView({
                   {t('items.fields.weightPerUnit')}
                 </TableHead>
                 <TableHead className="text-right">
-                  {t('items.fields.volumePerUnit')}
+                  {t('items.columns.dimensions')}
                 </TableHead>
                 <TableHead className="w-[72px]" />
               </TableRow>
@@ -288,8 +288,8 @@ export function ReceiptDetailView({
                         totalVolumeScaled != null ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="block w-full cursor-help text-right tabular-nums">
-                                {formatScaledInt(volumePerUnitScaled, 2)}
+                              <span className="block w-full cursor-help text-right tabular-nums whitespace-nowrap">
+                                {lengthCm} × {widthCm} × {heightCm}
                               </span>
                             </TooltipTrigger>
                             <TooltipContent

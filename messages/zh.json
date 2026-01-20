@@ -850,7 +850,7 @@
             "location": "库位",
             "weight": "重量",
             "totalWeight": "总重量(kg)",
-            "dimensions": "尺寸",
+            "dimensions": "长 × 宽 × 高 (cm)",
             "totalVolume": "总体积(m³)",
             "actions": "操作"
           }
