@@ -16,6 +16,7 @@ import { PACKAGING_UNITS } from '@/lib/freight/constants';
 import { addInventoryItemSchema } from '@/lib/freight/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -81,6 +82,22 @@ export function AddItemDialog({
     },
   });
 
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        commodityName: '',
+        skuCode: '',
+        initialQty: 1,
+        unit: '',
+        weightPerUnit: undefined,
+        lengthCm: undefined,
+        widthCm: undefined,
+        heightCm: undefined,
+      });
+    }
+  }, [open, form]);
+
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       const payload = addInventoryItemSchema.omit({ receiptId: true }).parse({
@@ -92,12 +109,6 @@ export function AddItemDialog({
 
       await addItemMutation.mutateAsync(payload);
       toast.success(t('items.created'));
-      form.reset({
-        commodityName: '',
-        skuCode: '',
-        initialQty: 1,
-        unit: '',
-      });
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('items.createFailed'));
