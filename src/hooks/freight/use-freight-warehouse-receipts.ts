@@ -137,6 +137,10 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       inboundTime?: string;
       remarks?: string;
       internalRemarks?: string;
+      manualPieces?: number | null;
+      manualWeightKg?: number | null;
+      manualVolumeM3?: number | null;
+      bubbleSplitPercent?: number | null;
       shipperId?: string | null;
       bookingAgentId?: string | null;
       customsAgentId?: string | null;

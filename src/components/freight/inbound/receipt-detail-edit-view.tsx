@@ -139,6 +139,23 @@ const receiptFormSchema = z.object({
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
 
+function normalizeSummaryInput(value: string | null | undefined): string {
+  return value == null ? '' : String(value);
+}
+
+function parseSummaryInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseReceiptNumeric(value: string | null | undefined): number | null {
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function ReceiptDetailEditView({
   receipt,
   onBack,
@@ -240,7 +257,50 @@ export function ReceiptDetailEditView({
     },
   });
 
-  const isDirty = form.formState.isDirty;
+  const summaryDefaults = useMemo(
+    () => ({
+      piecesInput: normalizeSummaryInput(receipt.manualPieces),
+      weightInput: normalizeSummaryInput(receipt.manualWeightKg),
+      volumeInput: normalizeSummaryInput(receipt.manualVolumeM3),
+      bubbleSplitPercentInput: normalizeSummaryInput(
+        receipt.bubbleSplitPercent
+      ),
+    }),
+    [
+      receipt.manualPieces,
+      receipt.manualWeightKg,
+      receipt.manualVolumeM3,
+      receipt.bubbleSplitPercent,
+    ]
+  );
+
+  const [summaryInputs, setSummaryInputs] = useState(summaryDefaults);
+
+  useEffect(() => {
+    setSummaryInputs(summaryDefaults);
+  }, [summaryDefaults]);
+
+  const nextManualPieces = parseSummaryInput(summaryInputs.piecesInput);
+  const nextManualWeightKg = parseSummaryInput(summaryInputs.weightInput);
+  const nextManualVolumeM3 = parseSummaryInput(summaryInputs.volumeInput);
+  const nextBubbleSplitPercent = parseSummaryInput(
+    summaryInputs.bubbleSplitPercentInput
+  );
+
+  const prevManualPieces = parseReceiptNumeric(receipt.manualPieces);
+  const prevManualWeightKg = parseReceiptNumeric(receipt.manualWeightKg);
+  const prevManualVolumeM3 = parseReceiptNumeric(receipt.manualVolumeM3);
+  const prevBubbleSplitPercent = parseReceiptNumeric(
+    receipt.bubbleSplitPercent
+  );
+
+  const summaryDirty =
+    nextManualPieces !== prevManualPieces ||
+    nextManualWeightKg !== prevManualWeightKg ||
+    nextManualVolumeM3 !== prevManualVolumeM3 ||
+    nextBubbleSplitPercent !== prevBubbleSplitPercent;
+
+  const isDirty = form.formState.isDirty || summaryDirty;
   const isSaving =
     updateMutation.isPending ||
     createMblMutation.isPending ||
@@ -348,6 +408,19 @@ export function ReceiptDetailEditView({
       }
       if (data.internalRemarks !== (receipt.internalRemarks ?? '')) {
         payload.internalRemarks = data.internalRemarks;
+      }
+
+      if (nextManualPieces !== prevManualPieces) {
+        payload.manualPieces = nextManualPieces;
+      }
+      if (nextManualWeightKg !== prevManualWeightKg) {
+        payload.manualWeightKg = nextManualWeightKg;
+      }
+      if (nextManualVolumeM3 !== prevManualVolumeM3) {
+        payload.manualVolumeM3 = nextManualVolumeM3;
+      }
+      if (nextBubbleSplitPercent !== prevBubbleSplitPercent) {
+        payload.bubbleSplitPercent = nextBubbleSplitPercent;
       }
 
       // Contact information (nullable - allow clearing)
@@ -746,7 +819,11 @@ export function ReceiptDetailEditView({
               <Select
                 value={form.watch('transportType') ?? undefined}
                 onValueChange={(value) =>
-                  form.setValue('transportType', value, { shouldDirty: true })
+                  form.setValue(
+                    'transportType',
+                    value as ReceiptFormData['transportType'],
+                    { shouldDirty: true }
+                  )
                 }
               >
                 <SelectTrigger id="transportType">
@@ -813,6 +890,25 @@ export function ReceiptDetailEditView({
             <ReceiptSummaryPanel
               items={items}
               transportType={transportTypeValue}
+              bubbleSplitPercentInput={summaryInputs.bubbleSplitPercentInput}
+              piecesInput={summaryInputs.piecesInput}
+              weightInput={summaryInputs.weightInput}
+              volumeInput={summaryInputs.volumeInput}
+              onBubbleSplitPercentChange={(value) =>
+                setSummaryInputs((prev) => ({
+                  ...prev,
+                  bubbleSplitPercentInput: value,
+                }))
+              }
+              onPiecesChange={(value) =>
+                setSummaryInputs((prev) => ({ ...prev, piecesInput: value }))
+              }
+              onWeightChange={(value) =>
+                setSummaryInputs((prev) => ({ ...prev, weightInput: value }))
+              }
+              onVolumeChange={(value) =>
+                setSummaryInputs((prev) => ({ ...prev, volumeInput: value }))
+              }
             />
           </FreightSection>
 
@@ -832,7 +928,7 @@ export function ReceiptDetailEditView({
                   <TableHead className="w-[200px]">
                     {t('items.columns.commodity')}
                   </TableHead>
-                  <TableHead className="w-[80px] text-right">
+                  <TableHead className="w-[80px] text-right pr-6">
                     {t('items.columns.initialQty')}
                   </TableHead>
                   <TableHead className="w-[70px]">
@@ -928,7 +1024,7 @@ export function ReceiptDetailEditView({
                         <TableCell className="max-w-[200px] truncate font-medium">
                           {item.commodityName ?? '-'}
                         </TableCell>
-                        <TableCell className="w-[80px] text-right tabular-nums font-medium">
+                        <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
                           {item.initialQty}
                         </TableCell>
                         <TableCell className="w-[70px] text-muted-foreground">

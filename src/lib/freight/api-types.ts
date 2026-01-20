@@ -194,6 +194,10 @@ export const freightWarehouseReceiptSchema = z
     inboundTime: isoDateTimeSchema.nullable(),
     remarks: z.string().nullable(),
     internalRemarks: z.string().nullable(),
+    manualPieces: z.string().nullable().optional(),
+    manualWeightKg: z.string().nullable().optional(),
+    manualVolumeM3: z.string().nullable().optional(),
+    bubbleSplitPercent: z.string().nullable().optional(),
     // Contact information
     shipperId: uuidSchema.nullable().optional(),
     bookingAgentId: uuidSchema.nullable().optional(),

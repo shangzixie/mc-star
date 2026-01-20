@@ -147,7 +147,7 @@ export function ReceiptDetailView({
             <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead>{t('items.columns.commodity')}</TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-right pr-6">
                   {t('items.columns.initialQty')}
                 </TableHead>
                 <TableHead>{t('items.columns.unit')}</TableHead>
@@ -238,7 +238,7 @@ export function ReceiptDetailView({
                       <TableCell className="font-medium">
                         {item.commodityName ?? '-'}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums font-medium">
+                      <TableCell className="text-right tabular-nums font-medium pr-6">
                         {item.initialQty}
                       </TableCell>
                       <TableCell className="text-muted-foreground">

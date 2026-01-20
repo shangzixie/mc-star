@@ -9,7 +9,7 @@ import {
   formatScaledInt,
 } from '@/lib/freight/math';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -45,14 +45,27 @@ function getWeightConversionFactor(
 export function ReceiptSummaryPanel({
   items,
   transportType,
+  bubbleSplitPercentInput,
+  piecesInput,
+  weightInput,
+  volumeInput,
+  onBubbleSplitPercentChange,
+  onPiecesChange,
+  onWeightChange,
+  onVolumeChange,
 }: {
   items: FreightInventoryItem[];
   transportType?: string | null;
+  bubbleSplitPercentInput: string;
+  piecesInput: string;
+  weightInput: string;
+  volumeInput: string;
+  onBubbleSplitPercentChange: (value: string) => void;
+  onPiecesChange: (value: string) => void;
+  onWeightChange: (value: string) => void;
+  onVolumeChange: (value: string) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound.summaryPanel');
-
-  const [bubbleSplitPercentInput, setBubbleSplitPercentInput] =
-    useState<string>('0');
 
   const measured = useMemo(() => {
     let pieces = 0;
@@ -113,18 +126,41 @@ export function ReceiptSummaryPanel({
     return clampNumber(n, 0, 100) / 100;
   }, [bubbleSplitPercentInput]);
 
+  const manualPieces = useMemo(() => parseNumber(piecesInput), [piecesInput]);
+  const manualWeightKg = useMemo(() => parseNumber(weightInput), [weightInput]);
+  const manualVolumeM3 = useMemo(() => parseNumber(volumeInput), [volumeInput]);
+
+  const effectivePieces =
+    manualPieces != null ? Math.max(0, manualPieces) : measured.pieces;
+  const effectiveWeightKg =
+    manualWeightKg != null
+      ? Math.max(0, manualWeightKg)
+      : measured.grossWeightKg;
+  const effectiveVolumeM3 =
+    manualVolumeM3 != null ? Math.max(0, manualVolumeM3) : measured.volumeM3;
+
   const billingTons = useMemo(() => {
     const factor = weightConversionFactor > 0 ? weightConversionFactor : 1;
-    return measured.grossWeightKg > 0 ? measured.grossWeightKg / factor : 0;
-  }, [measured.grossWeightKg, weightConversionFactor]);
+    return effectiveWeightKg > 0 ? effectiveWeightKg / factor : 0;
+  }, [effectiveWeightKg, weightConversionFactor]);
 
   const settlementWeight = useMemo(() => {
     // 结算重 = max(体, (1 - 分泡) * 计费吨)
     // 计费吨 = 重 / 重量换算系数
     const adjustedBillingTons = (1 - bubbleSplitRatio) * billingTons;
-    const volume = measured.volumeM3;
+    const volume = effectiveVolumeM3;
     return Math.max(volume, adjustedBillingTons);
-  }, [measured.volumeM3, billingTons, bubbleSplitRatio]);
+  }, [effectiveVolumeM3, billingTons, bubbleSplitRatio]);
+
+  const piecesDisplayValue = piecesInput.trim()
+    ? piecesInput
+    : String(measured.pieces);
+  const weightDisplayValue = weightInput.trim()
+    ? weightInput
+    : formatCeilFixed(measured.grossWeightKg, 2);
+  const volumeDisplayValue = volumeInput.trim()
+    ? volumeInput
+    : formatScaledInt(measured.volumeM3Scaled, 2);
 
   return (
     <div className="rounded-md border text-sm">
@@ -156,7 +192,7 @@ export function ReceiptSummaryPanel({
           </Label>
           <Input
             value={bubbleSplitPercentInput}
-            onChange={(e) => setBubbleSplitPercentInput(e.target.value)}
+            onChange={(e) => onBubbleSplitPercentChange(e.target.value)}
             inputMode="decimal"
             placeholder="0"
             className="h-8"
@@ -170,15 +206,23 @@ export function ReceiptSummaryPanel({
           <Label className="text-xs text-muted-foreground">
             {t('fields.pieces')}
           </Label>
-          <Input value={String(measured.pieces)} readOnly className="h-8" />
+          <Input
+            value={piecesDisplayValue}
+            onChange={(e) => onPiecesChange(e.target.value)}
+            inputMode="numeric"
+            placeholder={String(measured.pieces)}
+            className="h-8"
+          />
         </div>
         <div className="min-w-0 space-y-1">
           <Label className="text-xs text-muted-foreground">
             {t('fields.weight')}
           </Label>
           <Input
-            value={formatCeilFixed(measured.grossWeightKg, 2)}
-            readOnly
+            value={weightDisplayValue}
+            onChange={(e) => onWeightChange(e.target.value)}
+            inputMode="decimal"
+            placeholder={formatCeilFixed(measured.grossWeightKg, 2)}
             className="h-8"
           />
         </div>
@@ -187,8 +231,10 @@ export function ReceiptSummaryPanel({
             {t('fields.volume')}
           </Label>
           <Input
-            value={formatScaledInt(measured.volumeM3Scaled, 2)}
-            readOnly
+            value={volumeDisplayValue}
+            onChange={(e) => onVolumeChange(e.target.value)}
+            inputMode="decimal"
+            placeholder={formatScaledInt(measured.volumeM3Scaled, 2)}
             className="h-8"
           />
         </div>

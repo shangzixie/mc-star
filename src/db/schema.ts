@@ -249,6 +249,13 @@ export const warehouseReceipts = pgTable(
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),
     internalRemarks: text('internal_remarks'),
+    manualPieces: numeric('manual_pieces', { precision: 12, scale: 3 }),
+    manualWeightKg: numeric('manual_weight_kg', { precision: 12, scale: 3 }),
+    manualVolumeM3: numeric('manual_volume_m3', { precision: 12, scale: 3 }),
+    bubbleSplitPercent: numeric('bubble_split_percent', {
+      precision: 6,
+      scale: 2,
+    }),
     // Contact information
     shipperId: uuid('shipper_id').references(() => parties.id, {
       onDelete: 'set null',

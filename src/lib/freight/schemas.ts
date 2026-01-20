@@ -63,6 +63,10 @@ export const createWarehouseReceiptSchema = z.object({
   inboundTime: z.string().datetime().optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
+  manualPieces: z.number().optional().nullable(),
+  manualWeightKg: z.number().optional().nullable(),
+  manualVolumeM3: z.number().optional().nullable(),
+  bubbleSplitPercent: z.number().optional().nullable(),
   // Contact information
   shipperId: uuidSchema.nullable().optional(),
   bookingAgentId: uuidSchema.nullable().optional(),
