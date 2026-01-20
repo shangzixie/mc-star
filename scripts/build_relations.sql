@@ -150,8 +150,10 @@ CREATE TABLE warehouse_receipts (
     air_arrival_date_e VARCHAR(20),   -- yyyy-mm-dd
     air_operation_location VARCHAR(200),
     air_operation_node VARCHAR(30),
-    sea_carrier_route VARCHAR(200),
-    sea_vessel_voyage VARCHAR(200),
+    sea_carrier VARCHAR(200),
+    sea_route VARCHAR(200),
+    sea_vessel_name VARCHAR(200),
+    sea_voyage VARCHAR(200),
     sea_etd_e VARCHAR(20),            -- yyyy-mm-dd
     sea_eta_e VARCHAR(20),            -- yyyy-mm-dd
 

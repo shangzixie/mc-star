@@ -296,8 +296,10 @@ export const warehouseReceipts = pgTable(
     airArrivalDateE: varchar('air_arrival_date_e', { length: 20 }), // yyyy-mm-dd
     airOperationLocation: varchar('air_operation_location', { length: 200 }),
     airOperationNode: varchar('air_operation_node', { length: 30 }),
-    seaCarrierRoute: varchar('sea_carrier_route', { length: 200 }),
-    seaVesselVoyage: varchar('sea_vessel_voyage', { length: 200 }),
+    seaCarrier: varchar('sea_carrier', { length: 200 }),
+    seaRoute: varchar('sea_route', { length: 200 }),
+    seaVesselName: varchar('sea_vessel_name', { length: 200 }),
+    seaVoyage: varchar('sea_voyage', { length: 200 }),
     seaEtdE: varchar('sea_etd_e', { length: 20 }), // yyyy-mm-dd
     seaEtaE: varchar('sea_eta_e', { length: 20 }), // yyyy-mm-dd
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

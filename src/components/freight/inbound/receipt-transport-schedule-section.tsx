@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  AirlineCombobox,
+  OceanCarrierCombobox,
+} from '@/components/freight/shared/carrier-combobox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,7 +15,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AIR_OPERATION_NODES } from '@/lib/freight/local-receipt-transport-schedule';
+import { AlertCircle, Calendar } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
 export function ReceiptTransportScheduleSection({
@@ -22,16 +29,41 @@ export function ReceiptTransportScheduleSection({
 }) {
   const t = useTranslations('Dashboard.freight.inbound.transportSchedule');
 
+  // 验证：航班日期 < 到达日期
+  const airDateValidation = useMemo(() => {
+    const flightDate = form.watch('airFlightDate');
+    const arrivalDate = form.watch('airArrivalDateE');
+    if (flightDate && arrivalDate && flightDate > arrivalDate) {
+      return t('air.validation.dateOrder');
+    }
+    return null;
+  }, [form.watch('airFlightDate'), form.watch('airArrivalDateE'), t]);
+
+  // 验证：离港日期 < 到港日期
+  const seaDateValidation = useMemo(() => {
+    const etd = form.watch('seaEtdE');
+    const eta = form.watch('seaEtaE');
+    if (etd && eta && etd > eta) {
+      return t('sea.validation.dateOrder');
+    }
+    return null;
+  }, [form.watch('seaEtdE'), form.watch('seaEtaE'), t]);
+
   if (transportType === 'AIR_FREIGHT') {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* 航空公司 / 航班 */}
         <div className="space-y-2">
           <Label>{t('air.fields.carrierAndFlight')}</Label>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_18px_1fr] sm:items-center">
-            <Input
+            <AirlineCombobox
+              value={form.watch('airCarrier') ?? undefined}
+              onValueChange={(value) =>
+                form.setValue('airCarrier', value ?? '', {
+                  shouldDirty: true,
+                })
+              }
               placeholder={t('air.placeholders.carrier')}
-              {...form.register('airCarrier')}
             />
             <div className="hidden text-center text-muted-foreground sm:block">
               /
@@ -43,27 +75,47 @@ export function ReceiptTransportScheduleSection({
           </div>
         </div>
 
-        {/* 航班日期(E) */}
-        <div className="space-y-2">
-          <Label htmlFor="airFlightDate">{t('air.fields.flightDateE')}</Label>
-          <Input
-            id="airFlightDate"
-            type="date"
-            {...form.register('airFlightDate')}
-          />
+        {/* 航班日期 & 到达日期 */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label
+              htmlFor="airFlightDate"
+              className="flex items-center gap-1.5"
+            >
+              <Calendar className="size-4 text-blue-500" />
+              {t('air.fields.flightDateE')}
+            </Label>
+            <Input
+              id="airFlightDate"
+              type="date"
+              {...form.register('airFlightDate')}
+              className="text-base"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="airArrivalDateE"
+              className="flex items-center gap-1.5"
+            >
+              <Calendar className="size-4 text-green-500" />
+              {t('air.fields.arrivalDateE')}
+            </Label>
+            <Input
+              id="airArrivalDateE"
+              type="date"
+              {...form.register('airArrivalDateE')}
+              className="text-base"
+            />
+          </div>
         </div>
 
-        {/* 到达日期(E) */}
-        <div className="space-y-2">
-          <Label htmlFor="airArrivalDateE">
-            {t('air.fields.arrivalDateE')}
-          </Label>
-          <Input
-            id="airArrivalDateE"
-            type="date"
-            {...form.register('airArrivalDateE')}
-          />
-        </div>
+        {/* 日期验证提示 */}
+        {airDateValidation && (
+          <Alert variant="destructive" className="py-3">
+            <AlertCircle className="size-4" />
+            <AlertDescription>{airDateValidation}</AlertDescription>
+          </Alert>
+        )}
 
         {/* 操作地点 */}
         <div className="space-y-2">
@@ -106,42 +158,86 @@ export function ReceiptTransportScheduleSection({
 
   if (transportType === 'SEA_FCL' || transportType === 'SEA_LCL') {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* 承运人 / 航线 */}
-        <div className="space-y-2">
-          <Label htmlFor="seaCarrierRoute">
-            {t('sea.fields.carrierRoute')}
-          </Label>
-          <Input
-            id="seaCarrierRoute"
-            placeholder={t('sea.placeholders.carrierRoute')}
-            {...form.register('seaCarrierRoute')}
-          />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="seaCarrier">{t('sea.fields.carrier')}</Label>
+            <OceanCarrierCombobox
+              value={form.watch('seaCarrier') ?? undefined}
+              onValueChange={(value) =>
+                form.setValue('seaCarrier', value ?? '', {
+                  shouldDirty: true,
+                })
+              }
+              placeholder={t('sea.placeholders.carrier')}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="seaRoute">{t('sea.fields.route')}</Label>
+            <Input
+              id="seaRoute"
+              placeholder={t('sea.placeholders.route')}
+              {...form.register('seaRoute')}
+            />
+          </div>
         </div>
 
         {/* 船名 / 航次 */}
-        <div className="space-y-2">
-          <Label htmlFor="seaVesselVoyage">
-            {t('sea.fields.vesselVoyage')}
-          </Label>
-          <Input
-            id="seaVesselVoyage"
-            placeholder={t('sea.placeholders.vesselVoyage')}
-            {...form.register('seaVesselVoyage')}
-          />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="seaVesselName">{t('sea.fields.vesselName')}</Label>
+            <Input
+              id="seaVesselName"
+              placeholder={t('sea.placeholders.vesselName')}
+              {...form.register('seaVesselName')}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="seaVoyage">{t('sea.fields.voyage')}</Label>
+            <Input
+              id="seaVoyage"
+              placeholder={t('sea.placeholders.voyage')}
+              {...form.register('seaVoyage')}
+            />
+          </div>
         </div>
 
-        {/* 离港日期(E) */}
-        <div className="space-y-2">
-          <Label htmlFor="seaEtdE">{t('sea.fields.etdE')}</Label>
-          <Input id="seaEtdE" type="date" {...form.register('seaEtdE')} />
+        {/* 离港日期(E) & 到港日期(E) */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="seaEtdE" className="flex items-center gap-1.5">
+              <Calendar className="size-4 text-blue-500" />
+              {t('sea.fields.etdE')}
+            </Label>
+            <Input
+              id="seaEtdE"
+              type="date"
+              {...form.register('seaEtdE')}
+              className="text-base"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="seaEtaE" className="flex items-center gap-1.5">
+              <Calendar className="size-4 text-green-500" />
+              {t('sea.fields.etaE')}
+            </Label>
+            <Input
+              id="seaEtaE"
+              type="date"
+              {...form.register('seaEtaE')}
+              className="text-base"
+            />
+          </div>
         </div>
 
-        {/* 到港日期(E) */}
-        <div className="space-y-2">
-          <Label htmlFor="seaEtaE">{t('sea.fields.etaE')}</Label>
-          <Input id="seaEtaE" type="date" {...form.register('seaEtaE')} />
-        </div>
+        {/* 日期验证提示 */}
+        {seaDateValidation && (
+          <Alert variant="destructive" className="py-3">
+            <AlertCircle className="size-4" />
+            <AlertDescription>{seaDateValidation}</AlertDescription>
+          </Alert>
+        )}
       </div>
     );
   }

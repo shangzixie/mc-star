@@ -24,8 +24,10 @@ export const receiptTransportScheduleSchema = z
     airOperationNode: z.enum(AIR_OPERATION_NODES).optional(),
 
     // Sea freight
-    seaCarrierRoute: z.string().max(200).optional(),
-    seaVesselVoyage: z.string().max(200).optional(),
+    seaCarrier: z.string().max(200).optional(),
+    seaRoute: z.string().max(200).optional(),
+    seaVesselName: z.string().max(200).optional(),
+    seaVoyage: z.string().max(200).optional(),
     seaEtdE: z.string().max(20).optional(), // yyyy-mm-dd
     seaEtaE: z.string().max(20).optional(), // yyyy-mm-dd
   })
@@ -53,8 +55,10 @@ export function normalizeReceiptTransportSchedule(
     airOperationLocation: v.airOperationLocation ?? '',
     airOperationNode: (v.airOperationNode ?? undefined) as any,
 
-    seaCarrierRoute: v.seaCarrierRoute ?? '',
-    seaVesselVoyage: v.seaVesselVoyage ?? '',
+    seaCarrier: v.seaCarrier ?? '',
+    seaRoute: v.seaRoute ?? '',
+    seaVesselName: v.seaVesselName ?? '',
+    seaVoyage: v.seaVoyage ?? '',
     seaEtdE: v.seaEtdE ?? '',
     seaEtaE: v.seaEtaE ?? '',
   };
@@ -73,8 +77,10 @@ export function isSameReceiptTransportSchedule(
     na.airArrivalDateE === nb.airArrivalDateE &&
     na.airOperationLocation === nb.airOperationLocation &&
     (na.airOperationNode ?? '') === (nb.airOperationNode ?? '') &&
-    na.seaCarrierRoute === nb.seaCarrierRoute &&
-    na.seaVesselVoyage === nb.seaVesselVoyage &&
+    na.seaCarrier === nb.seaCarrier &&
+    na.seaRoute === nb.seaRoute &&
+    na.seaVesselName === nb.seaVesselName &&
+    na.seaVoyage === nb.seaVoyage &&
     na.seaEtdE === nb.seaEtdE &&
     na.seaEtaE === nb.seaEtaE
   );

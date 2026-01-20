@@ -705,6 +705,9 @@
               "operationLocation": "Enter operation location",
               "operationNode": "Select operation node"
             },
+            "validation": {
+              "dateOrder": "Flight date must be earlier than arrival date"
+            },
             "operationNodes": {
               "SPACE_BOOKED": "Space Booked",
               "PICKING_UP_GOODS": "Picking up goods",
@@ -719,14 +722,21 @@
           "sea": {
             "title": "Vessel schedule",
             "fields": {
-              "carrierRoute": "Carrier / Route",
-              "vesselVoyage": "Vessel / Voyage",
+              "carrier": "Carrier",
+              "route": "Route",
+              "vesselName": "Vessel",
+              "voyage": "Voyage",
               "etdE": "ETD (E)",
               "etaE": "ETA (E)"
             },
             "placeholders": {
-              "carrierRoute": "Carrier / Route",
-              "vesselVoyage": "Vessel / Voyage"
+              "carrier": "Select carrier",
+              "route": "Enter route",
+              "vesselName": "Enter vessel name",
+              "voyage": "Enter voyage"
+            },
+            "validation": {
+              "dateOrder": "Departure date must be earlier than arrival date"
             }
           }
         },

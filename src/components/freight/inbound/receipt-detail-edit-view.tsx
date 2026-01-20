@@ -106,8 +106,10 @@ const receiptFormSchema = z.object({
   airArrivalDateE: z.string().max(20).optional(),
   airOperationLocation: z.string().max(200).optional(),
   airOperationNode: z.enum(AIR_OPERATION_NODES).optional(),
-  seaCarrierRoute: z.string().max(200).optional(),
-  seaVesselVoyage: z.string().max(200).optional(),
+  seaCarrier: z.string().max(200).optional(),
+  seaRoute: z.string().max(200).optional(),
+  seaVesselName: z.string().max(200).optional(),
+  seaVoyage: z.string().max(200).optional(),
   seaEtdE: z.string().max(20).optional(),
   seaEtaE: z.string().max(20).optional(),
   // Employee assignments
@@ -204,8 +206,10 @@ export function ReceiptDetailEditView({
       airArrivalDateE: receipt.airArrivalDateE ?? '',
       airOperationLocation: receipt.airOperationLocation ?? '',
       airOperationNode: defaultAirOperationNode,
-      seaCarrierRoute: receipt.seaCarrierRoute ?? '',
-      seaVesselVoyage: receipt.seaVesselVoyage ?? '',
+      seaCarrier: receipt.seaCarrier ?? '',
+      seaRoute: receipt.seaRoute ?? '',
+      seaVesselName: receipt.seaVesselName ?? '',
+      seaVoyage: receipt.seaVoyage ?? '',
       seaEtdE: receipt.seaEtdE ?? '',
       seaEtaE: receipt.seaEtaE ?? '',
       // Employee assignments (stored in DB)
@@ -464,16 +468,28 @@ export function ReceiptDetailEditView({
         payload.airOperationNode = nextAirOperationNode || null;
       }
 
-      const nextSeaCarrierRoute = (data.seaCarrierRoute ?? '').trim();
-      const prevSeaCarrierRoute = (receipt.seaCarrierRoute ?? '').trim();
-      if (nextSeaCarrierRoute !== prevSeaCarrierRoute) {
-        payload.seaCarrierRoute = nextSeaCarrierRoute || null;
+      const nextSeaCarrier = (data.seaCarrier ?? '').trim();
+      const prevSeaCarrier = (receipt.seaCarrier ?? '').trim();
+      if (nextSeaCarrier !== prevSeaCarrier) {
+        payload.seaCarrier = nextSeaCarrier || null;
       }
 
-      const nextSeaVesselVoyage = (data.seaVesselVoyage ?? '').trim();
-      const prevSeaVesselVoyage = (receipt.seaVesselVoyage ?? '').trim();
-      if (nextSeaVesselVoyage !== prevSeaVesselVoyage) {
-        payload.seaVesselVoyage = nextSeaVesselVoyage || null;
+      const nextSeaRoute = (data.seaRoute ?? '').trim();
+      const prevSeaRoute = (receipt.seaRoute ?? '').trim();
+      if (nextSeaRoute !== prevSeaRoute) {
+        payload.seaRoute = nextSeaRoute || null;
+      }
+
+      const nextSeaVesselName = (data.seaVesselName ?? '').trim();
+      const prevSeaVesselName = (receipt.seaVesselName ?? '').trim();
+      if (nextSeaVesselName !== prevSeaVesselName) {
+        payload.seaVesselName = nextSeaVesselName || null;
+      }
+
+      const nextSeaVoyage = (data.seaVoyage ?? '').trim();
+      const prevSeaVoyage = (receipt.seaVoyage ?? '').trim();
+      if (nextSeaVoyage !== prevSeaVoyage) {
+        payload.seaVoyage = nextSeaVoyage || null;
       }
 
       const nextSeaEtdE = (data.seaEtdE ?? '').trim();

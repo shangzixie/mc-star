@@ -705,6 +705,9 @@
               "operationLocation": "请输入操作地点",
               "operationNode": "请选择操作节点"
             },
+            "validation": {
+              "dateOrder": "航班日期必须早于到达日期"
+            },
             "operationNodes": {
               "SPACE_BOOKED": "已订舱",
               "PICKING_UP_GOODS": "提货中",
@@ -719,14 +722,21 @@
           "sea": {
             "title": "船期",
             "fields": {
-              "carrierRoute": "承运人 / 航线",
-              "vesselVoyage": "船名 / 航次",
+              "carrier": "承运人",
+              "route": "航线",
+              "vesselName": "船名",
+              "voyage": "航次",
               "etdE": "离港日期(E)",
               "etaE": "到港日期(E)"
             },
             "placeholders": {
-              "carrierRoute": "承运人 / 航线",
-              "vesselVoyage": "船名 / 航次"
+              "carrier": "请选择承运人",
+              "route": "请输入航线",
+              "vesselName": "请输入船名",
+              "voyage": "请输入航次"
+            },
+            "validation": {
+              "dateOrder": "离港日期必须早于到港日期"
             }
           }
         },

@@ -170,8 +170,10 @@ export async function updateWarehouseReceipt(
     airArrivalDateE?: string | null;
     airOperationLocation?: string | null;
     airOperationNode?: string | null;
-    seaCarrierRoute?: string | null;
-    seaVesselVoyage?: string | null;
+    seaCarrier?: string | null;
+    seaRoute?: string | null;
+    seaVesselName?: string | null;
+    seaVoyage?: string | null;
     seaEtdE?: string | null;
     seaEtaE?: string | null;
   }

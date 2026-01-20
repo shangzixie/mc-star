@@ -78,8 +78,10 @@ export const createWarehouseReceiptSchema = z.object({
   airArrivalDateE: z.string().max(20).nullable().optional(),
   airOperationLocation: z.string().max(200).nullable().optional(),
   airOperationNode: z.string().max(30).nullable().optional(),
-  seaCarrierRoute: z.string().max(200).nullable().optional(),
-  seaVesselVoyage: z.string().max(200).nullable().optional(),
+  seaCarrier: z.string().max(200).nullable().optional(),
+  seaRoute: z.string().max(200).nullable().optional(),
+  seaVesselName: z.string().max(200).nullable().optional(),
+  seaVoyage: z.string().max(200).nullable().optional(),
   seaEtdE: z.string().max(20).nullable().optional(),
   seaEtaE: z.string().max(20).nullable().optional(),
 });
