@@ -34,10 +34,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useFreightWarehouseReceipts } from '@/hooks/freight/use-freight-warehouse-receipts';
+import {
+  useFreightWarehouseReceipts,
+  useUpdateFreightWarehouseReceipt,
+} from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type { FreightWarehouseReceiptWithRelations } from '@/lib/freight/api-types';
-import { RECEIPT_STATUSES } from '@/lib/freight/constants';
+import {
+  RECEIPT_STATUSES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
+} from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
 import type {
   ColumnDef,
@@ -60,9 +66,10 @@ import {
   parseAsString,
   useQueryStates,
 } from 'nuqs';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FloatingActionButton } from './floating-action-button';
 import { ReceiptStatusBadge } from './receipt-status-badge';
+import { toast } from 'sonner';
 
 function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
   return (
@@ -73,6 +80,62 @@ function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
         </TableCell>
       ))}
     </TableRow>
+  );
+}
+
+function TransportTypeCell({
+  receipt,
+  successLabel,
+  placeholder,
+  getLabel,
+}: {
+  receipt: FreightWarehouseReceiptWithRelations;
+  successLabel: string;
+  placeholder: string;
+  getLabel: (value: string) => React.ReactNode;
+}) {
+  const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
+  const [value, setValue] = useState(receipt.transportType ?? '');
+
+  useEffect(() => {
+    setValue(receipt.transportType ?? '');
+  }, [receipt.transportType]);
+
+  const handleChange = async (next: string) => {
+    if (next === value) return;
+    const prev = value;
+    setValue(next);
+    try {
+      await updateMutation.mutateAsync({ transportType: next });
+      toast.success(successLabel);
+    } catch (error) {
+      setValue(prev);
+      toast.error(getFreightApiErrorMessage(error));
+    }
+  };
+
+  return (
+    <Select
+      value={value}
+      onValueChange={handleChange}
+      disabled={updateMutation.isPending}
+    >
+      <SelectTrigger
+        size="sm"
+        className="h-8 w-[112px]"
+        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent align="start">
+        {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+          <SelectItem key={tt} value={tt}>
+            {getLabel(tt)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -229,12 +292,33 @@ export function ReceiptListView({
         ),
         cell: ({ row }) => {
           const receipt = row.original;
+          const getLabel = (value: string) => {
+            const text = t(`transportType.options.${value}` as any);
+            const colorClass =
+              value === 'AIR_FREIGHT'
+                ? 'text-sky-600'
+                : value === 'SEA_FCL'
+                  ? 'text-emerald-600'
+                  : value === 'SEA_LCL'
+                    ? 'text-indigo-600'
+                    : value === 'FBA_AIR'
+                      ? 'text-cyan-600'
+                      : value === 'FBA_SEA'
+                        ? 'text-teal-600'
+                        : value === 'BULK_CARGO'
+                          ? 'text-amber-600'
+                          : 'text-muted-foreground';
+            return (
+              <span className={`font-medium ${colorClass}`}>{text}</span>
+            );
+          };
           return (
-            <span className="text-muted-foreground max-w-[140px] truncate block">
-              {receipt.transportType
-                ? t(`transportType.options.${receipt.transportType}` as any)
-                : '-'}
-            </span>
+            <TransportTypeCell
+              receipt={receipt}
+              successLabel={t('receiptActions.updateSuccess')}
+              placeholder={t('transportType.placeholder')}
+              getLabel={getLabel}
+            />
           );
         },
         meta: { label: t('receiptList.columns.transportType') },

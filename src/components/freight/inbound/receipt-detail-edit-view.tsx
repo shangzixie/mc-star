@@ -68,7 +68,10 @@ import type {
   FreightInventoryItem,
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
-import { WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES } from '@/lib/freight/constants';
+import {
+  WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
+  WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
+} from '@/lib/freight/constants';
 import { AIR_OPERATION_NODES } from '@/lib/freight/local-receipt-transport-schedule';
 import {
   ceilToScaledInt,
@@ -94,6 +97,7 @@ import { z } from 'zod';
 
 const receiptFormSchema = z.object({
   customerId: z.string().optional(),
+  transportType: z.enum(WAREHOUSE_RECEIPT_TRANSPORT_TYPES).optional(),
   customsDeclarationType: z.string().optional(),
   mblNo: z.string().max(50).optional(),
   soNo: z.string().max(50).optional(),
@@ -195,6 +199,7 @@ export function ReceiptDetailEditView({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
       customerId: receipt.customerId ?? '',
+      transportType: receipt.transportType ?? undefined,
       customsDeclarationType: receipt.customsDeclarationType ?? '',
       mblNo: '',
       soNo: '',
@@ -318,12 +323,19 @@ export function ReceiptDetailEditView({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
+  const transportTypeValue = form.watch('transportType') ?? null;
+
   const handleSave = async (data: ReceiptFormData) => {
     try {
       const payload: Record<string, any> = {};
 
       if (data.customerId !== (receipt.customerId ?? '')) {
         payload.customerId = data.customerId || undefined;
+      }
+      const nextTransportType = (data.transportType ?? '').trim();
+      const prevTransportType = (receipt.transportType ?? '').trim();
+      if (nextTransportType && nextTransportType !== prevTransportType) {
+        payload.transportType = nextTransportType;
       }
       if (
         data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')
@@ -728,14 +740,26 @@ export function ReceiptDetailEditView({
               />
             </div>
 
-            {/* 运输类型（创建时已确定，仅展示） */}
+            {/* 运输类型 */}
             <div className="space-y-2">
               <Label className="text-sm">{t('transportType.label')}</Label>
-              <div className="text-sm text-muted-foreground">
-                {receipt.transportType
-                  ? t(`transportType.options.${receipt.transportType}` as any)
-                  : '-'}
-              </div>
+              <Select
+                value={form.watch('transportType') ?? undefined}
+                onValueChange={(value) =>
+                  form.setValue('transportType', value, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger id="transportType">
+                  <SelectValue placeholder={t('transportType.placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+                    <SelectItem key={tt} value={tt}>
+                      {t(`transportType.options.${tt}` as any)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* 报关类型 */}
@@ -771,14 +795,14 @@ export function ReceiptDetailEditView({
         {/* 中间：航班/船期（随保存写入数据库） */}
         <FreightSection
           title={
-            receipt.transportType === 'AIR_FREIGHT'
+            transportTypeValue === 'AIR_FREIGHT'
               ? t('transportSchedule.air.title')
               : t('transportSchedule.sea.title')
           }
           className="min-w-0"
         >
           <ReceiptTransportScheduleSection
-            transportType={receipt.transportType ?? null}
+            transportType={transportTypeValue}
             form={form as any}
           />
         </FreightSection>
@@ -788,7 +812,7 @@ export function ReceiptDetailEditView({
           <FreightSection title={tSummaryPanel('title')}>
             <ReceiptSummaryPanel
               items={items}
-              transportType={receipt.transportType ?? null}
+              transportType={transportTypeValue}
             />
           </FreightSection>
 

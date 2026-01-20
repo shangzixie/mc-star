@@ -38,6 +38,9 @@ export function PortCombobox({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('A'); // Default to 'A'
+  const [portCache, setPortCache] = useState<Record<string, TransportNode>>(
+    {}
+  );
 
   // Debounce search query
   useEffect(() => {
@@ -50,11 +53,22 @@ export function PortCombobox({
 
   const { data: ports = [], isLoading } = useFreightPorts(debouncedQuery);
 
+  useEffect(() => {
+    if (ports.length === 0) return;
+    setPortCache((prev) => {
+      const next = { ...prev };
+      for (const port of ports) {
+        next[port.id] = port;
+      }
+      return next;
+    });
+  }, [ports]);
+
   // Find selected port to display its label
   const selectedPort = useMemo(() => {
     if (!value) return null;
-    return ports.find((p: TransportNode) => p.id === value) ?? null;
-  }, [value, ports]);
+    return portCache[value] ?? ports.find((p) => p.id === value) ?? null;
+  }, [value, portCache, ports]);
 
   const getPortDisplayName = (port: TransportNode) => {
     return port.nameCn || port.nameEn || port.unLocode || port.id;
@@ -108,6 +122,10 @@ export function PortCombobox({
                     value={port.id}
                     onSelect={() => {
                       onValueChange(port.id === value ? undefined : port.id);
+                      setPortCache((prev) => ({
+                        ...prev,
+                        [port.id]: port,
+                      }));
                       setOpen(false);
                       setSearchQuery('');
                     }}
