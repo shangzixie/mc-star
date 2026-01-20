@@ -38,9 +38,7 @@ export function PortCombobox({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('A'); // Default to 'A'
-  const [portCache, setPortCache] = useState<Record<string, TransportNode>>(
-    {}
-  );
+  const [portCache, setPortCache] = useState<Record<string, TransportNode>>({});
 
   // Debounce search query
   useEffect(() => {

@@ -1244,9 +1244,9 @@
             "inventoryEmpty": "暂无库存条目",
             "qtyHint": "允许范围：{min} - {max}",
             "fields": {
-            "inventorySearch": "查找库存条目",
-            "inventorySearchPlaceholder": "搜索品名 / 库位...",
-            "inventoryItemId": "库存条目ID",
+              "inventorySearch": "查找库存条目",
+              "inventorySearchPlaceholder": "搜索品名 / 库位...",
+              "inventoryItemId": "库存条目ID",
               "inventoryItemIdHint": "提示：点击上方条目可自动填入 ID。",
               "allocatedQty": "分配数量",
               "pickedQty": "拣货数量",

@@ -241,10 +241,22 @@ export async function POST(request: Request) {
         inboundTime: body.inboundTime ? new Date(body.inboundTime) : undefined,
         remarks: body.remarks,
         internalRemarks: body.internalRemarks,
-        manualPieces: body.manualPieces,
-        manualWeightKg: body.manualWeightKg,
-        manualVolumeM3: body.manualVolumeM3,
-        bubbleSplitPercent: body.bubbleSplitPercent,
+        manualPieces:
+          body.manualPieces != null
+            ? `${body.manualPieces}`
+            : body.manualPieces,
+        manualWeightKg:
+          body.manualWeightKg != null
+            ? `${body.manualWeightKg}`
+            : body.manualWeightKg,
+        manualVolumeM3:
+          body.manualVolumeM3 != null
+            ? `${body.manualVolumeM3}`
+            : body.manualVolumeM3,
+        bubbleSplitPercent:
+          body.bubbleSplitPercent != null
+            ? `${body.bubbleSplitPercent}`
+            : body.bubbleSplitPercent,
         shipperId: body.shipperId,
         bookingAgentId: body.bookingAgentId,
         customsAgentId: body.customsAgentId,

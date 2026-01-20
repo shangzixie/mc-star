@@ -1192,11 +1192,7 @@ export function FreightSettingsPageClient() {
       const phone = getPartyPhone(p).toLowerCase();
       const email = getPartyEmail(p).toLowerCase();
       const name = (p.name ?? '').toLowerCase();
-      return (
-        name.includes(q) ||
-        phone.includes(q) ||
-        email.includes(q)
-      );
+      return name.includes(q) || phone.includes(q) || email.includes(q);
     });
   }, [customerQ, partiesQuery.data]);
   const customerParties = allParties.filter((p) =>
