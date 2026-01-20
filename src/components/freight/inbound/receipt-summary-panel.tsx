@@ -49,10 +49,12 @@ export function ReceiptSummaryPanel({
   piecesInput,
   weightInput,
   volumeInput,
+  weightConversionFactorInput,
   onBubbleSplitPercentChange,
   onPiecesChange,
   onWeightChange,
   onVolumeChange,
+  onWeightConversionFactorChange,
 }: {
   items: FreightInventoryItem[];
   transportType?: string | null;
@@ -60,10 +62,12 @@ export function ReceiptSummaryPanel({
   piecesInput: string;
   weightInput: string;
   volumeInput: string;
+  weightConversionFactorInput: string;
   onBubbleSplitPercentChange: (value: string) => void;
   onPiecesChange: (value: string) => void;
   onWeightChange: (value: string) => void;
   onVolumeChange: (value: string) => void;
+  onWeightConversionFactorChange: (value: string) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound.summaryPanel');
 
@@ -117,9 +121,14 @@ export function ReceiptSummaryPanel({
     };
   }, [items]);
 
-  const weightConversionFactor = useMemo(() => {
+  const defaultWeightConversionFactor = useMemo(() => {
     return getWeightConversionFactor(transportType);
   }, [transportType]);
+
+  const weightConversionFactor = useMemo(() => {
+    const manual = parseNumber(weightConversionFactorInput);
+    return manual != null ? manual : defaultWeightConversionFactor;
+  }, [weightConversionFactorInput, defaultWeightConversionFactor]);
 
   const bubbleSplitRatio = useMemo(() => {
     const n = parseNumber(bubbleSplitPercentInput) ?? 0;
@@ -161,6 +170,9 @@ export function ReceiptSummaryPanel({
   const volumeDisplayValue = volumeInput.trim()
     ? volumeInput
     : formatScaledInt(measured.volumeM3Scaled, 2);
+  const weightConversionFactorDisplayValue = weightConversionFactorInput.trim()
+    ? weightConversionFactorInput
+    : String(defaultWeightConversionFactor);
 
   return (
     <div className="rounded-md border text-sm">
@@ -171,8 +183,10 @@ export function ReceiptSummaryPanel({
             {t('fields.weightConversionFactor')}
           </Label>
           <Input
-            value={String(weightConversionFactor)}
-            readOnly
+            value={weightConversionFactorDisplayValue}
+            onChange={(e) => onWeightConversionFactorChange(e.target.value)}
+            inputMode="decimal"
+            placeholder={String(defaultWeightConversionFactor)}
             className="h-8"
           />
         </div>
@@ -183,7 +197,7 @@ export function ReceiptSummaryPanel({
           <Input
             value={formatCeilFixed(billingTons, 2)}
             readOnly
-            className="h-8"
+            className="h-8 shadow-inner bg-muted/50"
           />
         </div>
         <div className="min-w-0 space-y-1">
@@ -245,7 +259,7 @@ export function ReceiptSummaryPanel({
           <Input
             value={formatCeilFixed(settlementWeight, 2)}
             readOnly
-            className="h-8"
+            className="h-8 shadow-inner bg-muted/50"
           />
         </div>
       </div>

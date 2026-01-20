@@ -256,6 +256,10 @@ export const warehouseReceipts = pgTable(
       precision: 6,
       scale: 2,
     }),
+    weightConversionFactor: numeric('weight_conversion_factor', {
+      precision: 12,
+      scale: 3,
+    }),
     // Contact information
     shipperId: uuid('shipper_id').references(() => parties.id, {
       onDelete: 'set null',

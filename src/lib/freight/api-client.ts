@@ -157,6 +157,7 @@ export async function updateWarehouseReceipt(
     manualWeightKg?: number | null;
     manualVolumeM3?: number | null;
     bubbleSplitPercent?: number | null;
+    weightConversionFactor?: number | null;
     shipperId?: string | null;
     bookingAgentId?: string | null;
     customsAgentId?: string | null;

@@ -52,6 +52,7 @@ export async function GET(
         manualWeightKg: warehouseReceipts.manualWeightKg,
         manualVolumeM3: warehouseReceipts.manualVolumeM3,
         bubbleSplitPercent: warehouseReceipts.bubbleSplitPercent,
+        weightConversionFactor: warehouseReceipts.weightConversionFactor,
         shipperId: warehouseReceipts.shipperId,
         bookingAgentId: warehouseReceipts.bookingAgentId,
         customsAgentId: warehouseReceipts.customsAgentId,
@@ -165,6 +166,10 @@ export async function PATCH(
             body.bubbleSplitPercent != null
               ? `${body.bubbleSplitPercent}`
               : body.bubbleSplitPercent,
+          weightConversionFactor:
+            body.weightConversionFactor != null
+              ? `${body.weightConversionFactor}`
+              : body.weightConversionFactor,
           shipperId: body.shipperId,
           bookingAgentId: body.bookingAgentId,
           customsAgentId: body.customsAgentId,

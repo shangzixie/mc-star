@@ -265,12 +265,16 @@ export function ReceiptDetailEditView({
       bubbleSplitPercentInput: normalizeSummaryInput(
         receipt.bubbleSplitPercent
       ),
+      weightConversionFactorInput: normalizeSummaryInput(
+        receipt.weightConversionFactor
+      ),
     }),
     [
       receipt.manualPieces,
       receipt.manualWeightKg,
       receipt.manualVolumeM3,
       receipt.bubbleSplitPercent,
+      receipt.weightConversionFactor,
     ]
   );
 
@@ -286,6 +290,9 @@ export function ReceiptDetailEditView({
   const nextBubbleSplitPercent = parseSummaryInput(
     summaryInputs.bubbleSplitPercentInput
   );
+  const nextWeightConversionFactor = parseSummaryInput(
+    summaryInputs.weightConversionFactorInput
+  );
 
   const prevManualPieces = parseReceiptNumeric(receipt.manualPieces);
   const prevManualWeightKg = parseReceiptNumeric(receipt.manualWeightKg);
@@ -293,12 +300,16 @@ export function ReceiptDetailEditView({
   const prevBubbleSplitPercent = parseReceiptNumeric(
     receipt.bubbleSplitPercent
   );
+  const prevWeightConversionFactor = parseReceiptNumeric(
+    receipt.weightConversionFactor
+  );
 
   const summaryDirty =
     nextManualPieces !== prevManualPieces ||
     nextManualWeightKg !== prevManualWeightKg ||
     nextManualVolumeM3 !== prevManualVolumeM3 ||
-    nextBubbleSplitPercent !== prevBubbleSplitPercent;
+    nextBubbleSplitPercent !== prevBubbleSplitPercent ||
+    nextWeightConversionFactor !== prevWeightConversionFactor;
 
   const isDirty = form.formState.isDirty || summaryDirty;
   const isSaving =
@@ -421,6 +432,9 @@ export function ReceiptDetailEditView({
       }
       if (nextBubbleSplitPercent !== prevBubbleSplitPercent) {
         payload.bubbleSplitPercent = nextBubbleSplitPercent;
+      }
+      if (nextWeightConversionFactor !== prevWeightConversionFactor) {
+        payload.weightConversionFactor = nextWeightConversionFactor;
       }
 
       // Contact information (nullable - allow clearing)
@@ -894,6 +908,9 @@ export function ReceiptDetailEditView({
               piecesInput={summaryInputs.piecesInput}
               weightInput={summaryInputs.weightInput}
               volumeInput={summaryInputs.volumeInput}
+              weightConversionFactorInput={
+                summaryInputs.weightConversionFactorInput
+              }
               onBubbleSplitPercentChange={(value) =>
                 setSummaryInputs((prev) => ({
                   ...prev,
@@ -908,6 +925,12 @@ export function ReceiptDetailEditView({
               }
               onVolumeChange={(value) =>
                 setSummaryInputs((prev) => ({ ...prev, volumeInput: value }))
+              }
+              onWeightConversionFactorChange={(value) =>
+                setSummaryInputs((prev) => ({
+                  ...prev,
+                  weightConversionFactorInput: value,
+                }))
               }
             />
           </FreightSection>

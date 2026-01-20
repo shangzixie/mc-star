@@ -198,6 +198,7 @@ export const freightWarehouseReceiptSchema = z
     manualWeightKg: z.string().nullable().optional(),
     manualVolumeM3: z.string().nullable().optional(),
     bubbleSplitPercent: z.string().nullable().optional(),
+    weightConversionFactor: z.string().nullable().optional(),
     // Contact information
     shipperId: uuidSchema.nullable().optional(),
     bookingAgentId: uuidSchema.nullable().optional(),
