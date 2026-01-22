@@ -16,9 +16,9 @@ type DbOrTransaction =
  * Calculate the appropriate status for a warehouse receipt based on its inventory items.
  *
  * Logic:
- * - RECEIVED: All items have current_qty = initial_qty (nothing shipped)
- * - SHIPPED: All items have current_qty = 0 (everything shipped)
- * - PARTIAL: Some items shipped, some remaining
+ * - INBOUND: All items have current_qty = initial_qty (nothing shipped)
+ * - OUTBOUND: All items have current_qty = 0 (everything shipped)
+ * - VOID: Items have been voided or cancelled
  *
  * @param receiptId - UUID of the warehouse receipt
  * @param tx - Database transaction
@@ -37,15 +37,15 @@ export async function calculateReceiptStatus(
     .from(inventoryItems)
     .where(eq(inventoryItems.receiptId, receiptId));
 
-  // If no items, default to RECEIVED
+  // If no items, default to INBOUND
   if (items.length === 0) {
-    return 'RECEIVED';
+    return 'INBOUND';
   }
 
   // Check if all items are fully shipped (currentQty = 0)
   const allShipped = items.every((item) => item.currentQty === 0);
   if (allShipped) {
-    return 'SHIPPED';
+    return 'OUTBOUND';
   }
 
   // Check if all items are untouched (currentQty = initialQty)
@@ -53,11 +53,11 @@ export async function calculateReceiptStatus(
     (item) => item.currentQty === item.initialQty
   );
   if (allReceived) {
-    return 'RECEIVED';
+    return 'INBOUND';
   }
 
-  // Otherwise, it's partial
-  return 'PARTIAL';
+  // Otherwise, it's outbound (partial shipping is still considered outbound)
+  return 'OUTBOUND';
 }
 
 /**

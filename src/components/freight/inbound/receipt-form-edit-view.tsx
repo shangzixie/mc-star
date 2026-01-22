@@ -82,7 +82,7 @@ export function ReceiptFormEditView({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
       customerId: receipt.customerId ?? '',
-      status: receipt.status ?? 'RECEIVED',
+      status: receipt.status ?? 'INBOUND',
       transportType: receipt.transportType ?? '',
       customsDeclarationType: receipt.customsDeclarationType ?? '',
       inboundTime: formatDateTimeLocalValue(receipt.inboundTime),

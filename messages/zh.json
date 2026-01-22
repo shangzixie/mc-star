@@ -937,9 +937,9 @@
         "internalRemarks": "内部备注",
         "status": {
           "label": "状态",
-          "received": "已入库",
-          "partial": "部分出库",
-          "shipped": "已出库"
+          "inbound": "入库",
+          "outbound": "出库",
+          "void": "作废"
         },
         "receiptActions": {
           "edit": "编辑入库单",

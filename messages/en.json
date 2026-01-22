@@ -937,9 +937,9 @@
         "internalRemarks": "Internal Remarks",
         "status": {
           "label": "Status",
-          "received": "Received",
-          "partial": "Partial Shipped",
-          "shipped": "Shipped"
+          "inbound": "Inbound",
+          "outbound": "Outbound",
+          "void": "Void"
         },
         "receiptActions": {
           "edit": "Edit Receipt",

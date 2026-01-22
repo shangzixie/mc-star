@@ -29,7 +29,7 @@ export const SHIPMENT_STATUSES = [
 ] as const;
 export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number];
 
-export const RECEIPT_STATUSES = ['RECEIVED', 'SHIPPED', 'PARTIAL'] as const;
+export const RECEIPT_STATUSES = ['INBOUND', 'OUTBOUND', 'VOID'] as const;
 export type ReceiptStatus = (typeof RECEIPT_STATUSES)[number];
 
 export const WAREHOUSE_RECEIPT_TRANSPORT_TYPES = [

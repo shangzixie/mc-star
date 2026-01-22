@@ -59,7 +59,7 @@ export function useSidebarLinks(): NestedMenuItem[] {
       icon: <TruckIcon className="size-4 shrink-0" />,
       items: [
         {
-          title: t('freight.inbound.title'),
+          title: '总操作',
           icon: <PackagePlusIcon className="size-4 shrink-0" />,
           href: Routes.FreightInbound,
           external: false,

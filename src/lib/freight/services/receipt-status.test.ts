@@ -17,7 +17,7 @@ function createMockTx(
 }
 
 describe('calculateReceiptStatus', () => {
-  it('should return RECEIVED when all items have full inventory', async () => {
+  it('should return INBOUND when all items have full inventory', async () => {
     const tx = createMockTx([
       { initialQty: 100, currentQty: 100 },
       { initialQty: 50, currentQty: 50 },
@@ -25,10 +25,10 @@ describe('calculateReceiptStatus', () => {
     ]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'RECEIVED');
+    assert.strictEqual(status, 'INBOUND');
   });
 
-  it('should return SHIPPED when all items have zero inventory', async () => {
+  it('should return OUTBOUND when all items have zero inventory', async () => {
     const tx = createMockTx([
       { initialQty: 100, currentQty: 0 },
       { initialQty: 50, currentQty: 0 },
@@ -36,10 +36,10 @@ describe('calculateReceiptStatus', () => {
     ]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'SHIPPED');
+    assert.strictEqual(status, 'OUTBOUND');
   });
 
-  it('should return PARTIAL when some items are shipped', async () => {
+  it('should return OUTBOUND when some items are shipped', async () => {
     const tx = createMockTx([
       { initialQty: 100, currentQty: 50 }, // Partially shipped
       { initialQty: 50, currentQty: 50 }, // Not shipped
@@ -47,44 +47,44 @@ describe('calculateReceiptStatus', () => {
     ]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'PARTIAL');
+    assert.strictEqual(status, 'OUTBOUND');
   });
 
-  it('should return PARTIAL when only some items are fully shipped', async () => {
+  it('should return OUTBOUND when only some items are fully shipped', async () => {
     const tx = createMockTx([
       { initialQty: 100, currentQty: 100 }, // Not shipped
       { initialQty: 50, currentQty: 0 }, // Fully shipped
     ]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'PARTIAL');
+    assert.strictEqual(status, 'OUTBOUND');
   });
 
-  it('should return RECEIVED when receipt has no items', async () => {
+  it('should return INBOUND when receipt has no items', async () => {
     const tx = createMockTx([]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'RECEIVED');
+    assert.strictEqual(status, 'INBOUND');
   });
 
-  it('should return PARTIAL when one item is partially shipped', async () => {
+  it('should return OUTBOUND when one item is partially shipped', async () => {
     const tx = createMockTx([{ initialQty: 100, currentQty: 75 }]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'PARTIAL');
+    assert.strictEqual(status, 'OUTBOUND');
   });
 
-  it('should return SHIPPED when single item is fully shipped', async () => {
+  it('should return OUTBOUND when single item is fully shipped', async () => {
     const tx = createMockTx([{ initialQty: 100, currentQty: 0 }]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'SHIPPED');
+    assert.strictEqual(status, 'OUTBOUND');
   });
 
-  it('should return RECEIVED when single item is not shipped', async () => {
+  it('should return INBOUND when single item is not shipped', async () => {
     const tx = createMockTx([{ initialQty: 100, currentQty: 100 }]);
 
     const status = await calculateReceiptStatus('test-receipt-id', tx);
-    assert.strictEqual(status, 'RECEIVED');
+    assert.strictEqual(status, 'INBOUND');
   });
 });

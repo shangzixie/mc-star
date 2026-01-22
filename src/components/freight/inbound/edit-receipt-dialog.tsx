@@ -83,7 +83,7 @@ export function EditReceiptDialog({
       customerId: receipt.customerId ?? undefined,
       transportType: receipt.transportType ?? undefined,
       customsDeclarationType: receipt.customsDeclarationType ?? undefined,
-      status: receipt.status as 'RECEIVED' | 'SHIPPED' | 'PARTIAL',
+      status: receipt.status as 'INBOUND' | 'OUTBOUND' | 'VOID',
       inboundTime: receipt.inboundTime
         ? format(new Date(receipt.inboundTime), "yyyy-MM-dd'T'HH:mm")
         : undefined,
@@ -99,7 +99,7 @@ export function EditReceiptDialog({
       customerId: receipt.customerId ?? undefined,
       transportType: receipt.transportType ?? undefined,
       customsDeclarationType: receipt.customsDeclarationType ?? undefined,
-      status: receipt.status as 'RECEIVED' | 'SHIPPED' | 'PARTIAL',
+      status: receipt.status as 'INBOUND' | 'OUTBOUND' | 'VOID',
       inboundTime: receipt.inboundTime
         ? format(new Date(receipt.inboundTime), "yyyy-MM-dd'T'HH:mm")
         : undefined,
