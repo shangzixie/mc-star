@@ -225,6 +225,12 @@ export const freightWarehouseReceiptSchema = z
     seaVoyage: z.string().nullable().optional(),
     seaEtdE: z.string().nullable().optional(),
     seaEtaE: z.string().nullable().optional(),
+    singleBillCutoffDateSi: z.string().nullable().optional(),
+    singleBillGateClosingTime: z.string().nullable().optional(),
+    singleBillDepartureDateE: z.string().nullable().optional(),
+    singleBillArrivalDateE: z.string().nullable().optional(),
+    singleBillTransitDateE: z.string().nullable().optional(),
+    singleBillDeliveryDateE: z.string().nullable().optional(),
     createdAt: isoDateTimeSchema.nullable(),
   })
   .passthrough();

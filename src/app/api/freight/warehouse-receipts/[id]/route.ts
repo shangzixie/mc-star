@@ -79,6 +79,12 @@ export async function GET(
         seaVoyage: warehouseReceipts.seaVoyage,
         seaEtdE: warehouseReceipts.seaEtdE,
         seaEtaE: warehouseReceipts.seaEtaE,
+        singleBillCutoffDateSi: warehouseReceipts.singleBillCutoffDateSi,
+        singleBillGateClosingTime: warehouseReceipts.singleBillGateClosingTime,
+        singleBillDepartureDateE: warehouseReceipts.singleBillDepartureDateE,
+        singleBillArrivalDateE: warehouseReceipts.singleBillArrivalDateE,
+        singleBillTransitDateE: warehouseReceipts.singleBillTransitDateE,
+        singleBillDeliveryDateE: warehouseReceipts.singleBillDeliveryDateE,
         createdAt: warehouseReceipts.createdAt,
         warehouse: {
           id: warehouses.id,
@@ -239,6 +245,12 @@ export async function PATCH(
           seaVoyage: body.seaVoyage,
           seaEtdE: body.seaEtdE,
           seaEtaE: body.seaEtaE,
+          singleBillCutoffDateSi: body.singleBillCutoffDateSi,
+          singleBillGateClosingTime: body.singleBillGateClosingTime,
+          singleBillDepartureDateE: body.singleBillDepartureDateE,
+          singleBillArrivalDateE: body.singleBillArrivalDateE,
+          singleBillTransitDateE: body.singleBillTransitDateE,
+          singleBillDeliveryDateE: body.singleBillDeliveryDateE,
         })
         .where(eq(warehouseReceipts.id, receiptId))
         .returning();

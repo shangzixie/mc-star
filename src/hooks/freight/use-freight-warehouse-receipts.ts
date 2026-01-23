@@ -190,6 +190,12 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       seaVoyage?: string | null;
       seaEtdE?: string | null;
       seaEtaE?: string | null;
+      singleBillCutoffDateSi?: string | null;
+      singleBillGateClosingTime?: string | null;
+      singleBillDepartureDateE?: string | null;
+      singleBillArrivalDateE?: string | null;
+      singleBillTransitDateE?: string | null;
+      singleBillDeliveryDateE?: string | null;
     }) => {
       const { updateWarehouseReceipt } = await import(
         '@/lib/freight/api-client'

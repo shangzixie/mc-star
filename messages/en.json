@@ -686,7 +686,9 @@
         },
         "detailSections": {
           "contact": "Contact",
-          "mbl": "Master Bill of Lading (MBL)"
+          "singleBill": "Single Bill",
+          "hbl": "HBL",
+          "mbl": "MBL"
         },
         "transportSchedule": {
           "unsupported": "-",
@@ -741,7 +743,7 @@
           }
         },
         "mbl": {
-          "title": "Master Bill of Lading (MBL)",
+          "title": "MBL",
           "description": "Master Bill of Lading information",
           "portOfDestination": "Port of Destination",
           "portOfDestinationPlaceholder": "Enter port of destination",
@@ -759,6 +761,29 @@
           "saveFailed": "Failed to save MBL information",
           "empty": "No MBL information",
           "emptyHint": "Fill in the information below to create MBL"
+        },
+        "singleBill": {
+          "title": "Single Bill",
+          "fields": {
+            "cutoffDateSi": "Cut-off date (SI)",
+            "gateClosingTime": "Gate closing date (SI)",
+            "departureDateE": "Departure date (E)",
+            "arrivalDateE": "Arrival date (E)",
+            "transitDateE": "Estimated transit date (E)",
+            "deliveryDateE": "Estimated delivery date (E)"
+          }
+        },
+        "hbl": {
+          "title": "HBL",
+          "description": "House Bill of Lading (HBL) information",
+          "portOfDestination": "Port of Destination",
+          "portOfDestinationPlaceholder": "Enter port of destination",
+          "portOfDischarge": "Port of Discharge",
+          "portOfDischargePlaceholder": "Enter port of discharge",
+          "portOfLoading": "Port of Loading",
+          "portOfLoadingPlaceholder": "Enter port of loading",
+          "placeOfReceipt": "Place of Receipt",
+          "placeOfReceiptPlaceholder": "Enter place of receipt"
         },
         "receiptList": {
           "title": "Receipt List",

@@ -686,7 +686,9 @@
         },
         "detailSections": {
           "contact": "联系资料",
-          "mbl": "提单信息 (MBL)"
+          "singleBill": "单套提单",
+          "hbl": "HBL",
+          "mbl": "MBL"
         },
         "transportSchedule": {
           "unsupported": "-",
@@ -741,7 +743,7 @@
           }
         },
         "mbl": {
-          "title": "提单信息 (MBL)",
+          "title": "MBL",
           "description": "Master Bill of Lading 主提单信息",
           "portOfDestination": "目的港",
           "portOfDestinationPlaceholder": "请输入目的港",
@@ -759,6 +761,29 @@
           "saveFailed": "保存提单信息失败",
           "empty": "暂无提单信息",
           "emptyHint": "填写以下信息以创建提单"
+        },
+        "singleBill": {
+          "title": "单套提单",
+          "fields": {
+            "cutoffDateSi": "截单日期 (SI)",
+            "gateClosingTime": "截关时间",
+            "departureDateE": "离港日期 (E)",
+            "arrivalDateE": "到港日期 (E)",
+            "transitDateE": "预计转运日期 (E)",
+            "deliveryDateE": "预计派送日期 (E)"
+          }
+        },
+        "hbl": {
+          "title": "HBL",
+          "description": "House Bill of Lading (HBL) 信息",
+          "portOfDestination": "目的港",
+          "portOfDestinationPlaceholder": "请输入目的港",
+          "portOfDischarge": "卸货港",
+          "portOfDischargePlaceholder": "请输入卸货港",
+          "portOfLoading": "起运港",
+          "portOfLoadingPlaceholder": "请输入起运港",
+          "placeOfReceipt": "收货地",
+          "placeOfReceiptPlaceholder": "请输入收货地"
         },
         "receiptList": {
           "title": "总列表",

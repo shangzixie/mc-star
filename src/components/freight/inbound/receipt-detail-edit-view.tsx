@@ -103,6 +103,12 @@ const receiptFormSchema = z.object({
   mblNo: z.string().max(50).optional(),
   soNo: z.string().max(50).optional(),
   hblNo: z.string().max(50).optional(),
+  singleBillCutoffDateSi: z.string().max(20).optional(),
+  singleBillGateClosingTime: z.string().max(20).optional(),
+  singleBillDepartureDateE: z.string().max(20).optional(),
+  singleBillArrivalDateE: z.string().max(20).optional(),
+  singleBillTransitDateE: z.string().max(20).optional(),
+  singleBillDeliveryDateE: z.string().max(20).optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
   // Transport schedule (stored in DB)
@@ -136,6 +142,10 @@ const receiptFormSchema = z.object({
   portOfDischargeId: z.string().optional(),
   portOfLoadingId: z.string().optional(),
   placeOfReceiptId: z.string().optional(),
+  hblPortOfDestinationId: z.string().optional(),
+  hblPortOfDischargeId: z.string().optional(),
+  hblPortOfLoadingId: z.string().optional(),
+  hblPlaceOfReceiptId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -177,6 +187,8 @@ export function ReceiptDetailEditView({
     'Dashboard.freight.inbound.summaryPanel'
   );
   const tMbl = useTranslations('Dashboard.freight.inbound.mbl');
+  const tSingleBill = useTranslations('Dashboard.freight.inbound.singleBill');
+  const tHbl = useTranslations('Dashboard.freight.inbound.hbl');
   const tCommon = useTranslations('Common');
   const tCustomerFields = useTranslations(
     'Dashboard.freight.settings.customers.fields'
@@ -227,6 +239,12 @@ export function ReceiptDetailEditView({
       mblNo: '',
       soNo: '',
       hblNo: '',
+      singleBillCutoffDateSi: receipt.singleBillCutoffDateSi ?? '',
+      singleBillGateClosingTime: receipt.singleBillGateClosingTime ?? '',
+      singleBillDepartureDateE: receipt.singleBillDepartureDateE ?? '',
+      singleBillArrivalDateE: receipt.singleBillArrivalDateE ?? '',
+      singleBillTransitDateE: receipt.singleBillTransitDateE ?? '',
+      singleBillDeliveryDateE: receipt.singleBillDeliveryDateE ?? '',
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
       // Transport schedule (stored in DB)
@@ -260,6 +278,10 @@ export function ReceiptDetailEditView({
       portOfDischargeId: '',
       portOfLoadingId: '',
       placeOfReceiptId: '',
+      hblPortOfDestinationId: '',
+      hblPortOfDischargeId: '',
+      hblPortOfLoadingId: '',
+      hblPlaceOfReceiptId: '',
     },
   });
 
@@ -342,12 +364,31 @@ export function ReceiptDetailEditView({
   }, [mblQuery.data?.soNo, form]);
 
   useEffect(() => {
-    const nextHblNo = hblQuery.data?.hblNo ?? '';
-    const current = form.getValues('hblNo') ?? '';
-    if (nextHblNo !== current) {
-      form.setValue('hblNo', nextHblNo, { shouldDirty: false });
+    if (hblQuery.data) {
+      const updates: Record<string, string> = {};
+      const trackedFields: Array<
+        [keyof ReceiptFormData, string | null | undefined]
+      > = [
+        ['hblNo', hblQuery.data.hblNo ?? ''],
+        ['hblPortOfDestinationId', hblQuery.data.portOfDestinationId ?? ''],
+        ['hblPortOfDischargeId', hblQuery.data.portOfDischargeId ?? ''],
+        ['hblPortOfLoadingId', hblQuery.data.portOfLoadingId ?? ''],
+        ['hblPlaceOfReceiptId', hblQuery.data.placeOfReceiptId ?? ''],
+      ];
+
+      trackedFields.forEach(([field, nextValue]) => {
+        const currentValue = (form.getValues(field) ?? '').trim();
+        const nextTrimmed = (nextValue ?? '').trim();
+        if (currentValue !== nextTrimmed) {
+          updates[field] = nextTrimmed;
+        }
+      });
+
+      Object.entries(updates).forEach(([key, value]) => {
+        form.setValue(key as any, value, { shouldDirty: false });
+      });
     }
-  }, [hblQuery.data?.hblNo, form]);
+  }, [hblQuery.data, form]);
 
   // Sync MBL port information from query
   useEffect(() => {
@@ -462,6 +503,67 @@ export function ReceiptDetailEditView({
         payload.customsAgentId = nextCustomsAgentId || null;
       }
 
+      const nextSingleBillCutoffDateSi = (
+        data.singleBillCutoffDateSi ?? ''
+      ).trim();
+      const prevSingleBillCutoffDateSi = (
+        receipt.singleBillCutoffDateSi ?? ''
+      ).trim();
+      if (nextSingleBillCutoffDateSi !== prevSingleBillCutoffDateSi) {
+        payload.singleBillCutoffDateSi = nextSingleBillCutoffDateSi || null;
+      }
+
+      const nextSingleBillGateClosingTime = (
+        data.singleBillGateClosingTime ?? ''
+      ).trim();
+      const prevSingleBillGateClosingTime = (
+        receipt.singleBillGateClosingTime ?? ''
+      ).trim();
+      if (nextSingleBillGateClosingTime !== prevSingleBillGateClosingTime) {
+        payload.singleBillGateClosingTime =
+          nextSingleBillGateClosingTime || null;
+      }
+
+      const nextSingleBillDepartureDateE = (
+        data.singleBillDepartureDateE ?? ''
+      ).trim();
+      const prevSingleBillDepartureDateE = (
+        receipt.singleBillDepartureDateE ?? ''
+      ).trim();
+      if (nextSingleBillDepartureDateE !== prevSingleBillDepartureDateE) {
+        payload.singleBillDepartureDateE = nextSingleBillDepartureDateE || null;
+      }
+
+      const nextSingleBillArrivalDateE = (
+        data.singleBillArrivalDateE ?? ''
+      ).trim();
+      const prevSingleBillArrivalDateE = (
+        receipt.singleBillArrivalDateE ?? ''
+      ).trim();
+      if (nextSingleBillArrivalDateE !== prevSingleBillArrivalDateE) {
+        payload.singleBillArrivalDateE = nextSingleBillArrivalDateE || null;
+      }
+
+      const nextSingleBillTransitDateE = (
+        data.singleBillTransitDateE ?? ''
+      ).trim();
+      const prevSingleBillTransitDateE = (
+        receipt.singleBillTransitDateE ?? ''
+      ).trim();
+      if (nextSingleBillTransitDateE !== prevSingleBillTransitDateE) {
+        payload.singleBillTransitDateE = nextSingleBillTransitDateE || null;
+      }
+
+      const nextSingleBillDeliveryDateE = (
+        data.singleBillDeliveryDateE ?? ''
+      ).trim();
+      const prevSingleBillDeliveryDateE = (
+        receipt.singleBillDeliveryDateE ?? ''
+      ).trim();
+      if (nextSingleBillDeliveryDateE !== prevSingleBillDeliveryDateE) {
+        payload.singleBillDeliveryDateE = nextSingleBillDeliveryDateE || null;
+      }
+
       // Employee assignments (nullable - allow clearing)
       const nextSalesEmployeeId = (data.salesEmployeeId ?? '').trim();
       const prevSalesEmployeeId = (receipt.salesEmployeeId ?? '').trim();
@@ -534,7 +636,54 @@ export function ReceiptDetailEditView({
 
       const nextHblNo = (data.hblNo ?? '').trim();
       const prevHblNo = (hblQuery.data?.hblNo ?? '').trim();
-      const hasHblNoChange = nextHblNo !== prevHblNo;
+
+      const hblPatch: Partial<{
+        hblNo: string | null;
+        portOfDestinationId?: string;
+        portOfDischargeId?: string;
+        portOfLoadingId?: string;
+        placeOfReceiptId?: string;
+      }> = {};
+
+      if (nextHblNo !== prevHblNo) {
+        hblPatch.hblNo = nextHblNo || null;
+      }
+
+      const nextHblPortOfDestinationId = (
+        data.hblPortOfDestinationId ?? ''
+      ).trim();
+      const prevHblPortOfDestinationId = (
+        hblQuery.data?.portOfDestinationId ?? ''
+      ).trim();
+      if (nextHblPortOfDestinationId !== prevHblPortOfDestinationId) {
+        hblPatch.portOfDestinationId = nextHblPortOfDestinationId || undefined;
+      }
+
+      const nextHblPortOfDischargeId = (data.hblPortOfDischargeId ?? '').trim();
+      const prevHblPortOfDischargeId = (
+        hblQuery.data?.portOfDischargeId ?? ''
+      ).trim();
+      if (nextHblPortOfDischargeId !== prevHblPortOfDischargeId) {
+        hblPatch.portOfDischargeId = nextHblPortOfDischargeId || undefined;
+      }
+
+      const nextHblPortOfLoadingId = (data.hblPortOfLoadingId ?? '').trim();
+      const prevHblPortOfLoadingId = (
+        hblQuery.data?.portOfLoadingId ?? ''
+      ).trim();
+      if (nextHblPortOfLoadingId !== prevHblPortOfLoadingId) {
+        hblPatch.portOfLoadingId = nextHblPortOfLoadingId || undefined;
+      }
+
+      const nextHblPlaceOfReceiptId = (data.hblPlaceOfReceiptId ?? '').trim();
+      const prevHblPlaceOfReceiptId = (
+        hblQuery.data?.placeOfReceiptId ?? ''
+      ).trim();
+      if (nextHblPlaceOfReceiptId !== prevHblPlaceOfReceiptId) {
+        hblPatch.placeOfReceiptId = nextHblPlaceOfReceiptId || undefined;
+      }
+
+      const hasHblChanges = Object.keys(hblPatch).length > 0;
 
       // Transport schedule (nullable - allow clearing)
       const nextAirCarrier = (data.airCarrier ?? '').trim();
@@ -662,7 +811,7 @@ export function ReceiptDetailEditView({
       if (
         Object.keys(payload).length === 0 &&
         Object.keys(mblPatch).length === 0 &&
-        !hasHblNoChange
+        !hasHblChanges
       ) {
         toast.info('没有需要保存的更改');
         return;
@@ -711,12 +860,37 @@ export function ReceiptDetailEditView({
         }
       }
 
-      if (hasHblNoChange) {
-        const hblNo = nextHblNo || null;
+      if (hasHblChanges) {
         if (hblQuery.data) {
-          await updateHblMutation.mutateAsync({ hblNo });
-        } else if (hblNo) {
-          await createHblMutation.mutateAsync({ hblNo });
+          await updateHblMutation.mutateAsync(hblPatch);
+        } else {
+          const createPayload: Partial<{
+            hblNo?: string;
+            portOfDestinationId?: string;
+            portOfDischargeId?: string;
+            portOfLoadingId?: string;
+            placeOfReceiptId?: string;
+          }> = {};
+
+          if (typeof hblPatch.hblNo === 'string' && hblPatch.hblNo.trim()) {
+            createPayload.hblNo = hblPatch.hblNo;
+          }
+          if (hblPatch.portOfDestinationId) {
+            createPayload.portOfDestinationId = hblPatch.portOfDestinationId;
+          }
+          if (hblPatch.portOfDischargeId) {
+            createPayload.portOfDischargeId = hblPatch.portOfDischargeId;
+          }
+          if (hblPatch.portOfLoadingId) {
+            createPayload.portOfLoadingId = hblPatch.portOfLoadingId;
+          }
+          if (hblPatch.placeOfReceiptId) {
+            createPayload.placeOfReceiptId = hblPatch.placeOfReceiptId;
+          }
+
+          if (Object.keys(createPayload).length > 0) {
+            await createHblMutation.mutateAsync(createPayload);
+          }
         }
       }
 
@@ -779,7 +953,7 @@ export function ReceiptDetailEditView({
       </div>
 
       {/* 主要内容区域 */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
         {/* 左侧：基本信息表单 */}
         <FreightSection
           title={t('receipt.fields.receiptNo')}
@@ -1259,7 +1433,7 @@ export function ReceiptDetailEditView({
           <TabsTrigger value="fees">{t('detailTabs.fees')}</TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
-          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
             {/* 左侧：内部资料 */}
             <EmployeeAssignmentsSection
               salesEmployeeId={form.watch('salesEmployeeId')}
@@ -1372,82 +1546,227 @@ export function ReceiptDetailEditView({
               </div>
             </FreightSection>
 
-            {/* 右侧：提单信息 */}
-            <FreightSection title={tMbl('title')} className="min-w-0">
-              <div className="grid gap-4">
-                {/* 目的港 */}
-                <div className="space-y-2">
-                  <Label htmlFor="portOfDestinationId">
-                    {tMbl('portOfDestination')}
-                  </Label>
-                  <Controller
-                    control={form.control}
-                    name="portOfDestinationId"
-                    render={({ field }) => (
-                      <PortCombobox
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder={tMbl('portOfDestinationPlaceholder')}
+            {/* 右侧：单套提单 / HBL / MBL */}
+            <div className="grid gap-4">
+              <div className="grid gap-4 xl:grid-cols-2">
+                <FreightSection
+                  title={tSingleBill('title')}
+                  className="min-w-0"
+                >
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillCutoffDateSi">
+                        {tSingleBill('fields.cutoffDateSi')}
+                      </Label>
+                      <Input
+                        id="singleBillCutoffDateSi"
+                        type="date"
+                        {...form.register('singleBillCutoffDateSi')}
+                        className="text-base"
                       />
-                    )}
-                  />
-                </div>
-
-                {/* 卸货港 */}
-                <div className="space-y-2">
-                  <Label htmlFor="portOfDischargeId">
-                    {tMbl('portOfDischarge')}
-                  </Label>
-                  <Controller
-                    control={form.control}
-                    name="portOfDischargeId"
-                    render={({ field }) => (
-                      <PortCombobox
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder={tMbl('portOfDischargePlaceholder')}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillGateClosingTime">
+                        {tSingleBill('fields.gateClosingTime')}
+                      </Label>
+                      <Input
+                        id="singleBillGateClosingTime"
+                        type="date"
+                        {...form.register('singleBillGateClosingTime')}
+                        className="text-base"
                       />
-                    )}
-                  />
-                </div>
-
-                {/* 起运港 */}
-                <div className="space-y-2">
-                  <Label htmlFor="portOfLoadingId">
-                    {tMbl('portOfLoading')}
-                  </Label>
-                  <Controller
-                    control={form.control}
-                    name="portOfLoadingId"
-                    render={({ field }) => (
-                      <PortCombobox
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder={tMbl('portOfLoadingPlaceholder')}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillDepartureDateE">
+                        {tSingleBill('fields.departureDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillDepartureDateE"
+                        type="date"
+                        {...form.register('singleBillDepartureDateE')}
+                        className="text-base"
                       />
-                    )}
-                  />
-                </div>
-
-                {/* 收货地 */}
-                <div className="space-y-2">
-                  <Label htmlFor="placeOfReceiptId">
-                    {tMbl('placeOfReceipt')}
-                  </Label>
-                  <Controller
-                    control={form.control}
-                    name="placeOfReceiptId"
-                    render={({ field }) => (
-                      <PortCombobox
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder={tMbl('placeOfReceiptPlaceholder')}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillArrivalDateE">
+                        {tSingleBill('fields.arrivalDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillArrivalDateE"
+                        type="date"
+                        {...form.register('singleBillArrivalDateE')}
+                        className="text-base"
                       />
-                    )}
-                  />
-                </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillTransitDateE">
+                        {tSingleBill('fields.transitDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillTransitDateE"
+                        type="date"
+                        {...form.register('singleBillTransitDateE')}
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillDeliveryDateE">
+                        {tSingleBill('fields.deliveryDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillDeliveryDateE"
+                        type="date"
+                        {...form.register('singleBillDeliveryDateE')}
+                        className="text-base"
+                      />
+                    </div>
+                  </div>
+                </FreightSection>
+                <FreightSection title={tHbl('title')} className="min-w-0">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPortOfDestinationId">
+                        {tHbl('portOfDestination')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPortOfDestinationId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('portOfDestinationPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPortOfDischargeId">
+                        {tHbl('portOfDischarge')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPortOfDischargeId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('portOfDischargePlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPortOfLoadingId">
+                        {tHbl('portOfLoading')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPortOfLoadingId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('portOfLoadingPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPlaceOfReceiptId">
+                        {tHbl('placeOfReceipt')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPlaceOfReceiptId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('placeOfReceiptPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                </FreightSection>
               </div>
-            </FreightSection>
+              <FreightSection title={tMbl('title')} className="min-w-0">
+                <div className="grid gap-4">
+                  {/* 目的港 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="portOfDestinationId">
+                      {tMbl('portOfDestination')}
+                    </Label>
+                    <Controller
+                      control={form.control}
+                      name="portOfDestinationId"
+                      render={({ field }) => (
+                        <PortCombobox
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={tMbl('portOfDestinationPlaceholder')}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* 卸货港 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="portOfDischargeId">
+                      {tMbl('portOfDischarge')}
+                    </Label>
+                    <Controller
+                      control={form.control}
+                      name="portOfDischargeId"
+                      render={({ field }) => (
+                        <PortCombobox
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={tMbl('portOfDischargePlaceholder')}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* 起运港 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="portOfLoadingId">
+                      {tMbl('portOfLoading')}
+                    </Label>
+                    <Controller
+                      control={form.control}
+                      name="portOfLoadingId"
+                      render={({ field }) => (
+                        <PortCombobox
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={tMbl('portOfLoadingPlaceholder')}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* 收货地 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="placeOfReceiptId">
+                      {tMbl('placeOfReceipt')}
+                    </Label>
+                    <Controller
+                      control={form.control}
+                      name="placeOfReceiptId"
+                      render={({ field }) => (
+                        <PortCombobox
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={tMbl('placeOfReceiptPlaceholder')}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+              </FreightSection>
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="fees">

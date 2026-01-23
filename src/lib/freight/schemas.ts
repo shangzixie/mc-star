@@ -94,6 +94,12 @@ export const createWarehouseReceiptSchema = z.object({
   seaVoyage: z.string().max(200).nullable().optional(),
   seaEtdE: z.string().max(20).nullable().optional(),
   seaEtaE: z.string().max(20).nullable().optional(),
+  singleBillCutoffDateSi: z.string().max(20).nullable().optional(),
+  singleBillGateClosingTime: z.string().max(20).nullable().optional(),
+  singleBillDepartureDateE: z.string().max(20).nullable().optional(),
+  singleBillArrivalDateE: z.string().max(20).nullable().optional(),
+  singleBillTransitDateE: z.string().max(20).nullable().optional(),
+  singleBillDeliveryDateE: z.string().max(20).nullable().optional(),
 });
 
 export const mergeWarehouseReceiptsSchema = createWarehouseReceiptSchema.extend(

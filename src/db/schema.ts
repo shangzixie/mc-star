@@ -312,6 +312,24 @@ export const warehouseReceipts = pgTable(
     seaVoyage: varchar('sea_voyage', { length: 200 }),
     seaEtdE: varchar('sea_etd_e', { length: 20 }), // yyyy-mm-dd
     seaEtaE: varchar('sea_eta_e', { length: 20 }), // yyyy-mm-dd
+    singleBillCutoffDateSi: varchar('single_bill_cutoff_date_si', {
+      length: 20,
+    }),
+    singleBillGateClosingTime: varchar('single_bill_gate_closing_time', {
+      length: 20,
+    }),
+    singleBillDepartureDateE: varchar('single_bill_departure_date_e', {
+      length: 20,
+    }),
+    singleBillArrivalDateE: varchar('single_bill_arrival_date_e', {
+      length: 20,
+    }),
+    singleBillTransitDateE: varchar('single_bill_transit_date_e', {
+      length: 20,
+    }),
+    singleBillDeliveryDateE: varchar('single_bill_delivery_date_e', {
+      length: 20,
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
