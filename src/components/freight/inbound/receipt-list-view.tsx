@@ -46,6 +46,7 @@ import {
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
+import { cn } from '@/lib/utils';
 import type {
   ColumnDef,
   SortingState,
@@ -152,22 +153,26 @@ export function ReceiptListView({
   title,
   description,
   headerActions,
+  headerExtras,
   floatingAction,
   fixedStatus,
   selectionMode = false,
   selectedIds: controlledSelectedIds,
   onSelectionChange,
+  onReceiptsDataChange,
 }: {
   onSelectReceipt: (receiptId: string) => void;
   onCreateReceipt?: () => void;
   title?: string;
   description?: string;
   headerActions?: ReactNode;
+  headerExtras?: ReactNode;
   floatingAction?: ReactNode | null;
   fixedStatus?: string;
   selectionMode?: boolean;
   selectedIds?: string[];
   onSelectionChange?: (receiptIds: string[]) => void;
+  onReceiptsDataChange?: (data: FreightWarehouseReceiptWithRelations[]) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [localSelectedIds, setLocalSelectedIds] = useState<string[]>([]);
@@ -845,6 +850,10 @@ export function ReceiptListView({
     enableMultiSort: false,
   });
 
+  useEffect(() => {
+    onReceiptsDataChange?.(data);
+  }, [data, onReceiptsDataChange]);
+
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
@@ -920,6 +929,9 @@ export function ReceiptListView({
             </Select>
           )}
         </DataTableAdvancedToolbar>
+        {headerExtras ? (
+          <div className="px-4 sm:px-0">{headerExtras}</div>
+        ) : null}
       </div>
 
       <div className="relative flex flex-col gap-4 overflow-auto">
@@ -982,27 +994,53 @@ export function ReceiptListView({
                   </TableCell>
                 </TableRow>
               ) : (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="h-14 cursor-pointer hover:bg-muted/50"
-                    onClick={() =>
-                      selectionMode
-                        ? isSelectableReceipt(row.original) &&
-                          toggleSelection(row.original.id)
-                        : onSelectReceipt(row.original.id)
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-3">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                table.getRowModel().rows.map((row) => {
+                  const selectable = isSelectableReceipt(row.original);
+                  return (
+                    <TableRow
+                      key={row.id}
+                      className={cn(
+                        'h-14 transition-colors',
+                        selectable
+                          ? 'cursor-pointer hover:bg-muted/50'
+                          : 'cursor-not-allowed bg-muted/70 shadow-inner'
+                      )}
+                      style={
+                        !selectable
+                          ? {
+                              backgroundImage:
+                                'repeating-linear-gradient(135deg, rgba(148, 163, 184, 0.35) 0, rgba(148, 163, 184, 0.35) 0.3px, transparent 1px, transparent 9px)',
+                            }
+                          : undefined
+                      }
+                      onClick={() => {
+                        if (selectionMode) {
+                          if (selectable) {
+                            toggleSelection(row.original.id);
+                          }
+                        } else {
+                          onSelectReceipt(row.original.id);
+                        }
+                      }}
+                      data-selectable={selectable ? 'true' : 'false'}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            'py-3',
+                            selectable ? '' : 'text-muted-foreground'
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

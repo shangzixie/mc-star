@@ -1215,6 +1215,12 @@
             }
           }
         },
+        "selectionSummary": {
+          "title": "选中合计",
+          "pieces": "件",
+          "weight": "重(kg)",
+          "volume": "体(m³)"
+        },
         "fields": {
           "jobNo": "工作号",
           "transportMode": "运输方式",

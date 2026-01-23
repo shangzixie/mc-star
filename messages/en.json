@@ -1215,6 +1215,12 @@
             }
           }
         },
+        "selectionSummary": {
+          "title": "Selected totals",
+          "pieces": "Pieces",
+          "weight": "Weight (kg)",
+          "volume": "Volume (m³)"
+        },
         "fields": {
           "jobNo": "Job No",
           "transportMode": "Transport mode",
