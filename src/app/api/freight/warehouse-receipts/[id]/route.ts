@@ -189,6 +189,19 @@ export async function PATCH(
         .from(warehouseReceipts)
         .where(eq(warehouseReceipts.id, receiptId));
 
+      if (existing?.status === 'OUTBOUND') {
+        const invalidKeys = Object.entries(body).filter(
+          ([key, value]) => key !== 'status' && value !== undefined
+        );
+        if (invalidKeys.length > 0) {
+          throw new ApiError({
+            status: 400,
+            code: 'OUTBOUND_EDIT_LOCKED',
+            message: 'Cannot modify receipt data once status is OUTBOUND',
+          });
+        }
+      }
+
       const [result] = await tx
         .update(warehouseReceipts)
         .set({

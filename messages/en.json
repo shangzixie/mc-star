@@ -742,6 +742,23 @@
             }
           }
         },
+        "warehouseField": {
+          "label": "Warehouse",
+          "placeholder": "Select warehouse",
+          "new": "New warehouse",
+          "created": "Warehouse created",
+          "dialog": {
+            "title": "Create warehouse",
+            "description": "Add a warehouse record for this receipt",
+            "name": "Warehouse name",
+            "namePlaceholder": "Enter warehouse name",
+            "cancel": "Cancel",
+            "create": "Create warehouse",
+            "creating": "Creating...",
+            "nameRequired": "Please enter a warehouse name",
+            "createFailed": "Failed to create warehouse"
+          }
+        },
         "mbl": {
           "title": "MBL",
           "description": "Master Bill of Lading information",

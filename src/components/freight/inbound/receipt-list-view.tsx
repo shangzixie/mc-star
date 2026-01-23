@@ -922,7 +922,7 @@ export function ReceiptListView({
                 </SelectItem>
                 {RECEIPT_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>
-                    {s}
+                    {t(`status.${s.toLowerCase()}` as any)}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -85,9 +85,7 @@ export function MergeReceiptsDialog({
       onOpenChange(false);
       onSuccess(created.id);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t('merge.failed')
-      );
+      toast.error(err instanceof Error ? err.message : t('merge.failed'));
     }
   });
 
@@ -116,13 +114,17 @@ export function MergeReceiptsDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="transportType">{t('merge.fields.transportType')}</Label>
+            <Label htmlFor="transportType">
+              {t('merge.fields.transportType')}
+            </Label>
             <select
               id="transportType"
               className="h-9 w-full rounded-md border bg-background px-3 text-sm"
               {...form.register('transportType')}
             >
-              <option value="">{t('merge.fields.transportTypePlaceholder')}</option>
+              <option value="">
+                {t('merge.fields.transportTypePlaceholder')}
+              </option>
               {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
                 <option key={tt} value={tt}>
                   {t(`merge.fields.transportTypeOptions.${tt}` as any)}
@@ -145,7 +147,9 @@ export function MergeReceiptsDialog({
               {t('merge.cancel')}
             </Button>
             <Button type="submit" disabled={mergeMutation.isPending}>
-              {mergeMutation.isPending ? t('merge.creating') : t('merge.create')}
+              {mergeMutation.isPending
+                ? t('merge.creating')
+                : t('merge.create')}
             </Button>
           </DialogFooter>
         </form>

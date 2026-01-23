@@ -69,6 +69,7 @@ import type {
   FreightWarehouseReceiptWithRelations,
 } from '@/lib/freight/api-types';
 import {
+  RECEIPT_STATUSES,
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from '@/lib/freight/constants';
@@ -98,6 +99,8 @@ import { z } from 'zod';
 
 const receiptFormSchema = z.object({
   customerId: z.string().optional(),
+  warehouseId: z.string().optional(),
+  status: z.enum(RECEIPT_STATUSES).optional(),
   transportType: z.enum(WAREHOUSE_RECEIPT_TRANSPORT_TYPES).optional(),
   customsDeclarationType: z.string().optional(),
   mblNo: z.string().max(50).optional(),
@@ -234,6 +237,8 @@ export function ReceiptDetailEditView({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
       customerId: receipt.customerId ?? '',
+      warehouseId: receipt.warehouseId ?? '',
+      status: (receipt.status as ReceiptFormData['status']) ?? undefined,
       transportType: receipt.transportType ?? undefined,
       customsDeclarationType: receipt.customsDeclarationType ?? '',
       mblNo: '',
@@ -442,189 +447,18 @@ export function ReceiptDetailEditView({
   }, [isDirty]);
 
   const transportTypeValue = form.watch('transportType') ?? null;
+  const statusValue = form.watch('status') ?? receipt.status ?? '';
+  const isOutbound = statusValue === 'OUTBOUND';
 
   const handleSave = async (data: ReceiptFormData) => {
     try {
       const payload: Record<string, any> = {};
-
-      if (data.customerId !== (receipt.customerId ?? '')) {
-        payload.customerId = data.customerId || undefined;
+      const prevStatus = (receipt.status ?? '').trim();
+      const nextStatus = (data.status ?? prevStatus).trim();
+      if (nextStatus && nextStatus !== prevStatus) {
+        payload.status = nextStatus;
       }
-      const nextTransportType = (data.transportType ?? '').trim();
-      const prevTransportType = (receipt.transportType ?? '').trim();
-      if (nextTransportType && nextTransportType !== prevTransportType) {
-        payload.transportType = nextTransportType;
-      }
-      if (
-        data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')
-      ) {
-        payload.customsDeclarationType =
-          data.customsDeclarationType || undefined;
-      }
-      if (data.remarks !== (receipt.remarks ?? '')) {
-        payload.remarks = data.remarks;
-      }
-      if (data.internalRemarks !== (receipt.internalRemarks ?? '')) {
-        payload.internalRemarks = data.internalRemarks;
-      }
-
-      if (nextManualPieces !== prevManualPieces) {
-        payload.manualPieces = nextManualPieces;
-      }
-      if (nextManualWeightKg !== prevManualWeightKg) {
-        payload.manualWeightKg = nextManualWeightKg;
-      }
-      if (nextManualVolumeM3 !== prevManualVolumeM3) {
-        payload.manualVolumeM3 = nextManualVolumeM3;
-      }
-      if (nextBubbleSplitPercent !== prevBubbleSplitPercent) {
-        payload.bubbleSplitPercent = nextBubbleSplitPercent;
-      }
-      if (nextWeightConversionFactor !== prevWeightConversionFactor) {
-        payload.weightConversionFactor = nextWeightConversionFactor;
-      }
-
-      // Contact information (nullable - allow clearing)
-      const nextShipperId = (data.shipperId ?? '').trim();
-      const prevShipperId = (receipt.shipperId ?? '').trim();
-      if (nextShipperId !== prevShipperId) {
-        payload.shipperId = nextShipperId || null;
-      }
-
-      const nextBookingAgentId = (data.bookingAgentId ?? '').trim();
-      const prevBookingAgentId = (receipt.bookingAgentId ?? '').trim();
-      if (nextBookingAgentId !== prevBookingAgentId) {
-        payload.bookingAgentId = nextBookingAgentId || null;
-      }
-
-      const nextCustomsAgentId = (data.customsAgentId ?? '').trim();
-      const prevCustomsAgentId = (receipt.customsAgentId ?? '').trim();
-      if (nextCustomsAgentId !== prevCustomsAgentId) {
-        payload.customsAgentId = nextCustomsAgentId || null;
-      }
-
-      const nextSingleBillCutoffDateSi = (
-        data.singleBillCutoffDateSi ?? ''
-      ).trim();
-      const prevSingleBillCutoffDateSi = (
-        receipt.singleBillCutoffDateSi ?? ''
-      ).trim();
-      if (nextSingleBillCutoffDateSi !== prevSingleBillCutoffDateSi) {
-        payload.singleBillCutoffDateSi = nextSingleBillCutoffDateSi || null;
-      }
-
-      const nextSingleBillGateClosingTime = (
-        data.singleBillGateClosingTime ?? ''
-      ).trim();
-      const prevSingleBillGateClosingTime = (
-        receipt.singleBillGateClosingTime ?? ''
-      ).trim();
-      if (nextSingleBillGateClosingTime !== prevSingleBillGateClosingTime) {
-        payload.singleBillGateClosingTime =
-          nextSingleBillGateClosingTime || null;
-      }
-
-      const nextSingleBillDepartureDateE = (
-        data.singleBillDepartureDateE ?? ''
-      ).trim();
-      const prevSingleBillDepartureDateE = (
-        receipt.singleBillDepartureDateE ?? ''
-      ).trim();
-      if (nextSingleBillDepartureDateE !== prevSingleBillDepartureDateE) {
-        payload.singleBillDepartureDateE = nextSingleBillDepartureDateE || null;
-      }
-
-      const nextSingleBillArrivalDateE = (
-        data.singleBillArrivalDateE ?? ''
-      ).trim();
-      const prevSingleBillArrivalDateE = (
-        receipt.singleBillArrivalDateE ?? ''
-      ).trim();
-      if (nextSingleBillArrivalDateE !== prevSingleBillArrivalDateE) {
-        payload.singleBillArrivalDateE = nextSingleBillArrivalDateE || null;
-      }
-
-      const nextSingleBillTransitDateE = (
-        data.singleBillTransitDateE ?? ''
-      ).trim();
-      const prevSingleBillTransitDateE = (
-        receipt.singleBillTransitDateE ?? ''
-      ).trim();
-      if (nextSingleBillTransitDateE !== prevSingleBillTransitDateE) {
-        payload.singleBillTransitDateE = nextSingleBillTransitDateE || null;
-      }
-
-      const nextSingleBillDeliveryDateE = (
-        data.singleBillDeliveryDateE ?? ''
-      ).trim();
-      const prevSingleBillDeliveryDateE = (
-        receipt.singleBillDeliveryDateE ?? ''
-      ).trim();
-      if (nextSingleBillDeliveryDateE !== prevSingleBillDeliveryDateE) {
-        payload.singleBillDeliveryDateE = nextSingleBillDeliveryDateE || null;
-      }
-
-      // Employee assignments (nullable - allow clearing)
-      const nextSalesEmployeeId = (data.salesEmployeeId ?? '').trim();
-      const prevSalesEmployeeId = (receipt.salesEmployeeId ?? '').trim();
-      if (nextSalesEmployeeId !== prevSalesEmployeeId) {
-        payload.salesEmployeeId = nextSalesEmployeeId || null;
-      }
-
-      const nextCustomerServiceEmployeeId = (
-        data.customerServiceEmployeeId ?? ''
-      ).trim();
-      const prevCustomerServiceEmployeeId = (
-        receipt.customerServiceEmployeeId ?? ''
-      ).trim();
-      if (nextCustomerServiceEmployeeId !== prevCustomerServiceEmployeeId) {
-        payload.customerServiceEmployeeId =
-          nextCustomerServiceEmployeeId || null;
-      }
-
-      const nextOverseasCsEmployeeId = (data.overseasCsEmployeeId ?? '').trim();
-      const prevOverseasCsEmployeeId = (
-        receipt.overseasCsEmployeeId ?? ''
-      ).trim();
-      if (nextOverseasCsEmployeeId !== prevOverseasCsEmployeeId) {
-        payload.overseasCsEmployeeId = nextOverseasCsEmployeeId || null;
-      }
-
-      const nextOperationsEmployeeId = (data.operationsEmployeeId ?? '').trim();
-      const prevOperationsEmployeeId = (
-        receipt.operationsEmployeeId ?? ''
-      ).trim();
-      if (nextOperationsEmployeeId !== prevOperationsEmployeeId) {
-        payload.operationsEmployeeId = nextOperationsEmployeeId || null;
-      }
-
-      const nextDocumentationEmployeeId = (
-        data.documentationEmployeeId ?? ''
-      ).trim();
-      const prevDocumentationEmployeeId = (
-        receipt.documentationEmployeeId ?? ''
-      ).trim();
-      if (nextDocumentationEmployeeId !== prevDocumentationEmployeeId) {
-        payload.documentationEmployeeId = nextDocumentationEmployeeId || null;
-      }
-
-      const nextFinanceEmployeeId = (data.financeEmployeeId ?? '').trim();
-      const prevFinanceEmployeeId = (receipt.financeEmployeeId ?? '').trim();
-      if (nextFinanceEmployeeId !== prevFinanceEmployeeId) {
-        payload.financeEmployeeId = nextFinanceEmployeeId || null;
-      }
-
-      const nextBookingEmployeeId = (data.bookingEmployeeId ?? '').trim();
-      const prevBookingEmployeeId = (receipt.bookingEmployeeId ?? '').trim();
-      if (nextBookingEmployeeId !== prevBookingEmployeeId) {
-        payload.bookingEmployeeId = nextBookingEmployeeId || null;
-      }
-
-      const nextReviewerEmployeeId = (data.reviewerEmployeeId ?? '').trim();
-      const prevReviewerEmployeeId = (receipt.reviewerEmployeeId ?? '').trim();
-      if (nextReviewerEmployeeId !== prevReviewerEmployeeId) {
-        payload.reviewerEmployeeId = nextReviewerEmployeeId || null;
-      }
+      const allowDetailUpdates = nextStatus !== 'OUTBOUND';
 
       const nextMblNo = (data.mblNo ?? '').trim();
       const prevMblNo = (mblQuery.data?.mblNo ?? '').trim();
@@ -645,122 +479,6 @@ export function ReceiptDetailEditView({
         placeOfReceiptId?: string;
       }> = {};
 
-      if (nextHblNo !== prevHblNo) {
-        hblPatch.hblNo = nextHblNo || null;
-      }
-
-      const nextHblPortOfDestinationId = (
-        data.hblPortOfDestinationId ?? ''
-      ).trim();
-      const prevHblPortOfDestinationId = (
-        hblQuery.data?.portOfDestinationId ?? ''
-      ).trim();
-      if (nextHblPortOfDestinationId !== prevHblPortOfDestinationId) {
-        hblPatch.portOfDestinationId = nextHblPortOfDestinationId || undefined;
-      }
-
-      const nextHblPortOfDischargeId = (data.hblPortOfDischargeId ?? '').trim();
-      const prevHblPortOfDischargeId = (
-        hblQuery.data?.portOfDischargeId ?? ''
-      ).trim();
-      if (nextHblPortOfDischargeId !== prevHblPortOfDischargeId) {
-        hblPatch.portOfDischargeId = nextHblPortOfDischargeId || undefined;
-      }
-
-      const nextHblPortOfLoadingId = (data.hblPortOfLoadingId ?? '').trim();
-      const prevHblPortOfLoadingId = (
-        hblQuery.data?.portOfLoadingId ?? ''
-      ).trim();
-      if (nextHblPortOfLoadingId !== prevHblPortOfLoadingId) {
-        hblPatch.portOfLoadingId = nextHblPortOfLoadingId || undefined;
-      }
-
-      const nextHblPlaceOfReceiptId = (data.hblPlaceOfReceiptId ?? '').trim();
-      const prevHblPlaceOfReceiptId = (
-        hblQuery.data?.placeOfReceiptId ?? ''
-      ).trim();
-      if (nextHblPlaceOfReceiptId !== prevHblPlaceOfReceiptId) {
-        hblPatch.placeOfReceiptId = nextHblPlaceOfReceiptId || undefined;
-      }
-
-      const hasHblChanges = Object.keys(hblPatch).length > 0;
-
-      // Transport schedule (nullable - allow clearing)
-      const nextAirCarrier = (data.airCarrier ?? '').trim();
-      const prevAirCarrier = (receipt.airCarrier ?? '').trim();
-      if (nextAirCarrier !== prevAirCarrier) {
-        payload.airCarrier = nextAirCarrier || null;
-      }
-
-      const nextAirFlightNo = (data.airFlightNo ?? '').trim();
-      const prevAirFlightNo = (receipt.airFlightNo ?? '').trim();
-      if (nextAirFlightNo !== prevAirFlightNo) {
-        payload.airFlightNo = nextAirFlightNo || null;
-      }
-
-      const nextAirFlightDate = (data.airFlightDate ?? '').trim();
-      const prevAirFlightDate = (receipt.airFlightDate ?? '').trim();
-      if (nextAirFlightDate !== prevAirFlightDate) {
-        payload.airFlightDate = nextAirFlightDate || null;
-      }
-
-      const nextAirArrivalDateE = (data.airArrivalDateE ?? '').trim();
-      const prevAirArrivalDateE = (receipt.airArrivalDateE ?? '').trim();
-      if (nextAirArrivalDateE !== prevAirArrivalDateE) {
-        payload.airArrivalDateE = nextAirArrivalDateE || null;
-      }
-
-      const nextAirOperationLocation = (data.airOperationLocation ?? '').trim();
-      const prevAirOperationLocation = (
-        receipt.airOperationLocation ?? ''
-      ).trim();
-      if (nextAirOperationLocation !== prevAirOperationLocation) {
-        payload.airOperationLocation = nextAirOperationLocation || null;
-      }
-
-      const nextAirOperationNode = (data.airOperationNode ?? '').trim();
-      const prevAirOperationNode = (receipt.airOperationNode ?? '').trim();
-      if (nextAirOperationNode !== prevAirOperationNode) {
-        payload.airOperationNode = nextAirOperationNode || null;
-      }
-
-      const nextSeaCarrier = (data.seaCarrier ?? '').trim();
-      const prevSeaCarrier = (receipt.seaCarrier ?? '').trim();
-      if (nextSeaCarrier !== prevSeaCarrier) {
-        payload.seaCarrier = nextSeaCarrier || null;
-      }
-
-      const nextSeaRoute = (data.seaRoute ?? '').trim();
-      const prevSeaRoute = (receipt.seaRoute ?? '').trim();
-      if (nextSeaRoute !== prevSeaRoute) {
-        payload.seaRoute = nextSeaRoute || null;
-      }
-
-      const nextSeaVesselName = (data.seaVesselName ?? '').trim();
-      const prevSeaVesselName = (receipt.seaVesselName ?? '').trim();
-      if (nextSeaVesselName !== prevSeaVesselName) {
-        payload.seaVesselName = nextSeaVesselName || null;
-      }
-
-      const nextSeaVoyage = (data.seaVoyage ?? '').trim();
-      const prevSeaVoyage = (receipt.seaVoyage ?? '').trim();
-      if (nextSeaVoyage !== prevSeaVoyage) {
-        payload.seaVoyage = nextSeaVoyage || null;
-      }
-
-      const nextSeaEtdE = (data.seaEtdE ?? '').trim();
-      const prevSeaEtdE = (receipt.seaEtdE ?? '').trim();
-      if (nextSeaEtdE !== prevSeaEtdE) {
-        payload.seaEtdE = nextSeaEtdE || null;
-      }
-
-      const nextSeaEtaE = (data.seaEtaE ?? '').trim();
-      const prevSeaEtaE = (receipt.seaEtaE ?? '').trim();
-      if (nextSeaEtaE !== prevSeaEtaE) {
-        payload.seaEtaE = nextSeaEtaE || null;
-      }
-
-      // Build comprehensive MBL patch with all fields
       const mblPatch: Partial<{
         mblNo: string | null;
         soNo: string | null;
@@ -770,46 +488,369 @@ export function ReceiptDetailEditView({
         placeOfReceiptId?: string;
       }> = {};
 
-      if (hasMblNoChange) {
-        mblPatch.mblNo = nextMblNo || null;
-      }
-      if (hasSoNoChange) {
-        mblPatch.soNo = nextSoNo || null;
+      if (allowDetailUpdates) {
+        if (data.customerId !== (receipt.customerId ?? '')) {
+          payload.customerId = data.customerId || undefined;
+        }
+        const nextWarehouseId = (data.warehouseId ?? '').trim();
+        const prevWarehouseId = (receipt.warehouseId ?? '').trim();
+        if (nextWarehouseId !== prevWarehouseId) {
+          payload.warehouseId = nextWarehouseId || undefined;
+        }
+        const nextTransportType = (data.transportType ?? '').trim();
+        const prevTransportType = (receipt.transportType ?? '').trim();
+        if (nextTransportType && nextTransportType !== prevTransportType) {
+          payload.transportType = nextTransportType;
+        }
+        if (
+          data.customsDeclarationType !== (receipt.customsDeclarationType ?? '')
+        ) {
+          payload.customsDeclarationType =
+            data.customsDeclarationType || undefined;
+        }
+        if (data.remarks !== (receipt.remarks ?? '')) {
+          payload.remarks = data.remarks;
+        }
+        if (data.internalRemarks !== (receipt.internalRemarks ?? '')) {
+          payload.internalRemarks = data.internalRemarks;
+        }
+
+        if (nextManualPieces !== prevManualPieces) {
+          payload.manualPieces = nextManualPieces;
+        }
+        if (nextManualWeightKg !== prevManualWeightKg) {
+          payload.manualWeightKg = nextManualWeightKg;
+        }
+        if (nextManualVolumeM3 !== prevManualVolumeM3) {
+          payload.manualVolumeM3 = nextManualVolumeM3;
+        }
+        if (nextBubbleSplitPercent !== prevBubbleSplitPercent) {
+          payload.bubbleSplitPercent = nextBubbleSplitPercent;
+        }
+        if (nextWeightConversionFactor !== prevWeightConversionFactor) {
+          payload.weightConversionFactor = nextWeightConversionFactor;
+        }
+
+        // Contact information (nullable - allow clearing)
+        const nextShipperId = (data.shipperId ?? '').trim();
+        const prevShipperId = (receipt.shipperId ?? '').trim();
+        if (nextShipperId !== prevShipperId) {
+          payload.shipperId = nextShipperId || null;
+        }
+
+        const nextBookingAgentId = (data.bookingAgentId ?? '').trim();
+        const prevBookingAgentId = (receipt.bookingAgentId ?? '').trim();
+        if (nextBookingAgentId !== prevBookingAgentId) {
+          payload.bookingAgentId = nextBookingAgentId || null;
+        }
+
+        const nextCustomsAgentId = (data.customsAgentId ?? '').trim();
+        const prevCustomsAgentId = (receipt.customsAgentId ?? '').trim();
+        if (nextCustomsAgentId !== prevCustomsAgentId) {
+          payload.customsAgentId = nextCustomsAgentId || null;
+        }
+
+        const nextSingleBillCutoffDateSi = (
+          data.singleBillCutoffDateSi ?? ''
+        ).trim();
+        const prevSingleBillCutoffDateSi = (
+          receipt.singleBillCutoffDateSi ?? ''
+        ).trim();
+        if (nextSingleBillCutoffDateSi !== prevSingleBillCutoffDateSi) {
+          payload.singleBillCutoffDateSi = nextSingleBillCutoffDateSi || null;
+        }
+
+        const nextSingleBillGateClosingTime = (
+          data.singleBillGateClosingTime ?? ''
+        ).trim();
+        const prevSingleBillGateClosingTime = (
+          receipt.singleBillGateClosingTime ?? ''
+        ).trim();
+        if (nextSingleBillGateClosingTime !== prevSingleBillGateClosingTime) {
+          payload.singleBillGateClosingTime =
+            nextSingleBillGateClosingTime || null;
+        }
+
+        const nextSingleBillDepartureDateE = (
+          data.singleBillDepartureDateE ?? ''
+        ).trim();
+        const prevSingleBillDepartureDateE = (
+          receipt.singleBillDepartureDateE ?? ''
+        ).trim();
+        if (nextSingleBillDepartureDateE !== prevSingleBillDepartureDateE) {
+          payload.singleBillDepartureDateE =
+            nextSingleBillDepartureDateE || null;
+        }
+
+        const nextSingleBillArrivalDateE = (
+          data.singleBillArrivalDateE ?? ''
+        ).trim();
+        const prevSingleBillArrivalDateE = (
+          receipt.singleBillArrivalDateE ?? ''
+        ).trim();
+        if (nextSingleBillArrivalDateE !== prevSingleBillArrivalDateE) {
+          payload.singleBillArrivalDateE = nextSingleBillArrivalDateE || null;
+        }
+
+        const nextSingleBillTransitDateE = (
+          data.singleBillTransitDateE ?? ''
+        ).trim();
+        const prevSingleBillTransitDateE = (
+          receipt.singleBillTransitDateE ?? ''
+        ).trim();
+        if (nextSingleBillTransitDateE !== prevSingleBillTransitDateE) {
+          payload.singleBillTransitDateE = nextSingleBillTransitDateE || null;
+        }
+
+        const nextSingleBillDeliveryDateE = (
+          data.singleBillDeliveryDateE ?? ''
+        ).trim();
+        const prevSingleBillDeliveryDateE = (
+          receipt.singleBillDeliveryDateE ?? ''
+        ).trim();
+        if (nextSingleBillDeliveryDateE !== prevSingleBillDeliveryDateE) {
+          payload.singleBillDeliveryDateE = nextSingleBillDeliveryDateE || null;
+        }
+
+        // Employee assignments (nullable - allow clearing)
+        const nextSalesEmployeeId = (data.salesEmployeeId ?? '').trim();
+        const prevSalesEmployeeId = (receipt.salesEmployeeId ?? '').trim();
+        if (nextSalesEmployeeId !== prevSalesEmployeeId) {
+          payload.salesEmployeeId = nextSalesEmployeeId || null;
+        }
+
+        const nextCustomerServiceEmployeeId = (
+          data.customerServiceEmployeeId ?? ''
+        ).trim();
+        const prevCustomerServiceEmployeeId = (
+          receipt.customerServiceEmployeeId ?? ''
+        ).trim();
+        if (nextCustomerServiceEmployeeId !== prevCustomerServiceEmployeeId) {
+          payload.customerServiceEmployeeId =
+            nextCustomerServiceEmployeeId || null;
+        }
+
+        const nextOverseasCsEmployeeId = (
+          data.overseasCsEmployeeId ?? ''
+        ).trim();
+        const prevOverseasCsEmployeeId = (
+          receipt.overseasCsEmployeeId ?? ''
+        ).trim();
+        if (nextOverseasCsEmployeeId !== prevOverseasCsEmployeeId) {
+          payload.overseasCsEmployeeId = nextOverseasCsEmployeeId || null;
+        }
+
+        const nextOperationsEmployeeId = (
+          data.operationsEmployeeId ?? ''
+        ).trim();
+        const prevOperationsEmployeeId = (
+          receipt.operationsEmployeeId ?? ''
+        ).trim();
+        if (nextOperationsEmployeeId !== prevOperationsEmployeeId) {
+          payload.operationsEmployeeId = nextOperationsEmployeeId || null;
+        }
+
+        const nextDocumentationEmployeeId = (
+          data.documentationEmployeeId ?? ''
+        ).trim();
+        const prevDocumentationEmployeeId = (
+          receipt.documentationEmployeeId ?? ''
+        ).trim();
+        if (nextDocumentationEmployeeId !== prevDocumentationEmployeeId) {
+          payload.documentationEmployeeId = nextDocumentationEmployeeId || null;
+        }
+
+        const nextFinanceEmployeeId = (data.financeEmployeeId ?? '').trim();
+        const prevFinanceEmployeeId = (receipt.financeEmployeeId ?? '').trim();
+        if (nextFinanceEmployeeId !== prevFinanceEmployeeId) {
+          payload.financeEmployeeId = nextFinanceEmployeeId || null;
+        }
+
+        const nextBookingEmployeeId = (data.bookingEmployeeId ?? '').trim();
+        const prevBookingEmployeeId = (receipt.bookingEmployeeId ?? '').trim();
+        if (nextBookingEmployeeId !== prevBookingEmployeeId) {
+          payload.bookingEmployeeId = nextBookingEmployeeId || null;
+        }
+
+        const nextReviewerEmployeeId = (data.reviewerEmployeeId ?? '').trim();
+        const prevReviewerEmployeeId = (
+          receipt.reviewerEmployeeId ?? ''
+        ).trim();
+        if (nextReviewerEmployeeId !== prevReviewerEmployeeId) {
+          payload.reviewerEmployeeId = nextReviewerEmployeeId || null;
+        }
+
+        if (nextHblNo !== prevHblNo) {
+          hblPatch.hblNo = nextHblNo || null;
+        }
+
+        const nextHblPortOfDestinationId = (
+          data.hblPortOfDestinationId ?? ''
+        ).trim();
+        const prevHblPortOfDestinationId = (
+          hblQuery.data?.portOfDestinationId ?? ''
+        ).trim();
+        if (nextHblPortOfDestinationId !== prevHblPortOfDestinationId) {
+          hblPatch.portOfDestinationId =
+            nextHblPortOfDestinationId || undefined;
+        }
+
+        const nextHblPortOfDischargeId = (
+          data.hblPortOfDischargeId ?? ''
+        ).trim();
+        const prevHblPortOfDischargeId = (
+          hblQuery.data?.portOfDischargeId ?? ''
+        ).trim();
+        if (nextHblPortOfDischargeId !== prevHblPortOfDischargeId) {
+          hblPatch.portOfDischargeId = nextHblPortOfDischargeId || undefined;
+        }
+
+        const nextHblPortOfLoadingId = (data.hblPortOfLoadingId ?? '').trim();
+        const prevHblPortOfLoadingId = (
+          hblQuery.data?.portOfLoadingId ?? ''
+        ).trim();
+        if (nextHblPortOfLoadingId !== prevHblPortOfLoadingId) {
+          hblPatch.portOfLoadingId = nextHblPortOfLoadingId || undefined;
+        }
+
+        const nextHblPlaceOfReceiptId = (data.hblPlaceOfReceiptId ?? '').trim();
+        const prevHblPlaceOfReceiptId = (
+          hblQuery.data?.placeOfReceiptId ?? ''
+        ).trim();
+        if (nextHblPlaceOfReceiptId !== prevHblPlaceOfReceiptId) {
+          hblPatch.placeOfReceiptId = nextHblPlaceOfReceiptId || undefined;
+        }
+
+        // Transport schedule (nullable - allow clearing)
+        const nextAirCarrier = (data.airCarrier ?? '').trim();
+        const prevAirCarrier = (receipt.airCarrier ?? '').trim();
+        if (nextAirCarrier !== prevAirCarrier) {
+          payload.airCarrier = nextAirCarrier || null;
+        }
+
+        const nextAirFlightNo = (data.airFlightNo ?? '').trim();
+        const prevAirFlightNo = (receipt.airFlightNo ?? '').trim();
+        if (nextAirFlightNo !== prevAirFlightNo) {
+          payload.airFlightNo = nextAirFlightNo || null;
+        }
+
+        const nextAirFlightDate = (data.airFlightDate ?? '').trim();
+        const prevAirFlightDate = (receipt.airFlightDate ?? '').trim();
+        if (nextAirFlightDate !== prevAirFlightDate) {
+          payload.airFlightDate = nextAirFlightDate || null;
+        }
+
+        const nextAirArrivalDateE = (data.airArrivalDateE ?? '').trim();
+        const prevAirArrivalDateE = (receipt.airArrivalDateE ?? '').trim();
+        if (nextAirArrivalDateE !== prevAirArrivalDateE) {
+          payload.airArrivalDateE = nextAirArrivalDateE || null;
+        }
+
+        const nextAirOperationLocation = (
+          data.airOperationLocation ?? ''
+        ).trim();
+        const prevAirOperationLocation = (
+          receipt.airOperationLocation ?? ''
+        ).trim();
+        if (nextAirOperationLocation !== prevAirOperationLocation) {
+          payload.airOperationLocation = nextAirOperationLocation || null;
+        }
+
+        const nextAirOperationNode = (data.airOperationNode ?? '').trim();
+        const prevAirOperationNode = (receipt.airOperationNode ?? '').trim();
+        if (nextAirOperationNode !== prevAirOperationNode) {
+          payload.airOperationNode = nextAirOperationNode || null;
+        }
+
+        const nextSeaCarrier = (data.seaCarrier ?? '').trim();
+        const prevSeaCarrier = (receipt.seaCarrier ?? '').trim();
+        if (nextSeaCarrier !== prevSeaCarrier) {
+          payload.seaCarrier = nextSeaCarrier || null;
+        }
+
+        const nextSeaRoute = (data.seaRoute ?? '').trim();
+        const prevSeaRoute = (receipt.seaRoute ?? '').trim();
+        if (nextSeaRoute !== prevSeaRoute) {
+          payload.seaRoute = nextSeaRoute || null;
+        }
+
+        const nextSeaVesselName = (data.seaVesselName ?? '').trim();
+        const prevSeaVesselName = (receipt.seaVesselName ?? '').trim();
+        if (nextSeaVesselName !== prevSeaVesselName) {
+          payload.seaVesselName = nextSeaVesselName || null;
+        }
+
+        const nextSeaVoyage = (data.seaVoyage ?? '').trim();
+        const prevSeaVoyage = (receipt.seaVoyage ?? '').trim();
+        if (nextSeaVoyage !== prevSeaVoyage) {
+          payload.seaVoyage = nextSeaVoyage || null;
+        }
+
+        const nextSeaEtdE = (data.seaEtdE ?? '').trim();
+        const prevSeaEtdE = (receipt.seaEtdE ?? '').trim();
+        if (nextSeaEtdE !== prevSeaEtdE) {
+          payload.seaEtdE = nextSeaEtdE || null;
+        }
+
+        const nextSeaEtaE = (data.seaEtaE ?? '').trim();
+        const prevSeaEtaE = (receipt.seaEtaE ?? '').trim();
+        if (nextSeaEtaE !== prevSeaEtaE) {
+          payload.seaEtaE = nextSeaEtaE || null;
+        }
+
+        // Build comprehensive MBL patch with all fields
+
+        if (hasMblNoChange) {
+          mblPatch.mblNo = nextMblNo || null;
+        }
+        if (hasSoNoChange) {
+          mblPatch.soNo = nextSoNo || null;
+        }
+
+        // Check for MBL port changes
+        const nextPortOfDestinationId = (data.portOfDestinationId ?? '').trim();
+        const prevPortOfDestinationId = (
+          mblQuery.data?.portOfDestinationId ?? ''
+        ).trim();
+        if (nextPortOfDestinationId !== prevPortOfDestinationId) {
+          mblPatch.portOfDestinationId = nextPortOfDestinationId || undefined;
+        }
+
+        const nextPortOfDischargeId = (data.portOfDischargeId ?? '').trim();
+        const prevPortOfDischargeId = (
+          mblQuery.data?.portOfDischargeId ?? ''
+        ).trim();
+        if (nextPortOfDischargeId !== prevPortOfDischargeId) {
+          mblPatch.portOfDischargeId = nextPortOfDischargeId || undefined;
+        }
+
+        const nextPortOfLoadingId = (data.portOfLoadingId ?? '').trim();
+        const prevPortOfLoadingId = (
+          mblQuery.data?.portOfLoadingId ?? ''
+        ).trim();
+        if (nextPortOfLoadingId !== prevPortOfLoadingId) {
+          mblPatch.portOfLoadingId = nextPortOfLoadingId || undefined;
+        }
+
+        const nextPlaceOfReceiptId = (data.placeOfReceiptId ?? '').trim();
+        const prevPlaceOfReceiptId = (
+          mblQuery.data?.placeOfReceiptId ?? ''
+        ).trim();
+        if (nextPlaceOfReceiptId !== prevPlaceOfReceiptId) {
+          mblPatch.placeOfReceiptId = nextPlaceOfReceiptId || undefined;
+        }
       }
 
-      // Check for MBL port changes
-      const nextPortOfDestinationId = (data.portOfDestinationId ?? '').trim();
-      const prevPortOfDestinationId = (
-        mblQuery.data?.portOfDestinationId ?? ''
-      ).trim();
-      if (nextPortOfDestinationId !== prevPortOfDestinationId) {
-        mblPatch.portOfDestinationId = nextPortOfDestinationId || undefined;
-      }
-
-      const nextPortOfDischargeId = (data.portOfDischargeId ?? '').trim();
-      const prevPortOfDischargeId = (
-        mblQuery.data?.portOfDischargeId ?? ''
-      ).trim();
-      if (nextPortOfDischargeId !== prevPortOfDischargeId) {
-        mblPatch.portOfDischargeId = nextPortOfDischargeId || undefined;
-      }
-
-      const nextPortOfLoadingId = (data.portOfLoadingId ?? '').trim();
-      const prevPortOfLoadingId = (mblQuery.data?.portOfLoadingId ?? '').trim();
-      if (nextPortOfLoadingId !== prevPortOfLoadingId) {
-        mblPatch.portOfLoadingId = nextPortOfLoadingId || undefined;
-      }
-
-      const nextPlaceOfReceiptId = (data.placeOfReceiptId ?? '').trim();
-      const prevPlaceOfReceiptId = (
-        mblQuery.data?.placeOfReceiptId ?? ''
-      ).trim();
-      if (nextPlaceOfReceiptId !== prevPlaceOfReceiptId) {
-        mblPatch.placeOfReceiptId = nextPlaceOfReceiptId || undefined;
-      }
+      const hasHblChanges =
+        allowDetailUpdates && Object.keys(hblPatch).length > 0;
+      const payloadToSend = allowDetailUpdates
+        ? payload
+        : payload.status
+          ? { status: payload.status }
+          : {};
 
       if (
-        Object.keys(payload).length === 0 &&
+        Object.keys(payloadToSend).length === 0 &&
         Object.keys(mblPatch).length === 0 &&
         !hasHblChanges
       ) {
@@ -817,12 +858,12 @@ export function ReceiptDetailEditView({
         return;
       }
 
-      if (Object.keys(payload).length > 0) {
-        await updateMutation.mutateAsync(payload);
+      if (Object.keys(payloadToSend).length > 0) {
+        await updateMutation.mutateAsync(payloadToSend);
       }
 
       // MBL: merge all changes into a single request to avoid multiple concurrent requests
-      if (Object.keys(mblPatch).length > 0) {
+      if (allowDetailUpdates && Object.keys(mblPatch).length > 0) {
         if (mblQuery.data) {
           await updateMblMutation.mutateAsync(mblPatch);
         } else {
@@ -860,7 +901,7 @@ export function ReceiptDetailEditView({
         }
       }
 
-      if (hasHblChanges) {
+      if (allowDetailUpdates && hasHblChanges) {
         if (hblQuery.data) {
           await updateHblMutation.mutateAsync(hblPatch);
         } else {
@@ -952,827 +993,842 @@ export function ReceiptDetailEditView({
         </DropdownMenu>
       </div>
 
-      {/* 主要内容区域 */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
-        {/* 左侧：基本信息表单 */}
-        <FreightSection
-          title={t('receipt.fields.receiptNo')}
-          className="min-w-0"
-        >
-          <div className="space-y-4">
-            {/* 入库单号（只读） */}
-            <div className="space-y-2">
-              <Label className="text-base font-semibold">
-                {t('receipt.fields.receiptNo')}
-              </Label>
-              <div className="flex min-w-0 items-baseline gap-2">
-                <div className="min-w-0 truncate text-base font-semibold">
-                  {receipt.receiptNo}
-                </div>
-                {mblQuery.data?.soNo ? (
-                  <div className="shrink-0 text-sm font-medium text-muted-foreground">
-                    / SO {mblQuery.data.soNo}
+      <fieldset disabled={isOutbound} className="space-y-4 border-0 p-0">
+        {/* 主要内容区域 */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
+          {/* 左侧：基本信息表单 */}
+          <FreightSection
+            title={t('receipt.fields.receiptNo')}
+            className="min-w-0"
+          >
+            <div className="space-y-4">
+              {/* 入库单号（只读） */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">
+                  {t('receipt.fields.receiptNo')}
+                </Label>
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <div className="min-w-0 truncate text-base font-semibold">
+                    {receipt.receiptNo}
                   </div>
-                ) : null}
+                  {mblQuery.data?.soNo ? (
+                    <div className="shrink-0 text-sm font-medium text-muted-foreground">
+                      / SO {mblQuery.data.soNo}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* SO No */}
+              <div className="space-y-2">
+                <Label htmlFor="soNo">SO号</Label>
+                <Input
+                  id="soNo"
+                  placeholder="请输入SO号"
+                  {...form.register('soNo')}
+                />
+              </div>
+
+              {/* MBL No */}
+              <div className="space-y-2">
+                <Label htmlFor="mblNo">{t('receipt.fields.mblNo')}</Label>
+                <Input
+                  id="mblNo"
+                  placeholder={t('receipt.fields.mblNoPlaceholder')}
+                  {...form.register('mblNo')}
+                />
+              </div>
+
+              {/* HBL No */}
+              <div className="space-y-2">
+                <Label htmlFor="hblNo">{t('receipt.fields.hblNo')}</Label>
+                <Input
+                  id="hblNo"
+                  placeholder={t('receipt.fields.hblNoPlaceholder')}
+                  {...form.register('hblNo')}
+                />
+              </div>
+
+              {/* 运输类型 */}
+              <div className="space-y-2">
+                <Label className="text-sm">{t('transportType.label')}</Label>
+                <Select
+                  value={form.watch('transportType') ?? undefined}
+                  onValueChange={(value) =>
+                    form.setValue(
+                      'transportType',
+                      value as ReceiptFormData['transportType'],
+                      { shouldDirty: true }
+                    )
+                  }
+                >
+                  <SelectTrigger id="transportType">
+                    <SelectValue placeholder={t('transportType.placeholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+                      <SelectItem key={tt} value={tt}>
+                        {t(`transportType.options.${tt}` as any)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 报关类型 */}
+              <div className="space-y-2">
+                <Label htmlFor="customsDeclarationType">
+                  {t('customsDeclarationType.label')}
+                </Label>
+                <Select
+                  value={form.watch('customsDeclarationType')}
+                  onValueChange={(value) =>
+                    form.setValue('customsDeclarationType', value, {
+                      shouldDirty: true,
+                    })
+                  }
+                >
+                  <SelectTrigger id="customsDeclarationType">
+                    <SelectValue
+                      placeholder={t('customsDeclarationType.placeholder')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES.map((ct) => (
+                      <SelectItem key={ct} value={ct}>
+                        {t(`customsDeclarationType.options.${ct}` as any)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+          </FreightSection>
 
-            {/* SO No */}
-            <div className="space-y-2">
-              <Label htmlFor="soNo">SO号</Label>
-              <Input
-                id="soNo"
-                placeholder="请输入SO号"
-                {...form.register('soNo')}
-              />
-            </div>
-
-            {/* MBL No */}
-            <div className="space-y-2">
-              <Label htmlFor="mblNo">{t('receipt.fields.mblNo')}</Label>
-              <Input
-                id="mblNo"
-                placeholder={t('receipt.fields.mblNoPlaceholder')}
-                {...form.register('mblNo')}
-              />
-            </div>
-
-            {/* HBL No */}
-            <div className="space-y-2">
-              <Label htmlFor="hblNo">{t('receipt.fields.hblNo')}</Label>
-              <Input
-                id="hblNo"
-                placeholder={t('receipt.fields.hblNoPlaceholder')}
-                {...form.register('hblNo')}
-              />
-            </div>
-
-            {/* 运输类型 */}
-            <div className="space-y-2">
-              <Label className="text-sm">{t('transportType.label')}</Label>
-              <Select
-                value={form.watch('transportType') ?? undefined}
-                onValueChange={(value) =>
-                  form.setValue(
-                    'transportType',
-                    value as ReceiptFormData['transportType'],
-                    { shouldDirty: true }
-                  )
-                }
-              >
-                <SelectTrigger id="transportType">
-                  <SelectValue placeholder={t('transportType.placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
-                    <SelectItem key={tt} value={tt}>
-                      {t(`transportType.options.${tt}` as any)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 报关类型 */}
-            <div className="space-y-2">
-              <Label htmlFor="customsDeclarationType">
-                {t('customsDeclarationType.label')}
-              </Label>
-              <Select
-                value={form.watch('customsDeclarationType')}
-                onValueChange={(value) =>
-                  form.setValue('customsDeclarationType', value, {
-                    shouldDirty: true,
-                  })
-                }
-              >
-                <SelectTrigger id="customsDeclarationType">
-                  <SelectValue
-                    placeholder={t('customsDeclarationType.placeholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES.map((ct) => (
-                    <SelectItem key={ct} value={ct}>
-                      {t(`customsDeclarationType.options.${ct}` as any)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </FreightSection>
-
-        {/* 中间：航班/船期（随保存写入数据库） */}
-        <FreightSection
-          title={
-            transportTypeValue === 'AIR_FREIGHT'
-              ? t('transportSchedule.air.title')
-              : t('transportSchedule.sea.title')
-          }
-          className="min-w-0"
-        >
-          <ReceiptTransportScheduleSection
-            transportType={transportTypeValue}
-            form={form as any}
-          />
-        </FreightSection>
-
-        {/* 右侧：汇总 + 商品明细表格 */}
-        <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-1 2xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-          <FreightSection title={tSummaryPanel('title')}>
-            <ReceiptSummaryPanel
-              items={items}
+          {/* 中间：航班/船期（随保存写入数据库） */}
+          <FreightSection
+            title={
+              transportTypeValue === 'AIR_FREIGHT'
+                ? t('transportSchedule.air.title')
+                : t('transportSchedule.sea.title')
+            }
+            className="min-w-0"
+          >
+            <ReceiptTransportScheduleSection
               transportType={transportTypeValue}
-              bubbleSplitPercentInput={summaryInputs.bubbleSplitPercentInput}
-              piecesInput={summaryInputs.piecesInput}
-              weightInput={summaryInputs.weightInput}
-              volumeInput={summaryInputs.volumeInput}
-              weightConversionFactorInput={
-                summaryInputs.weightConversionFactorInput
-              }
-              onBubbleSplitPercentChange={(value) =>
-                setSummaryInputs((prev) => ({
-                  ...prev,
-                  bubbleSplitPercentInput: value,
-                }))
-              }
-              onPiecesChange={(value) =>
-                setSummaryInputs((prev) => ({ ...prev, piecesInput: value }))
-              }
-              onWeightChange={(value) =>
-                setSummaryInputs((prev) => ({ ...prev, weightInput: value }))
-              }
-              onVolumeChange={(value) =>
-                setSummaryInputs((prev) => ({ ...prev, volumeInput: value }))
-              }
-              onWeightConversionFactorChange={(value) =>
-                setSummaryInputs((prev) => ({
-                  ...prev,
-                  weightConversionFactorInput: value,
-                }))
-              }
+              form={form as any}
             />
           </FreightSection>
 
-          <FreightTableSection
-            title={t('itemsList.title')}
-            icon={Package}
-            actions={
-              isMergedParent ? null : (
-                <Button onClick={onAddItem} size="sm" type="button">
-                  <Plus className="mr-2 size-4" />
-                  {t('items.create')}
-                </Button>
-              )
-            }
-          >
-            <Table className="min-w-[770px]">
-              <TableHeader className="bg-muted">
-                <TableRow>
-                  <TableHead className="w-[200px]">
-                    {t('items.columns.commodity')}
-                  </TableHead>
-                  <TableHead className="w-[160px]">
-                    {t('items.columns.childReceiptNo')}
-                  </TableHead>
-                  <TableHead className="w-[80px] text-right pr-6">
-                    {t('items.columns.initialQty')}
-                  </TableHead>
-                  <TableHead className="w-[70px]">
-                    {t('items.columns.unit')}
-                  </TableHead>
-                  <TableHead className="w-[120px]">
-                    {t('items.columns.location')}
-                  </TableHead>
-                  <TableHead className="w-[120px] text-right">
-                    {t('items.fields.weightPerUnit')}
-                  </TableHead>
-                  <TableHead className="w-[120px] text-right">
-                    {t('items.columns.dimensions')}
-                  </TableHead>
-                  <TableHead className="w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {itemsQuery.isLoading ? (
-                  Array.from({ length: 3 }).map((_, idx) => (
-                    <TableRow key={`sk-${idx}`} className="h-14">
-                      {Array.from({ length: 8 }).map((__, cIdx) => (
-                        <TableCell key={`sk-${idx}-${cIdx}`}>
-                          <Skeleton className="h-4 w-24" />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : itemsQuery.error ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
-                      <Empty>
-                        <EmptyHeader>
-                          <EmptyTitle>{t('items.error')}</EmptyTitle>
-                          <EmptyDescription>
-                            {getFreightApiErrorMessage(itemsQuery.error)}
-                          </EmptyDescription>
-                        </EmptyHeader>
-                      </Empty>
-                    </TableCell>
-                  </TableRow>
-                ) : isItemsEmpty ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
-                      <Empty>
-                        <EmptyHeader>
-                          <EmptyTitle>{t('items.empty')}</EmptyTitle>
-                          <EmptyDescription>
-                            {t('items.emptyHint')}
-                          </EmptyDescription>
-                        </EmptyHeader>
-                      </Empty>
-                    </TableCell>
-                  </TableRow>
-                ) : isMergedParent ? (
-                  mergedChildItems.map((child) => (
-                    <TableRow key={child.receiptId} className="h-14">
-                      <TableCell className="max-w-[200px] truncate font-medium">
-                        {child.commodityNames ?? '-'}
-                      </TableCell>
-                      <TableCell className="max-w-[160px] text-muted-foreground">
-                        <LocaleLink
-                          href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
-                          className="text-primary underline-offset-4 hover:underline"
-                        >
-                          {child.receiptNo}
-                        </LocaleLink>
-                      </TableCell>
-                      <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
-                        {child.totalInitialQty}
-                      </TableCell>
-                      <TableCell className="w-[70px] text-muted-foreground">
-                        {child.unit ?? '-'}
-                      </TableCell>
-                      <TableCell className="max-w-[120px] truncate text-muted-foreground">
-                        -
-                      </TableCell>
-                      <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                        -
-                      </TableCell>
-                      <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                        -
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="text-muted-foreground">-</span>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  renderedItems.map((item) => {
-                    const weightPerUnit =
-                      item.weightPerUnit != null
-                        ? Number(item.weightPerUnit)
-                        : undefined;
-                    const totalWeightKg =
-                      weightPerUnit != null && Number.isFinite(weightPerUnit)
-                        ? weightPerUnit * item.initialQty
-                        : undefined;
-
-                    const lengthCm =
-                      item.lengthCm != null ? Number(item.lengthCm) : undefined;
-                    const widthCm =
-                      item.widthCm != null ? Number(item.widthCm) : undefined;
-                    const heightCm =
-                      item.heightCm != null ? Number(item.heightCm) : undefined;
-                    const volumePerUnitM3 =
-                      lengthCm != null &&
-                      widthCm != null &&
-                      heightCm != null &&
-                      Number.isFinite(lengthCm) &&
-                      Number.isFinite(widthCm) &&
-                      Number.isFinite(heightCm)
-                        ? (lengthCm * widthCm * heightCm) / 1_000_000
-                        : undefined;
-                    const volumePerUnitScaled =
-                      volumePerUnitM3 != null &&
-                      Number.isFinite(volumePerUnitM3)
-                        ? ceilToScaledInt(volumePerUnitM3, 2)
-                        : undefined;
-                    const totalVolumeScaled =
-                      volumePerUnitScaled != null
-                        ? volumePerUnitScaled * item.initialQty
-                        : undefined;
-
-                    return (
-                      <TableRow key={item.id} className="h-14">
-                        <TableCell className="max-w-[200px] truncate font-medium">
-                          {item.commodityName ?? '-'}
-                        </TableCell>
-                        <TableCell className="max-w-[160px] text-muted-foreground">
-                          -
-                        </TableCell>
-                        <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
-                          {item.initialQty}
-                        </TableCell>
-                        <TableCell className="w-[70px] text-muted-foreground">
-                          {item.unit ?? '-'}
-                        </TableCell>
-                        <TableCell className="max-w-[120px] truncate text-muted-foreground">
-                          {item.binLocation ?? '-'}
-                        </TableCell>
-                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                          {weightPerUnit != null &&
-                          Number.isFinite(weightPerUnit) &&
-                          totalWeightKg != null ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="block w-full cursor-help text-right tabular-nums">
-                                  {formatCeilFixed(weightPerUnit, 3)}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                sideOffset={6}
-                                className="max-w-[320px]"
-                              >
-                                <div className="space-y-1">
-                                  <div className="font-medium">
-                                    {t('items.columns.totalWeight')}
-                                  </div>
-                                  <div className="text-muted-foreground">
-                                    {t('items.columns.totalWeight')} ={' '}
-                                    {t('items.fields.weightPerUnit')} ×{' '}
-                                    {t('items.columns.initialQty')}
-                                  </div>
-                                  <div className="font-mono tabular-nums">
-                                    {formatCeilFixed(weightPerUnit, 3)} ×{' '}
-                                    {item.initialQty} ={' '}
-                                    {formatCeilFixed(totalWeightKg, 2)}
-                                  </div>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                          {volumePerUnitScaled != null &&
-                          totalVolumeScaled != null ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="block w-full cursor-help text-right tabular-nums whitespace-nowrap">
-                                  {lengthCm} × {widthCm} × {heightCm}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                sideOffset={6}
-                                className="max-w-[360px]"
-                              >
-                                <div className="space-y-1">
-                                  <div className="font-medium">
-                                    {t('items.columns.totalVolume')}
-                                  </div>
-                                  <div className="text-muted-foreground">
-                                    {t('items.fields.volumePerUnit')} = L × W ×
-                                    H ÷ 1,000,000
-                                  </div>
-                                  <div className="font-mono tabular-nums">
-                                    {formatCeilFixed(lengthCm ?? 0, 2)} ×{' '}
-                                    {formatCeilFixed(widthCm ?? 0, 2)} ×{' '}
-                                    {formatCeilFixed(heightCm ?? 0, 2)} ÷
-                                    1,000,000 ={' '}
-                                    {formatScaledInt(volumePerUnitScaled, 2)}
-                                  </div>
-                                  <div className="text-muted-foreground">
-                                    {t('items.columns.totalVolume')} ={' '}
-                                    {t('items.fields.volumePerUnit')} ×{' '}
-                                    {t('items.columns.initialQty')}
-                                  </div>
-                                  <div className="font-mono tabular-nums">
-                                    {formatScaledInt(volumePerUnitScaled, 2)} ×{' '}
-                                    {item.initialQty} ={' '}
-                                    {formatScaledInt(totalVolumeScaled, 2)}
-                                  </div>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isMergedParent ? (
-                            <span className="text-muted-foreground">-</span>
-                          ) : (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8"
-                                  type="button"
-                                >
-                                  <MoreHorizontal className="size-4" />
-                                  <span className="sr-only">Actions</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => onEditItem(item)}
-                                >
-                                  <Edit className="mr-2 size-4" />
-                                  {t('itemActions.edit')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => onDeleteItem(item)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="mr-2 size-4" />
-                                  {t('itemActions.delete')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </FreightTableSection>
-        </div>
-      </div>
-
-      {/* 备注区域 */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="internalRemarks">{t('internalRemarks')}</Label>
-          <Textarea
-            id="internalRemarks"
-            {...form.register('internalRemarks')}
-            placeholder={t('receipt.fields.internalRemarksPlaceholder')}
-            rows={3}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="remarks">{t('remarks')}</Label>
-          <Textarea
-            id="remarks"
-            {...form.register('remarks')}
-            placeholder={t('receipt.fields.remarksPlaceholder')}
-            rows={3}
-          />
-        </div>
-      </div>
-
-      {/* Tab区域：基本信息 */}
-      <Tabs defaultValue="basic" className="space-y-3">
-        <TabsList>
-          <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
-          <TabsTrigger value="fees">{t('detailTabs.fees')}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="basic">
-          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
-            {/* 左侧：内部资料 */}
-            <EmployeeAssignmentsSection
-              salesEmployeeId={form.watch('salesEmployeeId')}
-              customerServiceEmployeeId={form.watch(
-                'customerServiceEmployeeId'
-              )}
-              overseasCsEmployeeId={form.watch('overseasCsEmployeeId')}
-              operationsEmployeeId={form.watch('operationsEmployeeId')}
-              documentationEmployeeId={form.watch('documentationEmployeeId')}
-              financeEmployeeId={form.watch('financeEmployeeId')}
-              bookingEmployeeId={form.watch('bookingEmployeeId')}
-              reviewerEmployeeId={form.watch('reviewerEmployeeId')}
-              onSalesEmployeeChange={(value) =>
-                form.setValue('salesEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onCustomerServiceEmployeeChange={(value) =>
-                form.setValue('customerServiceEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onOverseasCsEmployeeChange={(value) =>
-                form.setValue('overseasCsEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onOperationsEmployeeChange={(value) =>
-                form.setValue('operationsEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onDocumentationEmployeeChange={(value) =>
-                form.setValue('documentationEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onFinanceEmployeeChange={(value) =>
-                form.setValue('financeEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onBookingEmployeeChange={(value) =>
-                form.setValue('bookingEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-              onReviewerEmployeeChange={(value) =>
-                form.setValue('reviewerEmployeeId', value ?? '', {
-                  shouldDirty: true,
-                })
-              }
-            />
-
-            {/* 中间：联系资料 */}
-            <FreightSection title={t('detailSections.contact')}>
-              <div className="grid gap-4">
-                {/* 客户选择 */}
-                <div className="space-y-2">
-                  <Label htmlFor="customerId">{t('customer')}</Label>
-                  <CustomerCombobox
-                    value={form.watch('customerId')}
-                    onValueChange={(value) =>
-                      form.setValue('customerId', value, { shouldDirty: true })
-                    }
-                    onAddNew={() => setAddCustomerDialogOpen(true)}
-                    placeholder={t('selectCustomer')}
-                  />
-                </div>
-
-                {/* 发货人 */}
-                <div className="space-y-2">
-                  <Label htmlFor="shipperId">{t('shipper')}</Label>
-                  <ShipperCombobox
-                    value={form.watch('shipperId')}
-                    onValueChange={(value) =>
-                      form.setValue('shipperId', value, { shouldDirty: true })
-                    }
-                    placeholder={t('selectShipper')}
-                  />
-                </div>
-
-                {/* 订舱代理 */}
-                <div className="space-y-2">
-                  <Label htmlFor="bookingAgentId">{t('bookingAgent')}</Label>
-                  <BookingAgentCombobox
-                    value={form.watch('bookingAgentId')}
-                    onValueChange={(value) =>
-                      form.setValue('bookingAgentId', value, {
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder={t('selectBookingAgent')}
-                  />
-                </div>
-
-                {/* 清关代理 */}
-                <div className="space-y-2">
-                  <Label htmlFor="customsAgentId">{t('customsAgent')}</Label>
-                  <CustomsAgentCombobox
-                    value={form.watch('customsAgentId')}
-                    onValueChange={(value) =>
-                      form.setValue('customsAgentId', value, {
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder={t('selectCustomsAgent')}
-                  />
-                </div>
-              </div>
+          {/* 右侧：汇总 + 商品明细表格 */}
+          <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-1 2xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+            <FreightSection title={tSummaryPanel('title')}>
+              <ReceiptSummaryPanel
+                items={items}
+                transportType={transportTypeValue}
+                bubbleSplitPercentInput={summaryInputs.bubbleSplitPercentInput}
+                piecesInput={summaryInputs.piecesInput}
+                weightInput={summaryInputs.weightInput}
+                volumeInput={summaryInputs.volumeInput}
+                weightConversionFactorInput={
+                  summaryInputs.weightConversionFactorInput
+                }
+                onBubbleSplitPercentChange={(value) =>
+                  setSummaryInputs((prev) => ({
+                    ...prev,
+                    bubbleSplitPercentInput: value,
+                  }))
+                }
+                onPiecesChange={(value) =>
+                  setSummaryInputs((prev) => ({ ...prev, piecesInput: value }))
+                }
+                onWeightChange={(value) =>
+                  setSummaryInputs((prev) => ({ ...prev, weightInput: value }))
+                }
+                onVolumeChange={(value) =>
+                  setSummaryInputs((prev) => ({ ...prev, volumeInput: value }))
+                }
+                onWeightConversionFactorChange={(value) =>
+                  setSummaryInputs((prev) => ({
+                    ...prev,
+                    weightConversionFactorInput: value,
+                  }))
+                }
+              />
             </FreightSection>
 
-            {/* 右侧：单套提单 / HBL / MBL */}
-            <div className="grid gap-4">
-              <div className="grid gap-4 xl:grid-cols-2">
-                <FreightSection
-                  title={tSingleBill('title')}
-                  className="min-w-0"
-                >
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="singleBillCutoffDateSi">
-                        {tSingleBill('fields.cutoffDateSi')}
-                      </Label>
-                      <Input
-                        id="singleBillCutoffDateSi"
-                        type="date"
-                        {...form.register('singleBillCutoffDateSi')}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="singleBillGateClosingTime">
-                        {tSingleBill('fields.gateClosingTime')}
-                      </Label>
-                      <Input
-                        id="singleBillGateClosingTime"
-                        type="date"
-                        {...form.register('singleBillGateClosingTime')}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="singleBillDepartureDateE">
-                        {tSingleBill('fields.departureDateE')}
-                      </Label>
-                      <Input
-                        id="singleBillDepartureDateE"
-                        type="date"
-                        {...form.register('singleBillDepartureDateE')}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="singleBillArrivalDateE">
-                        {tSingleBill('fields.arrivalDateE')}
-                      </Label>
-                      <Input
-                        id="singleBillArrivalDateE"
-                        type="date"
-                        {...form.register('singleBillArrivalDateE')}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="singleBillTransitDateE">
-                        {tSingleBill('fields.transitDateE')}
-                      </Label>
-                      <Input
-                        id="singleBillTransitDateE"
-                        type="date"
-                        {...form.register('singleBillTransitDateE')}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="singleBillDeliveryDateE">
-                        {tSingleBill('fields.deliveryDateE')}
-                      </Label>
-                      <Input
-                        id="singleBillDeliveryDateE"
-                        type="date"
-                        {...form.register('singleBillDeliveryDateE')}
-                        className="text-base"
-                      />
-                    </div>
-                  </div>
-                </FreightSection>
-                <FreightSection title={tHbl('title')} className="min-w-0">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="hblPortOfDestinationId">
-                        {tHbl('portOfDestination')}
-                      </Label>
-                      <Controller
-                        control={form.control}
-                        name="hblPortOfDestinationId"
-                        render={({ field }) => (
-                          <PortCombobox
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={tHbl('portOfDestinationPlaceholder')}
-                          />
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hblPortOfDischargeId">
-                        {tHbl('portOfDischarge')}
-                      </Label>
-                      <Controller
-                        control={form.control}
-                        name="hblPortOfDischargeId"
-                        render={({ field }) => (
-                          <PortCombobox
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={tHbl('portOfDischargePlaceholder')}
-                          />
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hblPortOfLoadingId">
-                        {tHbl('portOfLoading')}
-                      </Label>
-                      <Controller
-                        control={form.control}
-                        name="hblPortOfLoadingId"
-                        render={({ field }) => (
-                          <PortCombobox
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={tHbl('portOfLoadingPlaceholder')}
-                          />
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hblPlaceOfReceiptId">
-                        {tHbl('placeOfReceipt')}
-                      </Label>
-                      <Controller
-                        control={form.control}
-                        name="hblPlaceOfReceiptId"
-                        render={({ field }) => (
-                          <PortCombobox
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={tHbl('placeOfReceiptPlaceholder')}
-                          />
-                        )}
-                      />
-                    </div>
-                  </div>
-                </FreightSection>
-              </div>
-              <FreightSection title={tMbl('title')} className="min-w-0">
+            <FreightTableSection
+              title={t('itemsList.title')}
+              icon={Package}
+              actions={
+                isMergedParent ? null : (
+                  <Button
+                    onClick={onAddItem}
+                    size="sm"
+                    type="button"
+                    disabled={isOutbound}
+                  >
+                    <Plus className="mr-2 size-4" />
+                    {t('items.create')}
+                  </Button>
+                )
+              }
+            >
+              <Table className="min-w-[770px]">
+                <TableHeader className="bg-muted">
+                  <TableRow>
+                    <TableHead className="w-[200px]">
+                      {t('items.columns.commodity')}
+                    </TableHead>
+                    <TableHead className="w-[160px]">
+                      {t('items.columns.childReceiptNo')}
+                    </TableHead>
+                    <TableHead className="w-[80px] text-right pr-6">
+                      {t('items.columns.initialQty')}
+                    </TableHead>
+                    <TableHead className="w-[70px]">
+                      {t('items.columns.unit')}
+                    </TableHead>
+                    <TableHead className="w-[120px]">
+                      {t('items.columns.location')}
+                    </TableHead>
+                    <TableHead className="w-[120px] text-right">
+                      {t('items.fields.weightPerUnit')}
+                    </TableHead>
+                    <TableHead className="w-[120px] text-right">
+                      {t('items.columns.dimensions')}
+                    </TableHead>
+                    <TableHead className="w-[60px]" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {itemsQuery.isLoading ? (
+                    Array.from({ length: 3 }).map((_, idx) => (
+                      <TableRow key={`sk-${idx}`} className="h-14">
+                        {Array.from({ length: 8 }).map((__, cIdx) => (
+                          <TableCell key={`sk-${idx}-${cIdx}`}>
+                            <Skeleton className="h-4 w-24" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : itemsQuery.error ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-32 text-center">
+                        <Empty>
+                          <EmptyHeader>
+                            <EmptyTitle>{t('items.error')}</EmptyTitle>
+                            <EmptyDescription>
+                              {getFreightApiErrorMessage(itemsQuery.error)}
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
+                      </TableCell>
+                    </TableRow>
+                  ) : isItemsEmpty ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-32 text-center">
+                        <Empty>
+                          <EmptyHeader>
+                            <EmptyTitle>{t('items.empty')}</EmptyTitle>
+                            <EmptyDescription>
+                              {t('items.emptyHint')}
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
+                      </TableCell>
+                    </TableRow>
+                  ) : isMergedParent ? (
+                    mergedChildItems.map((child) => (
+                      <TableRow key={child.receiptId} className="h-14">
+                        <TableCell className="max-w-[200px] truncate font-medium">
+                          {child.commodityNames ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[160px] text-muted-foreground">
+                          <LocaleLink
+                            href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
+                            className="text-primary underline-offset-4 hover:underline"
+                          >
+                            {child.receiptNo}
+                          </LocaleLink>
+                        </TableCell>
+                        <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
+                          {child.totalInitialQty}
+                        </TableCell>
+                        <TableCell className="w-[70px] text-muted-foreground">
+                          {child.unit ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[120px] truncate text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-muted-foreground">-</span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    renderedItems.map((item) => {
+                      const weightPerUnit =
+                        item.weightPerUnit != null
+                          ? Number(item.weightPerUnit)
+                          : undefined;
+                      const totalWeightKg =
+                        weightPerUnit != null && Number.isFinite(weightPerUnit)
+                          ? weightPerUnit * item.initialQty
+                          : undefined;
+
+                      const lengthCm =
+                        item.lengthCm != null
+                          ? Number(item.lengthCm)
+                          : undefined;
+                      const widthCm =
+                        item.widthCm != null ? Number(item.widthCm) : undefined;
+                      const heightCm =
+                        item.heightCm != null
+                          ? Number(item.heightCm)
+                          : undefined;
+                      const volumePerUnitM3 =
+                        lengthCm != null &&
+                        widthCm != null &&
+                        heightCm != null &&
+                        Number.isFinite(lengthCm) &&
+                        Number.isFinite(widthCm) &&
+                        Number.isFinite(heightCm)
+                          ? (lengthCm * widthCm * heightCm) / 1_000_000
+                          : undefined;
+                      const volumePerUnitScaled =
+                        volumePerUnitM3 != null &&
+                        Number.isFinite(volumePerUnitM3)
+                          ? ceilToScaledInt(volumePerUnitM3, 2)
+                          : undefined;
+                      const totalVolumeScaled =
+                        volumePerUnitScaled != null
+                          ? volumePerUnitScaled * item.initialQty
+                          : undefined;
+
+                      return (
+                        <TableRow key={item.id} className="h-14">
+                          <TableCell className="max-w-[200px] truncate font-medium">
+                            {item.commodityName ?? '-'}
+                          </TableCell>
+                          <TableCell className="max-w-[160px] text-muted-foreground">
+                            -
+                          </TableCell>
+                          <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
+                            {item.initialQty}
+                          </TableCell>
+                          <TableCell className="w-[70px] text-muted-foreground">
+                            {item.unit ?? '-'}
+                          </TableCell>
+                          <TableCell className="max-w-[120px] truncate text-muted-foreground">
+                            {item.binLocation ?? '-'}
+                          </TableCell>
+                          <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                            {weightPerUnit != null &&
+                            Number.isFinite(weightPerUnit) &&
+                            totalWeightKg != null ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="block w-full cursor-help text-right tabular-nums">
+                                    {formatCeilFixed(weightPerUnit, 3)}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="top"
+                                  sideOffset={6}
+                                  className="max-w-[320px]"
+                                >
+                                  <div className="space-y-1">
+                                    <div className="font-medium">
+                                      {t('items.columns.totalWeight')}
+                                    </div>
+                                    <div className="text-muted-foreground">
+                                      {t('items.columns.totalWeight')} ={' '}
+                                      {t('items.fields.weightPerUnit')} ×{' '}
+                                      {t('items.columns.initialQty')}
+                                    </div>
+                                    <div className="font-mono tabular-nums">
+                                      {formatCeilFixed(weightPerUnit, 3)} ×{' '}
+                                      {item.initialQty} ={' '}
+                                      {formatCeilFixed(totalWeightKg, 2)}
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                            {volumePerUnitScaled != null &&
+                            totalVolumeScaled != null ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="block w-full cursor-help text-right tabular-nums whitespace-nowrap">
+                                    {lengthCm} × {widthCm} × {heightCm}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="top"
+                                  sideOffset={6}
+                                  className="max-w-[360px]"
+                                >
+                                  <div className="space-y-1">
+                                    <div className="font-medium">
+                                      {t('items.columns.totalVolume')}
+                                    </div>
+                                    <div className="text-muted-foreground">
+                                      {t('items.fields.volumePerUnit')} = L × W
+                                      × H ÷ 1,000,000
+                                    </div>
+                                    <div className="font-mono tabular-nums">
+                                      {formatCeilFixed(lengthCm ?? 0, 2)} ×{' '}
+                                      {formatCeilFixed(widthCm ?? 0, 2)} ×{' '}
+                                      {formatCeilFixed(heightCm ?? 0, 2)} ÷
+                                      1,000,000 ={' '}
+                                      {formatScaledInt(volumePerUnitScaled, 2)}
+                                    </div>
+                                    <div className="text-muted-foreground">
+                                      {t('items.columns.totalVolume')} ={' '}
+                                      {t('items.fields.volumePerUnit')} ×{' '}
+                                      {t('items.columns.initialQty')}
+                                    </div>
+                                    <div className="font-mono tabular-nums">
+                                      {formatScaledInt(volumePerUnitScaled, 2)}{' '}
+                                      × {item.initialQty} ={' '}
+                                      {formatScaledInt(totalVolumeScaled, 2)}
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {isMergedParent ? (
+                              <span className="text-muted-foreground">-</span>
+                            ) : (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-8"
+                                    type="button"
+                                    disabled={isOutbound}
+                                  >
+                                    <MoreHorizontal className="size-4" />
+                                    <span className="sr-only">Actions</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => onEditItem(item)}
+                                    disabled={isOutbound}
+                                  >
+                                    <Edit className="mr-2 size-4" />
+                                    {t('itemActions.edit')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => onDeleteItem(item)}
+                                    className="text-destructive"
+                                    disabled={isOutbound}
+                                  >
+                                    <Trash2 className="mr-2 size-4" />
+                                    {t('itemActions.delete')}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </FreightTableSection>
+          </div>
+        </div>
+
+        {/* 备注区域 */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="internalRemarks">{t('internalRemarks')}</Label>
+            <Textarea
+              id="internalRemarks"
+              {...form.register('internalRemarks')}
+              placeholder={t('receipt.fields.internalRemarksPlaceholder')}
+              rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="remarks">{t('remarks')}</Label>
+            <Textarea
+              id="remarks"
+              {...form.register('remarks')}
+              placeholder={t('receipt.fields.remarksPlaceholder')}
+              rows={3}
+            />
+          </div>
+        </div>
+
+        {/* Tab区域：基本信息 */}
+        <Tabs defaultValue="basic" className="space-y-3">
+          <TabsList>
+            <TabsTrigger value="basic">{t('detailTabs.basic')}</TabsTrigger>
+            <TabsTrigger value="fees">{t('detailTabs.fees')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="basic">
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
+              {/* 左侧：内部资料 */}
+              <EmployeeAssignmentsSection
+                salesEmployeeId={form.watch('salesEmployeeId')}
+                customerServiceEmployeeId={form.watch(
+                  'customerServiceEmployeeId'
+                )}
+                overseasCsEmployeeId={form.watch('overseasCsEmployeeId')}
+                operationsEmployeeId={form.watch('operationsEmployeeId')}
+                documentationEmployeeId={form.watch('documentationEmployeeId')}
+                financeEmployeeId={form.watch('financeEmployeeId')}
+                bookingEmployeeId={form.watch('bookingEmployeeId')}
+                reviewerEmployeeId={form.watch('reviewerEmployeeId')}
+                onSalesEmployeeChange={(value) =>
+                  form.setValue('salesEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onCustomerServiceEmployeeChange={(value) =>
+                  form.setValue('customerServiceEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onOverseasCsEmployeeChange={(value) =>
+                  form.setValue('overseasCsEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onOperationsEmployeeChange={(value) =>
+                  form.setValue('operationsEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onDocumentationEmployeeChange={(value) =>
+                  form.setValue('documentationEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onFinanceEmployeeChange={(value) =>
+                  form.setValue('financeEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onBookingEmployeeChange={(value) =>
+                  form.setValue('bookingEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+                onReviewerEmployeeChange={(value) =>
+                  form.setValue('reviewerEmployeeId', value ?? '', {
+                    shouldDirty: true,
+                  })
+                }
+              />
+
+              {/* 中间：联系资料 */}
+              <FreightSection title={t('detailSections.contact')}>
                 <div className="grid gap-4">
-                  {/* 目的港 */}
+                  {/* 客户选择 */}
                   <div className="space-y-2">
-                    <Label htmlFor="portOfDestinationId">
-                      {tMbl('portOfDestination')}
-                    </Label>
-                    <Controller
-                      control={form.control}
-                      name="portOfDestinationId"
-                      render={({ field }) => (
-                        <PortCombobox
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={tMbl('portOfDestinationPlaceholder')}
-                        />
-                      )}
+                    <Label htmlFor="customerId">{t('customer')}</Label>
+                    <CustomerCombobox
+                      value={form.watch('customerId')}
+                      onValueChange={(value) =>
+                        form.setValue('customerId', value, {
+                          shouldDirty: true,
+                        })
+                      }
+                      onAddNew={() => setAddCustomerDialogOpen(true)}
+                      placeholder={t('selectCustomer')}
                     />
                   </div>
 
-                  {/* 卸货港 */}
+                  {/* 发货人 */}
                   <div className="space-y-2">
-                    <Label htmlFor="portOfDischargeId">
-                      {tMbl('portOfDischarge')}
-                    </Label>
-                    <Controller
-                      control={form.control}
-                      name="portOfDischargeId"
-                      render={({ field }) => (
-                        <PortCombobox
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={tMbl('portOfDischargePlaceholder')}
-                        />
-                      )}
+                    <Label htmlFor="shipperId">{t('shipper')}</Label>
+                    <ShipperCombobox
+                      value={form.watch('shipperId')}
+                      onValueChange={(value) =>
+                        form.setValue('shipperId', value, { shouldDirty: true })
+                      }
+                      placeholder={t('selectShipper')}
                     />
                   </div>
 
-                  {/* 起运港 */}
+                  {/* 订舱代理 */}
                   <div className="space-y-2">
-                    <Label htmlFor="portOfLoadingId">
-                      {tMbl('portOfLoading')}
-                    </Label>
-                    <Controller
-                      control={form.control}
-                      name="portOfLoadingId"
-                      render={({ field }) => (
-                        <PortCombobox
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={tMbl('portOfLoadingPlaceholder')}
-                        />
-                      )}
+                    <Label htmlFor="bookingAgentId">{t('bookingAgent')}</Label>
+                    <BookingAgentCombobox
+                      value={form.watch('bookingAgentId')}
+                      onValueChange={(value) =>
+                        form.setValue('bookingAgentId', value, {
+                          shouldDirty: true,
+                        })
+                      }
+                      placeholder={t('selectBookingAgent')}
                     />
                   </div>
 
-                  {/* 收货地 */}
+                  {/* 清关代理 */}
                   <div className="space-y-2">
-                    <Label htmlFor="placeOfReceiptId">
-                      {tMbl('placeOfReceipt')}
-                    </Label>
-                    <Controller
-                      control={form.control}
-                      name="placeOfReceiptId"
-                      render={({ field }) => (
-                        <PortCombobox
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={tMbl('placeOfReceiptPlaceholder')}
-                        />
-                      )}
+                    <Label htmlFor="customsAgentId">{t('customsAgent')}</Label>
+                    <CustomsAgentCombobox
+                      value={form.watch('customsAgentId')}
+                      onValueChange={(value) =>
+                        form.setValue('customsAgentId', value, {
+                          shouldDirty: true,
+                        })
+                      }
+                      placeholder={t('selectCustomsAgent')}
                     />
                   </div>
                 </div>
               </FreightSection>
+
+              {/* 右侧：单套提单 / HBL / MBL */}
+              <div className="grid gap-4">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <FreightSection
+                    title={tSingleBill('title')}
+                    className="min-w-0"
+                  >
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="singleBillCutoffDateSi">
+                          {tSingleBill('fields.cutoffDateSi')}
+                        </Label>
+                        <Input
+                          id="singleBillCutoffDateSi"
+                          type="date"
+                          {...form.register('singleBillCutoffDateSi')}
+                          className="text-base"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="singleBillGateClosingTime">
+                          {tSingleBill('fields.gateClosingTime')}
+                        </Label>
+                        <Input
+                          id="singleBillGateClosingTime"
+                          type="date"
+                          {...form.register('singleBillGateClosingTime')}
+                          className="text-base"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="singleBillDepartureDateE">
+                          {tSingleBill('fields.departureDateE')}
+                        </Label>
+                        <Input
+                          id="singleBillDepartureDateE"
+                          type="date"
+                          {...form.register('singleBillDepartureDateE')}
+                          className="text-base"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="singleBillArrivalDateE">
+                          {tSingleBill('fields.arrivalDateE')}
+                        </Label>
+                        <Input
+                          id="singleBillArrivalDateE"
+                          type="date"
+                          {...form.register('singleBillArrivalDateE')}
+                          className="text-base"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="singleBillTransitDateE">
+                          {tSingleBill('fields.transitDateE')}
+                        </Label>
+                        <Input
+                          id="singleBillTransitDateE"
+                          type="date"
+                          {...form.register('singleBillTransitDateE')}
+                          className="text-base"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="singleBillDeliveryDateE">
+                          {tSingleBill('fields.deliveryDateE')}
+                        </Label>
+                        <Input
+                          id="singleBillDeliveryDateE"
+                          type="date"
+                          {...form.register('singleBillDeliveryDateE')}
+                          className="text-base"
+                        />
+                      </div>
+                    </div>
+                  </FreightSection>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <FreightSection title={tHbl('title')} className="min-w-0">
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="hblPortOfDestinationId">
+                            {tHbl('portOfDestination')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="hblPortOfDestinationId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tHbl(
+                                  'portOfDestinationPlaceholder'
+                                )}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="hblPortOfDischargeId">
+                            {tHbl('portOfDischarge')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="hblPortOfDischargeId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tHbl('portOfDischargePlaceholder')}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="hblPortOfLoadingId">
+                            {tHbl('portOfLoading')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="hblPortOfLoadingId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tHbl('portOfLoadingPlaceholder')}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="hblPlaceOfReceiptId">
+                            {tHbl('placeOfReceipt')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="hblPlaceOfReceiptId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tHbl('placeOfReceiptPlaceholder')}
+                              />
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </FreightSection>
+                    <FreightSection title={tMbl('title')} className="min-w-0">
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="portOfDestinationId">
+                            {tMbl('portOfDestination')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="portOfDestinationId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tMbl(
+                                  'portOfDestinationPlaceholder'
+                                )}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="portOfDischargeId">
+                            {tMbl('portOfDischarge')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="portOfDischargeId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tMbl('portOfDischargePlaceholder')}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="portOfLoadingId">
+                            {tMbl('portOfLoading')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="portOfLoadingId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tMbl('portOfLoadingPlaceholder')}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="placeOfReceiptId">
+                            {tMbl('placeOfReceipt')}
+                          </Label>
+                          <Controller
+                            control={form.control}
+                            name="placeOfReceiptId"
+                            render={({ field }) => (
+                              <PortCombobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder={tMbl('placeOfReceiptPlaceholder')}
+                              />
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </FreightSection>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </TabsContent>
-        <TabsContent value="fees">
-          <ReceiptFeeManagementTab receiptId={receipt.id} />
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+          <TabsContent value="fees">
+            <ReceiptFeeManagementTab receiptId={receipt.id} />
+          </TabsContent>
+        </Tabs>
+      </fieldset>
 
       {/* 底部固定保存按钮 */}
       <div className="sticky bottom-0 bg-background border-t pt-4 flex justify-end">

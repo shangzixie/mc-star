@@ -60,11 +60,15 @@ export async function POST(request: Request) {
           transportType: body.transportType,
           customsDeclarationType: body.customsDeclarationType,
           status: body.status ?? 'INBOUND',
-          inboundTime: body.inboundTime ? new Date(body.inboundTime) : undefined,
+          inboundTime: body.inboundTime
+            ? new Date(body.inboundTime)
+            : undefined,
           remarks: body.remarks,
           internalRemarks: body.internalRemarks,
           manualPieces:
-            body.manualPieces != null ? `${body.manualPieces}` : body.manualPieces,
+            body.manualPieces != null
+              ? `${body.manualPieces}`
+              : body.manualPieces,
           manualWeightKg:
             body.manualWeightKg != null
               ? `${body.manualWeightKg}`
