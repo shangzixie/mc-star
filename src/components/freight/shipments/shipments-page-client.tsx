@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useLocaleRouter } from '@/i18n/navigation';
 import { Routes } from '@/routes';
 import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 import type { FreightWarehouseReceiptWithRelations } from '@/lib/freight/api-types';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { useMemo, useState } from 'react';
@@ -66,6 +67,8 @@ export function ShipmentsPageClient() {
       return null;
     }
 
+    const isWeightCritical = selectionTotals.weight > 2850;
+
     return (
       <div className="rounded-md border border-muted/40 bg-muted/5 p-3 text-sm text-muted-foreground shadow-sm">
         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -80,7 +83,12 @@ export function ShipmentsPageClient() {
           </div>
           <div>
             <div className="text-xs">{t('selectionSummary.weight')}</div>
-            <div className="text-base font-medium text-foreground tabular-nums">
+            <div
+              className={cn(
+                'text-base font-medium tabular-nums',
+                isWeightCritical ? 'text-red-600' : 'text-foreground'
+              )}
+            >
               {`${formatCeilFixed(selectionTotals.weight, 2)} kg`}
             </div>
           </div>
