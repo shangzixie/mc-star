@@ -765,6 +765,8 @@
           "description": "Manage warehouse receipts and inbound items",
           "searchPlaceholder": "Search receipt no / remarks...",
           "statusAll": "All Status",
+          "selectAll": "Select all",
+          "selectRow": "Select row",
           "empty": "No receipts",
           "emptyHint": "Create a new receipt on the right",
           "error": "Failed to load",
@@ -845,6 +847,7 @@
             "shipped": "Shipped",
             "unit": "Unit",
             "location": "Location",
+            "childReceiptNo": "Receipt No",
             "weight": "Weight",
             "totalWeight": "Total Weight (kg)",
             "dimensions": "L × W × H (cm)",
@@ -1172,7 +1175,7 @@
         }
       },
       "shipments": {
-        "title": "Shipments",
+        "title": "Consolidated Outbound",
         "new": "New shipment",
         "newDescription": "Create a shipment record (you can fill more details later).",
         "create": "Create",
@@ -1183,6 +1186,35 @@
         "searchPlaceholder": "Search job / MBL / HBL...",
         "statusAll": "All statuses",
         "empty": "No shipments",
+        "mergePage": {
+          "title": "Consolidated Outbound",
+          "description": "Select inbound receipts to merge"
+        },
+        "merge": {
+          "start": "Merge receipts",
+          "cancel": "Cancel",
+          "create": "Create receipt",
+          "creating": "Creating...",
+          "success": "Receipt created",
+          "failed": "Failed to create receipt",
+          "title": "Merge receipts",
+          "description": "Create a new receipt from selected inbound receipts.",
+          "validation": {
+            "receiptNoRequired": "Receipt number is required",
+            "transportTypeRequired": "Transport type is required"
+          },
+          "fields": {
+            "receiptNo": "Receipt No",
+            "receiptNoPlaceholder": "Enter receipt number",
+            "transportType": "Transport type",
+            "transportTypePlaceholder": "Select transport type",
+            "transportTypeOptions": {
+              "SEA_FCL": "Sea (FCL)",
+              "AIR_FREIGHT": "Air freight",
+              "SEA_LCL": "Sea (LCL)"
+            }
+          }
+        },
         "fields": {
           "jobNo": "Job No",
           "transportMode": "Transport mode",

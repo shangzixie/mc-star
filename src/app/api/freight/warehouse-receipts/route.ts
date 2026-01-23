@@ -2,6 +2,7 @@ import { getDb } from '@/db/index';
 import {
   inventoryItems,
   parties,
+  warehouseReceiptMerges,
   warehouseReceipts,
   warehouses,
 } from '@/db/schema';
@@ -187,6 +188,8 @@ export async function GET(request: Request) {
               },
             }
           : {}),
+        isMergedParent: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.parentReceiptId} = ${warehouseReceipts.id})`,
+        isMergedChild: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.childReceiptId} = ${warehouseReceipts.id})`,
       })
       .from(warehouseReceipts)
       .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))

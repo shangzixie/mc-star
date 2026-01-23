@@ -62,7 +62,7 @@ import {
   useUpdateFreightMBL,
 } from '@/hooks/freight/use-freight-mbl';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
-import { useLocaleRouter } from '@/i18n/navigation';
+import { LocaleLink, useLocaleRouter } from '@/i18n/navigation';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
   FreightInventoryItem,
@@ -78,6 +78,7 @@ import {
   formatCeilFixed,
   formatScaledInt,
 } from '@/lib/freight/math';
+import { Routes } from '@/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,
@@ -202,7 +203,12 @@ export function ReceiptDetailEditView({
   });
 
   const items = itemsQuery.data ?? [];
+  const isMergedParent = Boolean(receipt.isMergedParent);
+  const mergedChildItems = receipt.mergedChildItems ?? [];
   const renderedItems = useMemo(() => items, [items]);
+  const isItemsEmpty = isMergedParent
+    ? mergedChildItems.length === 0
+    : renderedItems.length === 0;
 
   const defaultAirOperationNode = useMemo(() => {
     const node = receipt.airOperationNode ?? undefined;
@@ -939,10 +945,12 @@ export function ReceiptDetailEditView({
             title={t('itemsList.title')}
             icon={Package}
             actions={
-              <Button onClick={onAddItem} size="sm" type="button">
-                <Plus className="mr-2 size-4" />
-                {t('items.create')}
-              </Button>
+              isMergedParent ? null : (
+                <Button onClick={onAddItem} size="sm" type="button">
+                  <Plus className="mr-2 size-4" />
+                  {t('items.create')}
+                </Button>
+              )
             }
           >
             <Table className="min-w-[770px]">
@@ -950,6 +958,9 @@ export function ReceiptDetailEditView({
                 <TableRow>
                   <TableHead className="w-[200px]">
                     {t('items.columns.commodity')}
+                  </TableHead>
+                  <TableHead className="w-[160px]">
+                    {t('items.columns.childReceiptNo')}
                   </TableHead>
                   <TableHead className="w-[80px] text-right pr-6">
                     {t('items.columns.initialQty')}
@@ -973,7 +984,7 @@ export function ReceiptDetailEditView({
                 {itemsQuery.isLoading ? (
                   Array.from({ length: 3 }).map((_, idx) => (
                     <TableRow key={`sk-${idx}`} className="h-14">
-                      {Array.from({ length: 7 }).map((__, cIdx) => (
+                      {Array.from({ length: 8 }).map((__, cIdx) => (
                         <TableCell key={`sk-${idx}-${cIdx}`}>
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
@@ -982,7 +993,7 @@ export function ReceiptDetailEditView({
                   ))
                 ) : itemsQuery.error ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-32 text-center">
+                    <TableCell colSpan={8} className="h-32 text-center">
                       <Empty>
                         <EmptyHeader>
                           <EmptyTitle>{t('items.error')}</EmptyTitle>
@@ -993,9 +1004,9 @@ export function ReceiptDetailEditView({
                       </Empty>
                     </TableCell>
                   </TableRow>
-                ) : renderedItems.length === 0 ? (
+                ) : isItemsEmpty ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-32 text-center">
+                    <TableCell colSpan={8} className="h-32 text-center">
                       <Empty>
                         <EmptyHeader>
                           <EmptyTitle>{t('items.empty')}</EmptyTitle>
@@ -1006,6 +1017,40 @@ export function ReceiptDetailEditView({
                       </Empty>
                     </TableCell>
                   </TableRow>
+                ) : isMergedParent ? (
+                  mergedChildItems.map((child) => (
+                    <TableRow key={child.receiptId} className="h-14">
+                      <TableCell className="max-w-[200px] truncate font-medium">
+                        {child.commodityNames ?? '-'}
+                      </TableCell>
+                      <TableCell className="max-w-[160px] text-muted-foreground">
+                        <LocaleLink
+                          href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
+                          {child.receiptNo}
+                        </LocaleLink>
+                      </TableCell>
+                      <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
+                        {child.totalInitialQty}
+                      </TableCell>
+                      <TableCell className="w-[70px] text-muted-foreground">
+                        {child.unit ?? '-'}
+                      </TableCell>
+                      <TableCell className="max-w-[120px] truncate text-muted-foreground">
+                        -
+                      </TableCell>
+                      <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                        -
+                      </TableCell>
+                      <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                        -
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="text-muted-foreground">-</span>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : (
                   renderedItems.map((item) => {
                     const weightPerUnit =
@@ -1046,6 +1091,9 @@ export function ReceiptDetailEditView({
                       <TableRow key={item.id} className="h-14">
                         <TableCell className="max-w-[200px] truncate font-medium">
                           {item.commodityName ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[160px] text-muted-foreground">
+                          -
                         </TableCell>
                         <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
                           {item.initialQty}
@@ -1139,34 +1187,38 @@ export function ReceiptDetailEditView({
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-8"
-                                type="button"
-                              >
-                                <MoreHorizontal className="size-4" />
-                                <span className="sr-only">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => onEditItem(item)}
-                              >
-                                <Edit className="mr-2 size-4" />
-                                {t('itemActions.edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => onDeleteItem(item)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 size-4" />
-                                {t('itemActions.delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          {isMergedParent ? (
+                            <span className="text-muted-foreground">-</span>
+                          ) : (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="size-8"
+                                  type="button"
+                                >
+                                  <MoreHorizontal className="size-4" />
+                                  <span className="sr-only">Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => onEditItem(item)}
+                                >
+                                  <Edit className="mr-2 size-4" />
+                                  {t('itemActions.edit')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => onDeleteItem(item)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="mr-2 size-4" />
+                                  {t('itemActions.delete')}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

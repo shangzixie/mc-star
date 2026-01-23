@@ -359,6 +359,57 @@ export const warehouseReceiptFees = pgTable(
   })
 );
 
+export const warehouseReceiptMerges = pgTable(
+  'warehouse_receipt_merges',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    parentReceiptId: uuid('parent_receipt_id')
+      .notNull()
+      .references(() => warehouseReceipts.id, { onDelete: 'cascade' }),
+    childReceiptId: uuid('child_receipt_id')
+      .notNull()
+      .references(() => warehouseReceipts.id, { onDelete: 'cascade' }),
+    createdBy: text('created_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    idxReceiptMergeParent: index('idx_receipt_merges_parent').on(
+      table.parentReceiptId
+    ),
+    idxReceiptMergeChild: index('idx_receipt_merges_child').on(
+      table.childReceiptId
+    ),
+  })
+);
+
+export const warehouseReceiptStatusLogs = pgTable(
+  'warehouse_receipt_status_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    receiptId: uuid('receipt_id')
+      .notNull()
+      .references(() => warehouseReceipts.id, { onDelete: 'cascade' }),
+    fromStatus: varchar('from_status', { length: 20 }).notNull(),
+    toStatus: varchar('to_status', { length: 20 }).notNull(),
+    changedBy: text('changed_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    reason: text('reason'),
+    batchId: uuid('batch_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    idxReceiptStatusLogsReceipt: index('idx_receipt_status_logs_receipt').on(
+      table.receiptId
+    ),
+    idxReceiptStatusLogsBatch: index('idx_receipt_status_logs_batch').on(
+      table.batchId
+    ),
+  })
+);
+
 export const inventoryItems = pgTable(
   'inventory_items',
   {

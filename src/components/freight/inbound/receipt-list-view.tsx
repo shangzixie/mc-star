@@ -6,6 +6,7 @@ import { DataTablePagination } from '@/components/data-table/data-table-paginati
 import { getSortingStateParser } from '@/components/data-table/lib/parsers';
 import type { ExtendedColumnSort } from '@/components/data-table/types/data-table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Empty,
   EmptyDescription,
@@ -66,7 +67,13 @@ import {
   parseAsString,
   useQueryStates,
 } from 'nuqs';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { FloatingActionButton } from './floating-action-button';
 import { ReceiptStatusBadge } from './receipt-status-badge';
@@ -142,11 +149,48 @@ function TransportTypeCell({
 export function ReceiptListView({
   onSelectReceipt,
   onCreateReceipt,
+  title,
+  description,
+  headerActions,
+  floatingAction,
+  fixedStatus,
+  selectionMode = false,
+  selectedIds: controlledSelectedIds,
+  onSelectionChange,
 }: {
   onSelectReceipt: (receiptId: string) => void;
-  onCreateReceipt: () => void;
+  onCreateReceipt?: () => void;
+  title?: string;
+  description?: string;
+  headerActions?: ReactNode;
+  floatingAction?: ReactNode | null;
+  fixedStatus?: string;
+  selectionMode?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (receiptIds: string[]) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
+  const [localSelectedIds, setLocalSelectedIds] = useState<string[]>([]);
+  const isControlled = controlledSelectedIds !== undefined;
+  const selectedIds = isControlled ? controlledSelectedIds : localSelectedIds;
+
+  const updateSelected = useCallback(
+    (updater: string[] | ((prev: string[]) => string[])) => {
+      const next =
+        typeof updater === 'function' ? updater(selectedIds) : updater;
+      if (!isControlled) {
+        setLocalSelectedIds(next);
+      }
+      onSelectionChange?.(next);
+    },
+    [selectedIds, isControlled, onSelectionChange]
+  );
+
+  useEffect(() => {
+    if (!selectionMode && selectedIds.length > 0) {
+      updateSelected([]);
+    }
+  }, [selectionMode, selectedIds.length, updateSelected]);
   const sortableColumnIds = useMemo(
     () => [
       'receiptNo',
@@ -199,19 +243,76 @@ export function ReceiptListView({
 
   const safeSorting = normalizeSorting(sort);
 
+  const effectiveStatus = fixedStatus ?? status;
+
   const receiptsQuery = useFreightWarehouseReceipts({
     q,
-    status,
+    status: effectiveStatus,
     includeStats: true,
     includeItemNames: true,
   });
 
   const data = receiptsQuery.data ?? [];
 
+  const currentPageIds = data.map((receipt) => receipt.id);
+  const selectablePageIds = data
+    .filter(
+      (receipt) =>
+        !selectionMode || (!receipt.isMergedChild && !receipt.isMergedParent)
+    )
+    .map((receipt) => receipt.id);
+  const allSelected =
+    selectionMode &&
+    selectablePageIds.length > 0 &&
+    selectablePageIds.every((id) => selectedIds.includes(id));
+
+  const toggleSelection = (receiptId: string) => {
+    updateSelected((prev) =>
+      prev.includes(receiptId)
+        ? prev.filter((id) => id !== receiptId)
+        : [...prev, receiptId]
+    );
+  };
+
+  const isSelectableReceipt = (receipt: FreightWarehouseReceiptWithRelations) =>
+    !selectionMode || (!receipt.isMergedChild && !receipt.isMergedParent);
+
   const columns = useMemo<
     ColumnDef<FreightWarehouseReceiptWithRelations>[]
   >(() => {
     const cols: ColumnDef<FreightWarehouseReceiptWithRelations>[] = [
+      ...(selectionMode
+        ? [
+            {
+              id: 'select',
+              header: () => (
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={(next) =>
+                    updateSelected((prev) =>
+                      next
+                        ? Array.from(new Set([...prev, ...selectablePageIds]))
+                        : prev.filter((id) => !selectablePageIds.includes(id))
+                    )
+                  }
+                  aria-label={t('receiptList.selectAll')}
+                />
+              ),
+              cell: ({ row }) => (
+                <Checkbox
+                  checked={selectedIds.includes(row.original.id)}
+                  disabled={!isSelectableReceipt(row.original)}
+                  onCheckedChange={() => toggleSelection(row.original.id)}
+                  onClick={(event) => event.stopPropagation()}
+                  aria-label={t('receiptList.selectRow')}
+                />
+              ),
+              enableSorting: false,
+              enableHiding: false,
+              size: 44,
+            } as ColumnDef<FreightWarehouseReceiptWithRelations>,
+          ]
+        : []),
       {
         id: 'receiptNo',
         accessorKey: 'receiptNo',
@@ -661,7 +762,7 @@ export function ReceiptListView({
     ];
 
     return cols;
-  }, [t]);
+  }, [allSelected, data, selectionMode, selectedIds, t]);
 
   const defaultColumnOrder = useMemo(
     () => [
@@ -697,6 +798,15 @@ export function ReceiptListView({
     totalCurrentQty: false,
     totalShippedQty: false,
   });
+
+  useEffect(() => {
+    setColumnOrder((prev) => {
+      if (selectionMode) {
+        return prev.includes('select') ? prev : ['select', ...prev];
+      }
+      return prev.filter((id) => id !== 'select');
+    });
+  }, [selectionMode]);
 
   const table = useReactTable({
     data,
@@ -740,16 +850,19 @@ export function ReceiptListView({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {t('receiptList.title')}
+            {title ?? t('receiptList.title')}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t('receiptList.description')}
+            {description ?? t('receiptList.description')}
           </p>
         </div>
-        <Button onClick={onCreateReceipt}>
-          <Plus className="mr-2 size-4" />
-          {t('receipt.create')}
-        </Button>
+        {headerActions ??
+          (onCreateReceipt ? (
+            <Button onClick={onCreateReceipt}>
+              <Plus className="mr-2 size-4" />
+              {t('receipt.create')}
+            </Button>
+          ) : null)}
       </div>
 
       <div className="px-0">
@@ -781,29 +894,31 @@ export function ReceiptListView({
             ) : null}
           </div>
 
-          <Select
-            value={status}
-            onValueChange={(value) =>
-              setQueryStates(
-                { status: value === '__all__' ? '' : value, page: 0 },
-                { shallow: true }
-              )
-            }
-          >
-            <SelectTrigger size="sm" className="h-8">
-              <SelectValue placeholder={t('receiptList.statusAll')} />
-            </SelectTrigger>
-            <SelectContent align="start">
-              <SelectItem value="__all__">
-                {t('receiptList.statusAll')}
-              </SelectItem>
-              {RECEIPT_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
+          {fixedStatus ? null : (
+            <Select
+              value={status}
+              onValueChange={(value) =>
+                setQueryStates(
+                  { status: value === '__all__' ? '' : value, page: 0 },
+                  { shallow: true }
+                )
+              }
+            >
+              <SelectTrigger size="sm" className="h-8">
+                <SelectValue placeholder={t('receiptList.statusAll')} />
+              </SelectTrigger>
+              <SelectContent align="start">
+                <SelectItem value="__all__">
+                  {t('receiptList.statusAll')}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {RECEIPT_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </DataTableAdvancedToolbar>
       </div>
 
@@ -871,7 +986,12 @@ export function ReceiptListView({
                   <TableRow
                     key={row.id}
                     className="h-14 cursor-pointer hover:bg-muted/50"
-                    onClick={() => onSelectReceipt(row.original.id)}
+                    onClick={() =>
+                      selectionMode
+                        ? isSelectableReceipt(row.original) &&
+                          toggleSelection(row.original.id)
+                        : onSelectReceipt(row.original.id)
+                    }
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">
@@ -891,10 +1011,16 @@ export function ReceiptListView({
         <DataTablePagination table={table} className="px-0" />
       </div>
 
-      <FloatingActionButton
-        onClick={onCreateReceipt}
-        label={t('receipt.create')}
-      />
+      {floatingAction === undefined ? (
+        onCreateReceipt ? (
+          <FloatingActionButton
+            onClick={onCreateReceipt}
+            label={t('receipt.create')}
+          />
+        ) : null
+      ) : (
+        floatingAction
+      )}
     </div>
   );
 }

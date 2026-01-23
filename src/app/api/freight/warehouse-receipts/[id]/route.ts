@@ -1,8 +1,11 @@
+import { randomUUID } from 'crypto';
 import { getDb } from '@/db/index';
 import {
   inventoryAllocations,
   inventoryItems,
   parties,
+  warehouseReceiptMerges,
+  warehouseReceiptStatusLogs,
   warehouseReceipts,
   warehouses,
 } from '@/db/schema';
@@ -16,7 +19,7 @@ import {
   getReceiptStats,
   updateReceiptStatus,
 } from '@/lib/freight/services/receipt-status';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -102,6 +105,8 @@ export async function GET(
           createdAt: parties.createdAt,
           updatedAt: parties.updatedAt,
         },
+        isMergedParent: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.parentReceiptId} = ${warehouseReceipts.id})`,
+        isMergedChild: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.childReceiptId} = ${warehouseReceipts.id})`,
       })
       .from(warehouseReceipts)
       .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
@@ -116,10 +121,46 @@ export async function GET(
       });
     }
 
+    const mergedChildren = await db
+      .select({
+        id: warehouseReceipts.id,
+        receiptNo: warehouseReceipts.receiptNo,
+      })
+      .from(warehouseReceiptMerges)
+      .innerJoin(
+        warehouseReceipts,
+        eq(warehouseReceipts.id, warehouseReceiptMerges.childReceiptId)
+      )
+      .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
+
+    const mergedChildIds = mergedChildren.map((child) => child.id);
+    const mergedChildItems =
+      mergedChildIds.length > 0
+        ? await db
+            .select({
+              receiptId: inventoryItems.receiptId,
+              receiptNo: warehouseReceipts.receiptNo,
+              commodityNames: sql<string>`string_agg(nullif(trim(${inventoryItems.commodityName}), ''), '; ' ORDER BY ${inventoryItems.createdAt})`,
+              totalInitialQty: sql<number>`coalesce(sum(${inventoryItems.initialQty}), 0)::int`,
+              unit: sql<
+                string | null
+              >`case when count(distinct ${inventoryItems.unit}) = 1 then max(${inventoryItems.unit}) else null end`,
+            })
+            .from(inventoryItems)
+            .innerJoin(
+              warehouseReceipts,
+              eq(warehouseReceipts.id, inventoryItems.receiptId)
+            )
+            .where(inArray(inventoryItems.receiptId, mergedChildIds))
+            .groupBy(inventoryItems.receiptId, warehouseReceipts.receiptNo)
+        : [];
+
     // Get aggregated stats
     const stats = await getReceiptStats(receiptId, db);
 
-    return jsonOk({ data: { ...receipt, stats } });
+    return jsonOk({
+      data: { ...receipt, stats, mergedChildren, mergedChildItems },
+    });
   } catch (error) {
     return jsonError(error as Error);
   }
@@ -130,13 +171,18 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireUser(request);
+    const user = await requireUser(request);
     const { id } = await context.params;
     const receiptId = uuidSchema.parse(id);
     const body = await parseJson(request, updateReceiptSchema);
 
     const db = await getDb();
     const updated = await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({ status: warehouseReceipts.status })
+        .from(warehouseReceipts)
+        .where(eq(warehouseReceipts.id, receiptId));
+
       const [result] = await tx
         .update(warehouseReceipts)
         .set({
@@ -205,9 +251,65 @@ export async function PATCH(
         });
       }
 
+      if (body.status && existing && body.status !== existing.status) {
+        const children = await tx
+          .select({
+            id: warehouseReceipts.id,
+            status: warehouseReceipts.status,
+          })
+          .from(warehouseReceipts)
+          .innerJoin(
+            warehouseReceiptMerges,
+            eq(warehouseReceiptMerges.childReceiptId, warehouseReceipts.id)
+          )
+          .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
+
+        const shouldCascade = body.status === 'OUTBOUND' && children.length > 0;
+        const batchId = shouldCascade ? randomUUID() : null;
+
+        await tx.insert(warehouseReceiptStatusLogs).values({
+          receiptId,
+          fromStatus: existing.status,
+          toStatus: body.status,
+          changedBy: user.id,
+          reason: shouldCascade
+            ? 'BATCH_PARENT_OUTBOUND'
+            : 'MANUAL_STATUS_UPDATE',
+          batchId,
+        });
+
+        if (shouldCascade) {
+          const childUpdates = children.filter(
+            (child) => child.status !== 'OUTBOUND'
+          );
+
+          if (childUpdates.length > 0) {
+            const childIds = childUpdates.map((child) => child.id);
+            await tx
+              .update(warehouseReceipts)
+              .set({ status: 'OUTBOUND' })
+              .where(inArray(warehouseReceipts.id, childIds));
+
+            await tx.insert(warehouseReceiptStatusLogs).values(
+              childUpdates.map((child) => ({
+                receiptId: child.id,
+                fromStatus: child.status,
+                toStatus: 'OUTBOUND',
+                changedBy: user.id,
+                reason: 'BATCH_CHILD_OUTBOUND',
+                batchId,
+              }))
+            );
+          }
+        }
+      }
+
       // Auto-update status if not explicitly set
       if (!body.status) {
-        await updateReceiptStatus(receiptId, tx);
+        await updateReceiptStatus(receiptId, tx, {
+          changedBy: user.id,
+          reason: 'AUTO_STATUS_UPDATE',
+        });
       }
 
       return result;

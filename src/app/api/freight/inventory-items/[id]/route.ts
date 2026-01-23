@@ -176,7 +176,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireUser(request);
+    const user = await requireUser(request);
     const { id } = await context.params;
     const itemId = uuidSchema.parse(id);
 
@@ -224,7 +224,10 @@ export async function DELETE(
       await tx.delete(inventoryItems).where(eq(inventoryItems.id, itemId));
 
       // Update receipt status
-      await updateReceiptStatus(item.receiptId, tx);
+      await updateReceiptStatus(item.receiptId, tx, {
+        changedBy: user.id,
+        reason: 'AUTO_STATUS_UPDATE',
+      });
     });
 
     return jsonOk({ data: { success: true } });

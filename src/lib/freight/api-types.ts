@@ -292,6 +292,27 @@ export const freightWarehouseReceiptWithRelationsSchema =
     warehouse: freightWarehouseSchema.nullable().optional(),
     customer: freightPartySchema.nullable().optional(),
     commodityNames: z.string().nullable().optional(),
+    isMergedParent: z.boolean().optional(),
+    isMergedChild: z.boolean().optional(),
+    mergedChildren: z
+      .array(
+        z.object({
+          id: uuidSchema,
+          receiptNo: z.string(),
+        })
+      )
+      .optional(),
+    mergedChildItems: z
+      .array(
+        z.object({
+          receiptId: uuidSchema,
+          receiptNo: z.string(),
+          commodityNames: z.string().nullable(),
+          totalInitialQty: z.number().int(),
+          unit: z.string().nullable(),
+        })
+      )
+      .optional(),
     stats: z
       .object({
         totalItems: z.number().int(),

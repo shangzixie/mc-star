@@ -56,8 +56,13 @@ export function FreightInboundDetailPageClient({
 
   const getBackUrl = () => {
     const next = new URLSearchParams(searchParams.toString());
+    const parentId = next.get('parentId');
     next.delete('autoEdit');
+    next.delete('parentId');
     const qs = next.toString();
+    if (parentId) {
+      return `${listPath}/${parentId}`;
+    }
     return qs ? `${listPath}?${qs}` : listPath;
   };
 

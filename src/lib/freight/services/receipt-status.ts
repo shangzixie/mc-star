@@ -1,4 +1,8 @@
-import { inventoryItems, warehouseReceipts } from '@/db/schema';
+import {
+  inventoryItems,
+  warehouseReceiptStatusLogs,
+  warehouseReceipts,
+} from '@/db/schema';
 import type { SQL } from 'drizzle-orm';
 import { and, eq, sql } from 'drizzle-orm';
 import type { PgTransaction } from 'drizzle-orm/pg-core';
@@ -73,14 +77,41 @@ export async function calculateReceiptStatus(
  */
 export async function updateReceiptStatus(
   receiptId: string,
-  db: DbOrTransaction
+  db: DbOrTransaction,
+  options?: {
+    changedBy?: string | null;
+    reason?: string;
+    batchId?: string | null;
+  }
 ): Promise<void> {
+  const [receipt] = await db
+    .select({ status: warehouseReceipts.status })
+    .from(warehouseReceipts)
+    .where(eq(warehouseReceipts.id, receiptId));
+
+  if (!receipt) {
+    return;
+  }
+
   const newStatus = await calculateReceiptStatus(receiptId, db);
+
+  if (newStatus === receipt.status) {
+    return;
+  }
 
   await db
     .update(warehouseReceipts)
     .set({ status: newStatus })
     .where(eq(warehouseReceipts.id, receiptId));
+
+  await db.insert(warehouseReceiptStatusLogs).values({
+    receiptId,
+    fromStatus: receipt.status,
+    toStatus: newStatus,
+    changedBy: options?.changedBy ?? null,
+    reason: options?.reason,
+    batchId: options?.batchId ?? null,
+  });
 }
 
 /**

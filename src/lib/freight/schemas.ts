@@ -96,6 +96,12 @@ export const createWarehouseReceiptSchema = z.object({
   seaEtaE: z.string().max(20).nullable().optional(),
 });
 
+export const mergeWarehouseReceiptsSchema = createWarehouseReceiptSchema.extend(
+  {
+    receiptIds: z.array(uuidSchema).min(1),
+  }
+);
+
 export const addInventoryItemSchema = z.object({
   receiptId: uuidSchema,
   commodityName: z.string().optional(),

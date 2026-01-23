@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useFreightInventoryItems } from '@/hooks/freight/use-freight-inventory-items';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
+import { LocaleLink } from '@/i18n/navigation';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
   FreightInventoryItem,
@@ -47,6 +48,7 @@ import {
   formatCeilFixed,
   formatScaledInt,
 } from '@/lib/freight/math';
+import { Routes } from '@/routes';
 import {
   ArrowLeft,
   Edit,
@@ -95,8 +97,13 @@ export function ReceiptDetailView({
   });
 
   const items = itemsQuery.data ?? [];
+  const isMergedParent = Boolean(receipt.isMergedParent);
+  const mergedChildItems = receipt.mergedChildItems ?? [];
 
   const renderedItems = useMemo(() => items, [items]);
+  const isItemsEmpty = isMergedParent
+    ? mergedChildItems.length === 0
+    : renderedItems.length === 0;
 
   return (
     <div className="space-y-4">
@@ -137,16 +144,19 @@ export function ReceiptDetailView({
           title={t('itemsList.title')}
           icon={Package}
           actions={
-            <Button onClick={onAddItem} size="sm">
-              <Plus className="mr-2 size-4" />
-              {t('items.create')}
-            </Button>
+            isMergedParent ? null : (
+              <Button onClick={onAddItem} size="sm">
+                <Plus className="mr-2 size-4" />
+                {t('items.create')}
+              </Button>
+            )
           }
         >
           <Table>
             <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead>{t('items.columns.commodity')}</TableHead>
+                <TableHead>{t('items.columns.childReceiptNo')}</TableHead>
                 <TableHead className="text-right pr-6">
                   {t('items.columns.initialQty')}
                 </TableHead>
@@ -165,7 +175,7 @@ export function ReceiptDetailView({
               {itemsQuery.isLoading ? (
                 Array.from({ length: 3 }).map((_, idx) => (
                   <TableRow key={`sk-${idx}`} className="h-14">
-                    {Array.from({ length: 7 }).map((__, cIdx) => (
+                    {Array.from({ length: 8 }).map((__, cIdx) => (
                       <TableCell key={`sk-${idx}-${cIdx}`}>
                         <Skeleton className="h-4 w-24" />
                       </TableCell>
@@ -174,7 +184,7 @@ export function ReceiptDetailView({
                 ))
               ) : itemsQuery.error ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={8} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('items.error')}</EmptyTitle>
@@ -185,9 +195,9 @@ export function ReceiptDetailView({
                     </Empty>
                   </TableCell>
                 </TableRow>
-              ) : renderedItems.length === 0 ? (
+              ) : isItemsEmpty ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={8} className="h-32 text-center">
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>{t('items.empty')}</EmptyTitle>
@@ -198,6 +208,38 @@ export function ReceiptDetailView({
                     </Empty>
                   </TableCell>
                 </TableRow>
+              ) : isMergedParent ? (
+                mergedChildItems.map((child) => (
+                  <TableRow key={child.receiptId} className="h-14">
+                    <TableCell className="font-medium">
+                      {child.commodityNames ?? '-'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <LocaleLink
+                        href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        {child.receiptNo}
+                      </LocaleLink>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums font-medium pr-6">
+                      {child.totalInitialQty}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {child.unit ?? '-'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">-</TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      -
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      -
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="text-muted-foreground">-</span>
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : (
                 renderedItems.map((item) => {
                   const weightPerUnit =
@@ -238,6 +280,7 @@ export function ReceiptDetailView({
                       <TableCell className="font-medium">
                         {item.commodityName ?? '-'}
                       </TableCell>
+                      <TableCell className="text-muted-foreground">-</TableCell>
                       <TableCell className="text-right tabular-nums font-medium pr-6">
                         {item.initialQty}
                       </TableCell>
@@ -330,31 +373,37 @@ export function ReceiptDetailView({
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                            >
-                              <MoreHorizontal className="size-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditItem(item)}>
-                              <Edit className="mr-2 size-4" />
-                              {t('itemActions.edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => onDeleteItem(item)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 size-4" />
-                              {t('itemActions.delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {isMergedParent ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                              >
+                                <MoreHorizontal className="size-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => onEditItem(item)}
+                              >
+                                <Edit className="mr-2 size-4" />
+                                {t('itemActions.edit')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => onDeleteItem(item)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 size-4" />
+                                {t('itemActions.delete')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

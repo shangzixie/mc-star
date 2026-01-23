@@ -761,10 +761,12 @@
           "emptyHint": "填写以下信息以创建提单"
         },
         "receiptList": {
-          "title": "入库单列表",
-          "description": "管理所有入库单据，点击查看详情",
+          "title": "总列表",
+          "description": "管理所有单据，点击查看详情",
           "searchPlaceholder": "搜索工作号 / 备注...",
           "statusAll": "全部状态",
+          "selectAll": "选择全部",
+          "selectRow": "选择行",
           "empty": "暂无入库单",
           "emptyHint": "点击右下角 + 按钮创建新的入库单",
           "error": "加载失败",
@@ -848,6 +850,7 @@
             "shipped": "已出库",
             "unit": "单位",
             "location": "库位",
+            "childReceiptNo": "入库单号",
             "weight": "重量",
             "totalWeight": "总重量(kg)",
             "dimensions": "长 × 宽 × 高 (cm)",
@@ -1172,7 +1175,7 @@
         }
       },
       "shipments": {
-        "title": "运单",
+        "title": "集拼出库",
         "new": "新建运单",
         "newDescription": "创建一个运单记录（更多信息可稍后补充）。",
         "create": "创建",
@@ -1183,6 +1186,35 @@
         "searchPlaceholder": "搜索 Job / 主单号 / 分单号...",
         "statusAll": "全部状态",
         "empty": "暂无运单",
+        "mergePage": {
+          "title": "集拼出库",
+          "description": "选择已入库单据进行自拼并单"
+        },
+        "merge": {
+          "start": "自拼并单",
+          "cancel": "取消",
+          "create": "创建",
+          "creating": "创建中...",
+          "success": "入库单已创建",
+          "failed": "创建入库单失败",
+          "title": "自拼并单",
+          "description": "为选中的入库单创建新的入库单。",
+          "validation": {
+            "receiptNoRequired": "请输入入库单号",
+            "transportTypeRequired": "请选择运输方式"
+          },
+          "fields": {
+            "receiptNo": "入库单号",
+            "receiptNoPlaceholder": "请输入入库单号",
+            "transportType": "运输方式",
+            "transportTypePlaceholder": "请选择运输方式",
+            "transportTypeOptions": {
+              "SEA_FCL": "海运整柜",
+              "AIR_FREIGHT": "空运",
+              "SEA_LCL": "海运拼箱"
+            }
+          }
+        },
         "fields": {
           "jobNo": "工作号",
           "transportMode": "运输方式",

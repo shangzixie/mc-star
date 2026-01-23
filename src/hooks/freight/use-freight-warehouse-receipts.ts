@@ -11,6 +11,7 @@ import {
 import {
   addInventoryItemSchema,
   createWarehouseReceiptSchema,
+  mergeWarehouseReceiptsSchema,
 } from '@/lib/freight/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -85,6 +86,30 @@ export function useCreateFreightWarehouseReceipt() {
           return [created, ...existing.data];
         }
       );
+    },
+  });
+}
+
+export function useMergeFreightWarehouseReceipts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: z.infer<typeof mergeWarehouseReceiptsSchema>) => {
+      const body = mergeWarehouseReceiptsSchema.parse(input);
+
+      return freightFetch('/api/freight/warehouse-receipts/merge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        schema: freightWarehouseReceiptSchema,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouseReceipts(),
+      });
     },
   });
 }
