@@ -43,27 +43,33 @@ export function ReceiptTransportScheduleSection({
   transportType: string | null | undefined;
   form: UseFormReturn<any>;
 }) {
-  const t = useTranslations('Dashboard.freight.inbound.transportSchedule');
+  const t = useTranslations(
+    'Dashboard.freight.inbound.transportSchedule'
+  ) as any;
   const { data: warehouses } = useFreightWarehouses({ q: '' });
   const createWarehouseMutation = useCreateFreightWarehouse();
   const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
   const [newWarehouseName, setNewWarehouseName] = useState('');
+  const [isCreatingWarehouse, setIsCreatingWarehouse] = useState(false);
 
   const handleCreateWarehouse = async () => {
     const name = newWarehouseName.trim();
     if (!name) {
-      toast.error(t('warehouseField.dialog.nameRequired'));
+      toast.error(t('warehouseField.dialog.nameRequired' as any));
       return;
     }
 
     try {
+      setIsCreatingWarehouse(true);
       const created = await createWarehouseMutation.mutateAsync({ name });
       form.setValue('warehouseId', created.id, { shouldDirty: true });
       setNewWarehouseName('');
       setWarehouseDialogOpen(false);
-      toast.success(t('warehouse.created'));
+      toast.success(t('warehouse.created' as any));
     } catch (error) {
-      toast.error(t('warehouseField.dialog.createFailed'));
+      toast.error(t('warehouseField.dialog.createFailed' as any));
+    } finally {
+      setIsCreatingWarehouse(false);
     }
   };
 
@@ -99,7 +105,7 @@ export function ReceiptTransportScheduleSection({
           onOpenChange={setWarehouseDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button size="xs" variant="outline">
+            <Button size="icon" variant="outline">
               {t('warehouseField.new')}
             </Button>
           </DialogTrigger>
@@ -132,9 +138,9 @@ export function ReceiptTransportScheduleSection({
               <Button
                 onClick={handleCreateWarehouse}
                 type="button"
-                disabled={createWarehouseMutation.isLoading}
+                disabled={isCreatingWarehouse}
               >
-                {createWarehouseMutation.isLoading
+                {isCreatingWarehouse
                   ? t('warehouseField.dialog.creating')
                   : t('warehouseField.dialog.create')}
               </Button>
