@@ -4,6 +4,7 @@ import {
   AirlineCombobox,
   OceanCarrierCombobox,
 } from '@/components/freight/shared/carrier-combobox';
+import { WarehouseCombobox } from '@/components/freight/shared/warehouse-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import {
   useCreateFreightWarehouse,
   useFreightWarehouses,
@@ -49,31 +51,44 @@ export function ReceiptTransportScheduleSection({
   const { data: warehouses } = useFreightWarehouses({ q: '' });
   const createWarehouseMutation = useCreateFreightWarehouse();
   const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
-  const [newWarehouseName, setNewWarehouseName] = useState('');
-  const [isCreatingWarehouse, setIsCreatingWarehouse] = useState(false);
+  const [warehouseFormData, setWarehouseFormData] = useState({
+    name: '',
+    address: '',
+    contactPerson: '',
+    phone: '',
+    remarks: '',
+  });
 
   const handleCreateWarehouse = async () => {
-    const name = newWarehouseName.trim();
+    const name = warehouseFormData.name.trim();
     if (!name) {
       toast.error(t('warehouseField.dialog.nameRequired' as any));
       return;
     }
 
     try {
-      setIsCreatingWarehouse(true);
-      const created = await createWarehouseMutation.mutateAsync({ name });
+      const created = await createWarehouseMutation.mutateAsync({
+        name,
+        address: warehouseFormData.address || undefined,
+        contactPerson: warehouseFormData.contactPerson || undefined,
+        phone: warehouseFormData.phone || undefined,
+        remarks: warehouseFormData.remarks || undefined,
+      });
       form.setValue('warehouseId', created.id, { shouldDirty: true });
-      setNewWarehouseName('');
+      setWarehouseFormData({
+        name: '',
+        address: '',
+        contactPerson: '',
+        phone: '',
+        remarks: '',
+      });
       setWarehouseDialogOpen(false);
-      toast.success(t('warehouse.created' as any));
+      toast.success(t('warehouseField.created' as any));
     } catch (error) {
       toast.error(t('warehouseField.dialog.createFailed' as any));
-    } finally {
-      setIsCreatingWarehouse(false);
     }
   };
 
-  const warehouseOptions = warehouses ?? [];
   const warehouseIdValue = form.watch('warehouseId') ?? '';
 
   // 验证：航班日期 < 到达日期
@@ -97,35 +112,120 @@ export function ReceiptTransportScheduleSection({
   }, [form.watch('seaEtdE'), form.watch('seaEtaE'), t]);
 
   const warehouseField = (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      <div className="space-y-2">
         <Label htmlFor="warehouseId">{t('warehouseField.label')}</Label>
+        <WarehouseCombobox
+          value={warehouseIdValue || undefined}
+          onValueChange={(value) =>
+            form.setValue('warehouseId', value ?? '', { shouldDirty: true })
+          }
+          onAddNew={() => setWarehouseDialogOpen(true)}
+          placeholder={t('warehouseField.placeholder')}
+        />
         <Dialog
           open={warehouseDialogOpen}
           onOpenChange={setWarehouseDialogOpen}
         >
-          <DialogTrigger asChild>
-            <Button size="icon" variant="outline">
-              {t('warehouseField.new')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t('warehouseField.dialog.title')}</DialogTitle>
               <DialogDescription>
                 {t('warehouseField.dialog.description')}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-2">
-              <Label htmlFor="newWarehouseName">
-                {t('warehouseField.dialog.name')}
-              </Label>
-              <Input
-                id="newWarehouseName"
-                value={newWarehouseName}
-                onChange={(event) => setNewWarehouseName(event.target.value)}
-                placeholder={t('warehouseField.dialog.namePlaceholder')}
-              />
+            <div className="space-y-4">
+              {/* 库房名称 */}
+              <div className="space-y-2">
+                <Label htmlFor="wh-name">
+                  {t('warehouseField.dialog.name')} *
+                </Label>
+                <Input
+                  id="wh-name"
+                  value={warehouseFormData.name}
+                  onChange={(e) =>
+                    setWarehouseFormData({
+                      ...warehouseFormData,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder={t('warehouseField.dialog.namePlaceholder')}
+                  autoFocus
+                />
+              </div>
+
+              {/* 地址 */}
+              <div className="space-y-2">
+                <Label htmlFor="wh-address">
+                  {t('warehouseField.dialog.address')}
+                </Label>
+                <Input
+                  id="wh-address"
+                  value={warehouseFormData.address}
+                  onChange={(e) =>
+                    setWarehouseFormData({
+                      ...warehouseFormData,
+                      address: e.target.value,
+                    })
+                  }
+                  placeholder={t('warehouseField.dialog.addressPlaceholder')}
+                />
+              </div>
+
+              {/* 联系人 & 电话 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="wh-contact">
+                    {t('warehouseField.dialog.contact')}
+                  </Label>
+                  <Input
+                    id="wh-contact"
+                    value={warehouseFormData.contactPerson}
+                    onChange={(e) =>
+                      setWarehouseFormData({
+                        ...warehouseFormData,
+                        contactPerson: e.target.value,
+                      })
+                    }
+                    placeholder={t('warehouseField.dialog.contactPlaceholder')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wh-phone">
+                    {t('warehouseField.dialog.phone')}
+                  </Label>
+                  <Input
+                    id="wh-phone"
+                    value={warehouseFormData.phone}
+                    onChange={(e) =>
+                      setWarehouseFormData({
+                        ...warehouseFormData,
+                        phone: e.target.value,
+                      })
+                    }
+                    placeholder={t('warehouseField.dialog.phonePlaceholder')}
+                  />
+                </div>
+              </div>
+
+              {/* 备注 */}
+              <div className="space-y-2">
+                <Label htmlFor="wh-remarks">
+                  {t('warehouseField.dialog.remarks')}
+                </Label>
+                <Textarea
+                  id="wh-remarks"
+                  value={warehouseFormData.remarks}
+                  onChange={(e) =>
+                    setWarehouseFormData({
+                      ...warehouseFormData,
+                      remarks: e.target.value,
+                    })
+                  }
+                  placeholder={t('warehouseField.dialog.remarksPlaceholder')}
+                  rows={3}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -138,9 +238,12 @@ export function ReceiptTransportScheduleSection({
               <Button
                 onClick={handleCreateWarehouse}
                 type="button"
-                disabled={isCreatingWarehouse}
+                disabled={
+                  createWarehouseMutation.isPending ||
+                  !warehouseFormData.name.trim()
+                }
               >
-                {isCreatingWarehouse
+                {createWarehouseMutation.isPending
                   ? t('warehouseField.dialog.creating')
                   : t('warehouseField.dialog.create')}
               </Button>
@@ -148,23 +251,6 @@ export function ReceiptTransportScheduleSection({
           </DialogContent>
         </Dialog>
       </div>
-      <Select
-        value={warehouseIdValue || undefined}
-        onValueChange={(value) =>
-          form.setValue('warehouseId', value ?? '', { shouldDirty: true })
-        }
-      >
-        <SelectTrigger id="warehouseId">
-          <SelectValue placeholder={t('warehouseField.placeholder')} />
-        </SelectTrigger>
-        <SelectContent>
-          {warehouseOptions.map((warehouse) => (
-            <SelectItem key={warehouse.id} value={warehouse.id}>
-              {warehouse.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
       <div className="space-y-2">
         <Label htmlFor="status">{t('status.label')}</Label>
         <Select
@@ -395,8 +481,8 @@ export function ReceiptTransportScheduleSection({
 
   return (
     <div className="space-y-4">
-      {warehouseField}
       {renderTransportContent()}
+      {warehouseField}
     </div>
   );
 }

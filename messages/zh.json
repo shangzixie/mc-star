@@ -740,23 +740,37 @@
             "validation": {
               "dateOrder": "离港日期必须早于到港日期"
             }
-          }
-        },
-        "warehouseField": {
-          "label": "库房名称",
-          "placeholder": "请选择库房",
-          "new": "新建库房",
-          "created": "库房创建成功",
-          "dialog": {
-            "title": "创建库房",
-            "description": "为该入库单添加库房信息",
-            "name": "库房名称",
-            "namePlaceholder": "请输入库房名称",
-            "cancel": "取消",
-            "create": "创建库房",
-            "creating": "创建中...",
-            "nameRequired": "请填写库房名称",
-            "createFailed": "创建库房失败"
+          },
+          "status": {
+            "label": "状态",
+            "inbound": "入库",
+            "outbound": "出库",
+            "void": "作废"
+          },
+          "warehouseField": {
+            "label": "库房名称",
+            "placeholder": "请选择库房",
+            "new": "新建库房",
+            "created": "库房创建成功",
+            "dialog": {
+              "title": "创建库房",
+              "description": "为该入库单添加库房信息",
+              "name": "库房名称",
+              "namePlaceholder": "请输入库房名称",
+              "address": "地址",
+              "addressPlaceholder": "请输入库房地址",
+              "contact": "联系人",
+              "contactPlaceholder": "请输入联系人姓名",
+              "phone": "电话",
+              "phonePlaceholder": "请输入联系电话",
+              "remarks": "备注",
+              "remarksPlaceholder": "请输入其他备注信息",
+              "cancel": "取消",
+              "create": "创建库房",
+              "creating": "创建中...",
+              "nameRequired": "请填写库房名称",
+              "createFailed": "创建库房失败"
+            }
           }
         },
         "mbl": {

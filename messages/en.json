@@ -740,23 +740,37 @@
             "validation": {
               "dateOrder": "Departure date must be earlier than arrival date"
             }
-          }
-        },
-        "warehouseField": {
-          "label": "Warehouse",
-          "placeholder": "Select warehouse",
-          "new": "New warehouse",
-          "created": "Warehouse created",
-          "dialog": {
-            "title": "Create warehouse",
-            "description": "Add a warehouse record for this receipt",
-            "name": "Warehouse name",
-            "namePlaceholder": "Enter warehouse name",
-            "cancel": "Cancel",
-            "create": "Create warehouse",
-            "creating": "Creating...",
-            "nameRequired": "Please enter a warehouse name",
-            "createFailed": "Failed to create warehouse"
+          },
+          "status": {
+            "label": "Status",
+            "inbound": "Inbound",
+            "outbound": "Outbound",
+            "void": "Void"
+          },
+          "warehouseField": {
+            "label": "Warehouse",
+            "placeholder": "Select warehouse",
+            "new": "New warehouse",
+            "created": "Warehouse created",
+            "dialog": {
+              "title": "Create warehouse",
+              "description": "Add a warehouse record for this receipt",
+              "name": "Warehouse name",
+              "namePlaceholder": "Enter warehouse name",
+              "address": "Address",
+              "addressPlaceholder": "Enter warehouse address",
+              "contact": "Contact person",
+              "contactPlaceholder": "Enter contact person name",
+              "phone": "Phone",
+              "phonePlaceholder": "Enter phone number",
+              "remarks": "Remarks",
+              "remarksPlaceholder": "Enter any additional remarks",
+              "cancel": "Cancel",
+              "create": "Create warehouse",
+              "creating": "Creating...",
+              "nameRequired": "Please enter a warehouse name",
+              "createFailed": "Failed to create warehouse"
+            }
           }
         },
         "mbl": {
