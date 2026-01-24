@@ -49,6 +49,7 @@ import { formatCeilFixed } from '@/lib/freight/math';
 import { cn } from '@/lib/utils';
 import type {
   ColumnDef,
+  PaginationState,
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table';
@@ -147,6 +148,8 @@ function TransportTypeCell({
   );
 }
 
+const EMPTY_ARRAY: any[] = [];
+
 export function ReceiptListView({
   onSelectReceipt,
   onCreateReceipt,
@@ -233,54 +236,76 @@ export function ReceiptListView({
     ).withDefault(defaultSorting),
   });
 
-  const normalizeSorting = (
-    value: SortingState
-  ): ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[] => {
-    const filtered = value
-      .filter((item) => sortableColumnSet.has(item.id))
-      .map((item) => ({
-        ...item,
-        id: item.id,
-      })) as ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[];
+  const normalizeSorting = useCallback(
+    (
+      value: SortingState
+    ): ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[] => {
+      const filtered = value
+        .filter((item) => sortableColumnSet.has(item.id))
+        .map((item) => ({
+          ...item,
+          id: item.id,
+        })) as ExtendedColumnSort<FreightWarehouseReceiptWithRelations>[];
 
-    return filtered.length > 0 ? filtered : defaultSorting;
-  };
+      return filtered.length > 0 ? filtered : defaultSorting;
+    },
+    [sortableColumnSet, defaultSorting]
+  );
 
   const safeSorting = normalizeSorting(sort);
 
   const effectiveStatus = fixedStatus ?? status;
 
-  const receiptsQuery = useFreightWarehouseReceipts({
-    q,
-    status: effectiveStatus,
-    includeStats: true,
-    includeItemNames: true,
-  });
-
-  const data = receiptsQuery.data ?? [];
-
-  const currentPageIds = data.map((receipt) => receipt.id);
-  const selectablePageIds = data
-    .filter(
-      (receipt) =>
-        !selectionMode || (!receipt.isMergedChild && !receipt.isMergedParent)
+  const receiptsQuery = useFreightWarehouseReceipts(
+    useMemo(
+      () => ({
+        q,
+        status: effectiveStatus,
+        includeStats: true,
+        includeItemNames: true,
+      }),
+      [q, effectiveStatus]
     )
-    .map((receipt) => receipt.id);
+  );
+
+  const data = receiptsQuery.data ?? EMPTY_ARRAY;
+
+  const currentPageIds = useMemo(
+    () => data.map((receipt) => receipt.id),
+    [data]
+  );
+  const selectablePageIds = useMemo(
+    () =>
+      data
+        .filter(
+          (receipt) =>
+            !selectionMode ||
+            (!receipt.isMergedChild && !receipt.isMergedParent)
+        )
+        .map((receipt) => receipt.id),
+    [data, selectionMode]
+  );
   const allSelected =
     selectionMode &&
     selectablePageIds.length > 0 &&
     selectablePageIds.every((id) => selectedIds.includes(id));
 
-  const toggleSelection = (receiptId: string) => {
-    updateSelected((prev) =>
-      prev.includes(receiptId)
-        ? prev.filter((id) => id !== receiptId)
-        : [...prev, receiptId]
-    );
-  };
+  const toggleSelection = useCallback(
+    (receiptId: string) => {
+      updateSelected((prev) =>
+        prev.includes(receiptId)
+          ? prev.filter((id) => id !== receiptId)
+          : [...prev, receiptId]
+      );
+    },
+    [updateSelected]
+  );
 
-  const isSelectableReceipt = (receipt: FreightWarehouseReceiptWithRelations) =>
-    !selectionMode || (!receipt.isMergedChild && !receipt.isMergedParent);
+  const isSelectableReceipt = useCallback(
+    (receipt: FreightWarehouseReceiptWithRelations) =>
+      !selectionMode || (!receipt.isMergedChild && !receipt.isMergedParent),
+    [selectionMode]
+  );
 
   const columns = useMemo<
     ColumnDef<FreightWarehouseReceiptWithRelations>[]
@@ -813,6 +838,11 @@ export function ReceiptListView({
     });
   }, [selectionMode]);
 
+  const pagination = useMemo(
+    () => ({ pageIndex: page, pageSize: size }),
+    [page, size]
+  );
+
   const table = useReactTable({
     data,
     columns,
@@ -820,33 +850,38 @@ export function ReceiptListView({
       sorting: safeSorting,
       columnOrder,
       columnVisibility,
-      pagination: { pageIndex: page, pageSize: size },
+      pagination,
     },
-    onSortingChange: (updater) => {
-      const next =
-        typeof updater === 'function' ? updater(safeSorting) : updater;
-      const normalized = normalizeSorting(next);
-      void setQueryStates({ sort: normalized, page: 0 }, { shallow: true });
-    },
+    onSortingChange: useCallback(
+      (updater: SortingState | ((prev: SortingState) => SortingState)) => {
+        const next =
+          typeof updater === 'function' ? updater(safeSorting) : updater;
+        const normalized = normalizeSorting(next);
+        void setQueryStates({ sort: normalized, page: 0 });
+      },
+      [safeSorting, setQueryStates, normalizeSorting]
+    ),
     onColumnOrderChange: setColumnOrder,
     onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: (updater) => {
-      const next =
-        typeof updater === 'function'
-          ? updater({ pageIndex: page, pageSize: size })
-          : updater;
-      if (next.pageSize !== size) {
-        void setQueryStates(
-          { size: next.pageSize, page: 0 },
-          { shallow: true }
-        );
-      } else if (next.pageIndex !== page) {
-        void setQueryStates({ page: next.pageIndex }, { shallow: true });
-      }
-    },
+    onPaginationChange: useCallback(
+      (
+        updater: PaginationState | ((prev: PaginationState) => PaginationState)
+      ) => {
+        const next =
+          typeof updater === 'function' ? updater(pagination) : updater;
+
+        if (next.pageSize !== pagination.pageSize) {
+          void setQueryStates({ size: next.pageSize, page: 0 });
+        } else if (next.pageIndex !== pagination.pageIndex) {
+          void setQueryStates({ page: next.pageIndex });
+        }
+      },
+      [pagination, setQueryStates]
+    ),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    autoResetPageIndex: false,
     enableMultiSort: false,
   });
 
@@ -880,12 +915,7 @@ export function ReceiptListView({
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
-              onChange={(e) =>
-                setQueryStates(
-                  { q: e.target.value, page: 0 },
-                  { shallow: true }
-                )
-              }
+              onChange={(e) => setQueryStates({ q: e.target.value, page: 0 })}
               placeholder={t('receiptList.searchPlaceholder')}
               className="h-8 w-[260px] pl-9 pr-8"
             />
@@ -894,9 +924,7 @@ export function ReceiptListView({
                 type="button"
                 aria-label={t('receiptList.searchPlaceholder')}
                 className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() =>
-                  setQueryStates({ q: '', page: 0 }, { shallow: true })
-                }
+                onClick={() => setQueryStates({ q: '', page: 0 })}
               >
                 <XIcon className="h-3.5 w-3.5" />
               </button>
@@ -907,10 +935,10 @@ export function ReceiptListView({
             <Select
               value={status}
               onValueChange={(value) =>
-                setQueryStates(
-                  { status: value === '__all__' ? '' : value, page: 0 },
-                  { shallow: true }
-                )
+                setQueryStates({
+                  status: value === '__all__' ? '' : value,
+                  page: 0,
+                })
               }
             >
               <SelectTrigger size="sm" className="h-8">
