@@ -995,7 +995,7 @@ export function ReceiptDetailEditView({
 
       <fieldset disabled={isOutbound} className="space-y-4 border-0 p-0">
         {/* 主要内容区域 */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[320px_320px_minmax(0,1fr)_minmax(0,1fr)]">
           {/* 左侧：基本信息表单 */}
           <FreightSection
             title={t('receipt.fields.receiptNo')}
@@ -1121,7 +1121,7 @@ export function ReceiptDetailEditView({
           </FreightSection>
 
           {/* 右侧：汇总 + 商品明细表格 */}
-          <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-1 2xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+          <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-2 2xl:grid-cols-[380px_1fr]">
             <FreightSection title={tSummaryPanel('title')}>
               <ReceiptSummaryPanel
                 items={items}
@@ -1159,6 +1159,7 @@ export function ReceiptDetailEditView({
 
             <FreightTableSection
               title={t('itemsList.title')}
+              className="w-full min-w-0"
               icon={Package}
               actions={
                 isMergedParent ? null : (
@@ -1174,7 +1175,7 @@ export function ReceiptDetailEditView({
                 )
               }
             >
-              <Table className="min-w-[770px]">
+              <Table className="w-full min-w-0">
                 <TableHeader className="bg-muted">
                   <TableRow>
                     <TableHead className="w-[200px]">
@@ -1487,7 +1488,7 @@ export function ReceiptDetailEditView({
             <TabsTrigger value="fees">{t('detailTabs.fees')}</TabsTrigger>
           </TabsList>
           <TabsContent value="basic">
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,320px)_minmax(0,320px)_minmax(0,640px)]">
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[320px_320px_minmax(0,1fr)_minmax(0,1fr)]">
               {/* 左侧：内部资料 */}
               <EmployeeAssignmentsSection
                 salesEmployeeId={form.watch('salesEmployeeId')}
@@ -1603,224 +1604,222 @@ export function ReceiptDetailEditView({
               </FreightSection>
 
               {/* 右侧：单套提单 / HBL / MBL */}
-              <div className="grid gap-4">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FreightSection
-                    title={tSingleBill('title')}
-                    className="min-w-0"
-                  >
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="singleBillCutoffDateSi">
-                          {tSingleBill('fields.cutoffDateSi')}
-                        </Label>
-                        <Input
-                          id="singleBillCutoffDateSi"
-                          type="date"
-                          {...form.register('singleBillCutoffDateSi')}
-                          className="text-base"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="singleBillGateClosingTime">
-                          {tSingleBill('fields.gateClosingTime')}
-                        </Label>
-                        <Input
-                          id="singleBillGateClosingTime"
-                          type="date"
-                          {...form.register('singleBillGateClosingTime')}
-                          className="text-base"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="singleBillDepartureDateE">
-                          {tSingleBill('fields.departureDateE')}
-                        </Label>
-                        <Input
-                          id="singleBillDepartureDateE"
-                          type="date"
-                          {...form.register('singleBillDepartureDateE')}
-                          className="text-base"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="singleBillArrivalDateE">
-                          {tSingleBill('fields.arrivalDateE')}
-                        </Label>
-                        <Input
-                          id="singleBillArrivalDateE"
-                          type="date"
-                          {...form.register('singleBillArrivalDateE')}
-                          className="text-base"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="singleBillTransitDateE">
-                          {tSingleBill('fields.transitDateE')}
-                        </Label>
-                        <Input
-                          id="singleBillTransitDateE"
-                          type="date"
-                          {...form.register('singleBillTransitDateE')}
-                          className="text-base"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="singleBillDeliveryDateE">
-                          {tSingleBill('fields.deliveryDateE')}
-                        </Label>
-                        <Input
-                          id="singleBillDeliveryDateE"
-                          type="date"
-                          {...form.register('singleBillDeliveryDateE')}
-                          className="text-base"
-                        />
-                      </div>
+              <div className="grid gap-4 xl:col-span-2 xl:grid-cols-3">
+                <FreightSection
+                  title={tSingleBill('title')}
+                  className="w-full min-w-0"
+                >
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillCutoffDateSi">
+                        {tSingleBill('fields.cutoffDateSi')}
+                      </Label>
+                      <Input
+                        id="singleBillCutoffDateSi"
+                        type="date"
+                        {...form.register('singleBillCutoffDateSi')}
+                        className="text-base"
+                      />
                     </div>
-                  </FreightSection>
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    <FreightSection title={tHbl('title')} className="min-w-0">
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="hblPortOfDestinationId">
-                            {tHbl('portOfDestination')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="hblPortOfDestinationId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tHbl(
-                                  'portOfDestinationPlaceholder'
-                                )}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="hblPortOfDischargeId">
-                            {tHbl('portOfDischarge')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="hblPortOfDischargeId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tHbl('portOfDischargePlaceholder')}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="hblPortOfLoadingId">
-                            {tHbl('portOfLoading')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="hblPortOfLoadingId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tHbl('portOfLoadingPlaceholder')}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="hblPlaceOfReceiptId">
-                            {tHbl('placeOfReceipt')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="hblPlaceOfReceiptId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tHbl('placeOfReceiptPlaceholder')}
-                              />
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </FreightSection>
-                    <FreightSection title={tMbl('title')} className="min-w-0">
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="portOfDestinationId">
-                            {tMbl('portOfDestination')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="portOfDestinationId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tMbl(
-                                  'portOfDestinationPlaceholder'
-                                )}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="portOfDischargeId">
-                            {tMbl('portOfDischarge')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="portOfDischargeId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tMbl('portOfDischargePlaceholder')}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="portOfLoadingId">
-                            {tMbl('portOfLoading')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="portOfLoadingId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tMbl('portOfLoadingPlaceholder')}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="placeOfReceiptId">
-                            {tMbl('placeOfReceipt')}
-                          </Label>
-                          <Controller
-                            control={form.control}
-                            name="placeOfReceiptId"
-                            render={({ field }) => (
-                              <PortCombobox
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                placeholder={tMbl('placeOfReceiptPlaceholder')}
-                              />
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </FreightSection>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillGateClosingTime">
+                        {tSingleBill('fields.gateClosingTime')}
+                      </Label>
+                      <Input
+                        id="singleBillGateClosingTime"
+                        type="date"
+                        {...form.register('singleBillGateClosingTime')}
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillDepartureDateE">
+                        {tSingleBill('fields.departureDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillDepartureDateE"
+                        type="date"
+                        {...form.register('singleBillDepartureDateE')}
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillArrivalDateE">
+                        {tSingleBill('fields.arrivalDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillArrivalDateE"
+                        type="date"
+                        {...form.register('singleBillArrivalDateE')}
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillTransitDateE">
+                        {tSingleBill('fields.transitDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillTransitDateE"
+                        type="date"
+                        {...form.register('singleBillTransitDateE')}
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillDeliveryDateE">
+                        {tSingleBill('fields.deliveryDateE')}
+                      </Label>
+                      <Input
+                        id="singleBillDeliveryDateE"
+                        type="date"
+                        {...form.register('singleBillDeliveryDateE')}
+                        className="text-base"
+                      />
+                    </div>
                   </div>
-                </div>
+                </FreightSection>
+                <FreightSection
+                  title={tHbl('title')}
+                  className="w-full min-w-0"
+                >
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPortOfDestinationId">
+                        {tHbl('portOfDestination')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPortOfDestinationId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('portOfDestinationPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPortOfDischargeId">
+                        {tHbl('portOfDischarge')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPortOfDischargeId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('portOfDischargePlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPortOfLoadingId">
+                        {tHbl('portOfLoading')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPortOfLoadingId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('portOfLoadingPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hblPlaceOfReceiptId">
+                        {tHbl('placeOfReceipt')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="hblPlaceOfReceiptId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tHbl('placeOfReceiptPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                </FreightSection>
+                <FreightSection
+                  title={tMbl('title')}
+                  className="w-full min-w-0"
+                >
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="portOfDestinationId">
+                        {tMbl('portOfDestination')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="portOfDestinationId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tMbl('portOfDestinationPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="portOfDischargeId">
+                        {tMbl('portOfDischarge')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="portOfDischargeId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tMbl('portOfDischargePlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="portOfLoadingId">
+                        {tMbl('portOfLoading')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="portOfLoadingId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tMbl('portOfLoadingPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="placeOfReceiptId">
+                        {tMbl('placeOfReceipt')}
+                      </Label>
+                      <Controller
+                        control={form.control}
+                        name="placeOfReceiptId"
+                        render={({ field }) => (
+                          <PortCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={tMbl('placeOfReceiptPlaceholder')}
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                </FreightSection>
               </div>
             </div>
           </TabsContent>
