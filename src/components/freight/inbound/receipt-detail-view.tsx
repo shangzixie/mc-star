@@ -99,10 +99,38 @@ export function ReceiptDetailView({
   const items = itemsQuery.data ?? [];
   const isMergedParent = Boolean(receipt.isMergedParent);
   const mergedChildItems = receipt.mergedChildItems ?? [];
+  const mergedChildren = receipt.mergedChildren ?? [];
+  const mergedChildRows = useMemo(() => {
+    const childMap = new Map(
+      mergedChildItems.map((item) => [item.receiptId, item])
+    );
+
+    if (mergedChildren.length > 0) {
+      return mergedChildren.map((child) => ({
+        receiptId: child.id,
+        receiptNo: child.receiptNo,
+        aggregated: childMap.get(child.id),
+      }));
+    }
+
+    if (mergedChildItems.length > 0) {
+      return mergedChildItems.map((item) => ({
+        receiptId: item.receiptId,
+        receiptNo: item.receiptNo,
+        aggregated: item,
+      }));
+    }
+
+    return mergedChildren.map((child) => ({
+      receiptId: child.id,
+      receiptNo: child.receiptNo,
+      aggregated: undefined,
+    }));
+  }, [mergedChildItems, mergedChildren]);
 
   const renderedItems = useMemo(() => items, [items]);
   const isItemsEmpty = isMergedParent
-    ? mergedChildItems.length === 0
+    ? mergedChildRows.length === 0
     : renderedItems.length === 0;
 
   return (
@@ -209,37 +237,41 @@ export function ReceiptDetailView({
                   </TableCell>
                 </TableRow>
               ) : isMergedParent ? (
-                mergedChildItems.map((child) => (
-                  <TableRow key={child.receiptId} className="h-14">
-                    <TableCell className="font-medium">
-                      {child.commodityNames ?? '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <LocaleLink
-                        href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
-                        className="text-primary underline-offset-4 hover:underline"
-                      >
-                        {child.receiptNo}
-                      </LocaleLink>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium pr-6">
-                      {child.totalInitialQty}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {child.unit ?? '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">-</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      -
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      -
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="text-muted-foreground">-</span>
-                    </TableCell>
-                  </TableRow>
-                ))
+                mergedChildRows.map((child) => {
+                  const aggregated = child.aggregated;
+
+                  return (
+                    <TableRow key={child.receiptId} className="h-14">
+                      <TableCell className="font-medium">
+                        {aggregated?.commodityNames ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <LocaleLink
+                          href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
+                          {child.receiptNo}
+                        </LocaleLink>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums font-medium pr-6">
+                        {aggregated?.totalInitialQty ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {aggregated?.unit ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">-</TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        -
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        -
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="text-muted-foreground">-</span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 renderedItems.map((item) => {
                   const weightPerUnit =
