@@ -970,8 +970,8 @@ export function ReceiptDetailEditView({
         soNo: nextSoNo,
         hblNo: nextHblNo,
       });
-      // Redirect back to inbound list with size=50 after save
-      router.push('/freight/inbound?size=50');
+      // Use the smart back navigation after save
+      onBack();
     } catch (error) {
       const message = getFreightApiErrorMessage(error);
       toast.error(message);

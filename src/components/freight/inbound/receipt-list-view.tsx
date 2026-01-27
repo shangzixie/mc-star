@@ -35,6 +35,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { freightKeys } from '@/hooks/freight/query-keys';
 import {
   useFreightWarehouseReceipts,
   useUpdateFreightWarehouseReceipt,
@@ -47,6 +48,7 @@ import {
 } from '@/lib/freight/constants';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { cn } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
   ColumnDef,
   PaginationState,
@@ -63,6 +65,7 @@ import {
 import { format } from 'date-fns';
 import { FileText, Plus, Search, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   parseAsIndex,
   parseAsInteger,
@@ -178,6 +181,17 @@ export function ReceiptListView({
   onReceiptsDataChange?: (data: FreightWarehouseReceiptWithRelations[]) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const qs = searchParams.toString();
+      const currentUrl = qs ? `${pathname}?${qs}` : pathname;
+      sessionStorage.setItem('freight_last_list_url', currentUrl);
+    }
+  }, [pathname, searchParams]);
+
   const [localSelectedIds, setLocalSelectedIds] = useState<string[]>([]);
   const isControlled = controlledSelectedIds !== undefined;
   const selectedIds = isControlled ? controlledSelectedIds : localSelectedIds;
@@ -354,8 +368,33 @@ export function ReceiptListView({
         ),
         cell: ({ row }) => {
           const receipt = row.original;
+          const queryClient = useQueryClient();
+
+          const handlePrefetch = () => {
+            queryClient.prefetchQuery({
+              queryKey: freightKeys.warehouseReceipt(receipt.id),
+              queryFn: async () => {
+                const { freightFetch } = await import(
+                  '@/lib/freight/api-client'
+                );
+                const { freightWarehouseReceiptWithRelationsSchema } =
+                  await import('@/lib/freight/api-types');
+                return freightFetch(
+                  `/api/freight/warehouse-receipts/${receipt.id}`,
+                  {
+                    schema: freightWarehouseReceiptWithRelationsSchema,
+                  }
+                );
+              },
+              staleTime: 60000,
+            });
+          };
+
           return (
-            <div className="flex min-w-0 items-center gap-2 font-medium">
+            <div
+              className="flex min-w-0 items-center gap-2 font-medium"
+              onMouseEnter={handlePrefetch}
+            >
               <FileText className="size-4 text-muted-foreground" />
               <span className="block max-w-[140px] truncate">
                 {receipt.receiptNo}

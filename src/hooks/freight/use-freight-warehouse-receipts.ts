@@ -41,6 +41,7 @@ export function useFreightWarehouseReceipts(params: {
         })}`,
         { schema: receiptsArraySchema }
       ),
+    staleTime: 60000, // 1 minute
   });
 }
 
@@ -52,6 +53,7 @@ export function useFreightWarehouseReceipt(id: string) {
       freightFetch(`/api/freight/warehouse-receipts/${id}`, {
         schema: freightWarehouseReceiptWithRelationsSchema,
       }),
+    staleTime: 60000, // 1 minute
   });
 }
 

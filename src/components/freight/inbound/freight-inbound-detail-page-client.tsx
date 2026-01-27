@@ -56,6 +56,19 @@ export function FreightInboundDetailPageClient({
 
   const getBackUrl = () => {
     const next = new URLSearchParams(searchParams.toString());
+    const returnTo = next.get('returnTo');
+    if (returnTo) {
+      return returnTo;
+    }
+
+    // Attempt to get the last visited list URL from sessionStorage
+    if (typeof window !== 'undefined') {
+      const storedUrl = sessionStorage.getItem('freight_last_list_url');
+      if (storedUrl) {
+        return storedUrl;
+      }
+    }
+
     const parentId = next.get('parentId');
     next.delete('autoEdit');
     next.delete('parentId');
