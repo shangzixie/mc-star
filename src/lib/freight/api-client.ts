@@ -48,14 +48,98 @@ async function parseApiError(
  * - Throws `FreightApiError` on non-2xx responses
  * - Validates successful payloads with Zod
  */
+const debugFetchEnabled = process.env.NEXT_PUBLIC_FREIGHT_API_DEBUG === '1';
+
+function getTimestamp() {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
+function getRequestId() {
+  return (
+    crypto.randomUUID?.() ??
+    `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`
+  );
+}
+
 export async function freightFetch<TData>(
   path: string,
   options: RequestInit & { schema: z.ZodType<TData> }
 ): Promise<TData> {
   const { schema, ...init } = options;
-  const response = await fetch(path, init);
+  const requestId = getRequestId();
+  const method = (init.method ?? 'GET').toUpperCase();
+  const startTime = getTimestamp();
 
-  if (!response.ok) {
+  const headers = new Headers(init.headers);
+  headers.set('Content-Type', 'application/json');
+  headers.set('x-freight-request-id', requestId);
+
+  let response: Response | undefined;
+
+  try {
+    response = await fetch(path, {
+      ...init,
+      headers,
+    });
+
+    if (!response.ok) {
+      const { code, message, details } = await parseApiError(response);
+      throw new FreightApiError({
+        status: response.status,
+        code,
+        message,
+        details,
+      });
+    }
+
+    const json = await response.json();
+    const parsed = apiOkEnvelopeSchema(schema).safeParse(json);
+    if (!parsed.success) {
+      throw new FreightApiError({
+        status: 500,
+        code: 'INVALID_RESPONSE',
+        message: 'Invalid response from server',
+        details: parsed.error.flatten(),
+      });
+    }
+
+    return parsed.data.data;
+  } finally {
+    if (debugFetchEnabled) {
+      const endTime = getTimestamp();
+      const duration = endTime - startTime;
+      const status = response?.status ?? 'ERR';
+      console.debug(
+        `[freight-fetch][${requestId}] ${method} ${path} -> ${status} (${duration.toFixed(
+          1
+        )}ms)`
+      );
+    }
+  }
+}
+
+export async function freightFetchVoid(
+  path: string,
+  init?: RequestInit
+): Promise<void> {
+  const requestId = getRequestId();
+  const method = (init?.method ?? 'GET').toUpperCase();
+  const startTime = getTimestamp();
+
+  const headers = new Headers(init?.headers);
+  headers.set('Content-Type', 'application/json');
+  headers.set('x-freight-request-id', requestId);
+
+  let response: Response | undefined;
+
+  try {
+    response = await fetch(path, {
+      ...init,
+      headers,
+    });
+
+    if (response.ok) return;
+
     const { code, message, details } = await parseApiError(response);
     throw new FreightApiError({
       status: response.status,
@@ -63,36 +147,18 @@ export async function freightFetch<TData>(
       message,
       details,
     });
+  } finally {
+    if (debugFetchEnabled) {
+      const endTime = getTimestamp();
+      const duration = endTime - startTime;
+      const status = response?.status ?? 'ERR';
+      console.debug(
+        `[freight-fetch][${requestId}] ${method} ${path} -> ${status} (${duration.toFixed(
+          1
+        )}ms)`
+      );
+    }
   }
-
-  const json = await response.json();
-  const parsed = apiOkEnvelopeSchema(schema).safeParse(json);
-  if (!parsed.success) {
-    throw new FreightApiError({
-      status: 500,
-      code: 'INVALID_RESPONSE',
-      message: 'Invalid response from server',
-      details: parsed.error.flatten(),
-    });
-  }
-
-  return parsed.data.data;
-}
-
-export async function freightFetchVoid(
-  path: string,
-  init?: RequestInit
-): Promise<void> {
-  const response = await fetch(path, init);
-  if (response.ok) return;
-
-  const { code, message, details } = await parseApiError(response);
-  throw new FreightApiError({
-    status: response.status,
-    code,
-    message,
-    details,
-  });
 }
 
 export function freightQueryString(params: Record<string, string | undefined>) {

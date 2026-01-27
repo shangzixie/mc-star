@@ -16,9 +16,37 @@ import { and, asc, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
+const freightDebugTimings =
+  process.env.FREIGHT_API_DEBUG === '1' ||
+  process.env.NEXT_PUBLIC_FREIGHT_API_DEBUG === '1';
+
+function createServerRequestId(provided?: string) {
+  if (provided && provided.length > 0) return provided;
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`
+  );
+}
+
+function logServerTiming(requestId: string, message: string) {
+  if (!freightDebugTimings) return;
+  console.info(`[freight:${requestId}] ${message}`);
+}
+
 export async function GET(request: Request) {
+  const requestId = createServerRequestId(
+    request.headers.get('x-freight-request-id') ?? undefined
+  );
+  const overallStart = Date.now();
+  let authDuration = 0;
+  let queryBuildDuration = 0;
+  let dbDuration = 0;
+
   try {
+    const authStart = Date.now();
     await requireUser(request);
+    authDuration = Date.now() - authStart;
+
     const url = new URL(request.url);
     const warehouseId = url.searchParams.get('warehouseId');
     const customerId = url.searchParams.get('customerId');
@@ -37,7 +65,8 @@ export async function GET(request: Request) {
 
     const db = await getDb();
 
-    // Build conditions
+    const queryBuildStart = Date.now();
+
     const conditions = [
       warehouseId
         ? eq(warehouseReceipts.warehouseId, uuidSchema.parse(warehouseId))
@@ -63,7 +92,6 @@ export async function GET(request: Request) {
         : undefined,
     ].filter(Boolean);
 
-    // Determine sort column
     const sortColumn =
       sortBy === 'receiptNo'
         ? warehouseReceipts.receiptNo
@@ -112,7 +140,6 @@ export async function GET(request: Request) {
           .as('item_names')
       : null;
 
-    // Build query with joins
     const baseQuery = db
       .select({
         id: warehouseReceipts.id,
@@ -214,14 +241,27 @@ export async function GET(request: Request) {
     const orderedQuery = queryWithStats.orderBy(
       sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn)
     );
+    queryBuildDuration = Date.now() - queryBuildStart;
 
+    const dbStart = Date.now();
     const rows =
       conditions.length > 0
         ? await orderedQuery.where(and(...conditions))
         : await orderedQuery;
+    dbDuration = Date.now() - dbStart;
+
+    const totalDuration = Date.now() - overallStart;
+    logServerTiming(
+      requestId,
+      `GET /api/freight/warehouse-receipts includeStats=${includeStats} includeItemNames=${includeItemNames} conditions=${conditions.length} rows=${rows.length} timings auth=${authDuration}ms query=${queryBuildDuration}ms db=${dbDuration}ms total=${totalDuration}ms`
+    );
 
     return jsonOk({ data: rows });
   } catch (error) {
+    logServerTiming(
+      requestId,
+      `GET /api/freight/warehouse-receipts failed (${error instanceof Error ? error.message : 'unknown'})`
+    );
     return jsonError(error as Error);
   }
 }
