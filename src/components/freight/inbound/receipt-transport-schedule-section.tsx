@@ -41,9 +41,11 @@ import { toast } from 'sonner';
 export function ReceiptTransportScheduleSection({
   transportType,
   form,
+  disabled,
 }: {
   transportType: string | null | undefined;
   form: UseFormReturn<any>;
+  disabled?: boolean;
 }) {
   const t = useTranslations(
     'Dashboard.freight.inbound.transportSchedule'
@@ -122,6 +124,7 @@ export function ReceiptTransportScheduleSection({
           }
           onAddNew={() => setWarehouseDialogOpen(true)}
           placeholder={t('warehouseField.placeholder')}
+          disabled={disabled}
         />
         <Dialog
           open={warehouseDialogOpen}
@@ -292,6 +295,7 @@ export function ReceiptTransportScheduleSection({
                   })
                 }
                 placeholder={t('air.placeholders.carrier')}
+                disabled={disabled}
               />
               <div className="hidden text-center text-muted-foreground sm:block">
                 /
@@ -299,6 +303,7 @@ export function ReceiptTransportScheduleSection({
               <Input
                 placeholder={t('air.placeholders.flightNo')}
                 {...form.register('airFlightNo')}
+                disabled={disabled}
               />
             </div>
           </div>
@@ -318,6 +323,7 @@ export function ReceiptTransportScheduleSection({
                 type="date"
                 {...form.register('airFlightDate')}
                 className="text-base"
+                disabled={disabled}
               />
             </div>
             <div className="space-y-2">
@@ -333,6 +339,7 @@ export function ReceiptTransportScheduleSection({
                 type="date"
                 {...form.register('airArrivalDateE')}
                 className="text-base"
+                disabled={disabled}
               />
             </div>
           </div>
@@ -354,6 +361,7 @@ export function ReceiptTransportScheduleSection({
               id="airOperationLocation"
               placeholder={t('air.placeholders.operationLocation')}
               {...form.register('airOperationLocation')}
+              disabled={disabled}
             />
           </div>
 
@@ -367,6 +375,7 @@ export function ReceiptTransportScheduleSection({
               onValueChange={(value) =>
                 form.setValue('airOperationNode', value, { shouldDirty: true })
               }
+              disabled={disabled}
             >
               <SelectTrigger id="airOperationNode">
                 <SelectValue
@@ -401,6 +410,7 @@ export function ReceiptTransportScheduleSection({
                   })
                 }
                 placeholder={t('sea.placeholders.carrier')}
+                disabled={disabled}
               />
             </div>
             <div className="space-y-2">
@@ -409,6 +419,7 @@ export function ReceiptTransportScheduleSection({
                 id="seaRoute"
                 placeholder={t('sea.placeholders.route')}
                 {...form.register('seaRoute')}
+                disabled={disabled}
               />
             </div>
           </div>
@@ -423,6 +434,7 @@ export function ReceiptTransportScheduleSection({
                 id="seaVesselName"
                 placeholder={t('sea.placeholders.vesselName')}
                 {...form.register('seaVesselName')}
+                disabled={disabled}
               />
             </div>
             <div className="space-y-2">
@@ -431,6 +443,7 @@ export function ReceiptTransportScheduleSection({
                 id="seaVoyage"
                 placeholder={t('sea.placeholders.voyage')}
                 {...form.register('seaVoyage')}
+                disabled={disabled}
               />
             </div>
           </div>
@@ -447,6 +460,7 @@ export function ReceiptTransportScheduleSection({
                 type="date"
                 {...form.register('seaEtdE')}
                 className="text-base"
+                disabled={disabled}
               />
             </div>
             <div className="space-y-2">
@@ -459,6 +473,7 @@ export function ReceiptTransportScheduleSection({
                 type="date"
                 {...form.register('seaEtaE')}
                 className="text-base"
+                disabled={disabled}
               />
             </div>
           </div>

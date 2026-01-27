@@ -43,7 +43,13 @@ function toStr(v: unknown) {
   return `${v}`;
 }
 
-export function ReceiptFeeManagementTab({ receiptId }: { receiptId: string }) {
+export function ReceiptFeeManagementTab({
+  receiptId,
+  disabled,
+}: {
+  receiptId: string;
+  disabled?: boolean;
+}) {
   const feesQuery = useFreightWarehouseReceiptFees({ receiptId });
   const fees = feesQuery.data ?? [];
 
@@ -206,6 +212,7 @@ export function ReceiptFeeManagementTab({ receiptId }: { receiptId: string }) {
                     variant="ghost"
                     className="size-8"
                     onClick={() => setEditFee(fee)}
+                    disabled={disabled}
                   >
                     <Pencil className="size-4" />
                     <span className="sr-only">Edit</span>
@@ -219,6 +226,7 @@ export function ReceiptFeeManagementTab({ receiptId }: { receiptId: string }) {
                       setDeleteError('');
                       setDeleteFee(fee);
                     }}
+                    disabled={disabled}
                   >
                     <Trash2 className="size-4" />
                     <span className="sr-only">Delete</span>
@@ -244,6 +252,7 @@ export function ReceiptFeeManagementTab({ receiptId }: { receiptId: string }) {
               setAddFeeType('AR');
               setAddDialogOpen(true);
             }}
+            disabled={disabled}
           >
             <Plus className="mr-2 size-4" />
             新增
@@ -263,6 +272,7 @@ export function ReceiptFeeManagementTab({ receiptId }: { receiptId: string }) {
               setAddFeeType('AP');
               setAddDialogOpen(true);
             }}
+            disabled={disabled}
           >
             <Plus className="mr-2 size-4" />
             新增

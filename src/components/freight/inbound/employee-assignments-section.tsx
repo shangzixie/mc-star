@@ -41,7 +41,8 @@ export function EmployeeAssignmentsSection({
   onFinanceEmployeeChange,
   onBookingEmployeeChange,
   onReviewerEmployeeChange,
-}: EmployeeAssignmentsSectionProps) {
+  disabled,
+}: EmployeeAssignmentsSectionProps & { disabled?: boolean }) {
   const t = useTranslations('Dashboard.freight.inbound');
 
   return (
@@ -54,6 +55,7 @@ export function EmployeeAssignmentsSection({
             value={salesEmployeeId}
             onValueChange={onSalesEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -66,6 +68,7 @@ export function EmployeeAssignmentsSection({
             value={customerServiceEmployeeId}
             onValueChange={onCustomerServiceEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -78,6 +81,7 @@ export function EmployeeAssignmentsSection({
             value={overseasCsEmployeeId}
             onValueChange={onOverseasCsEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -90,6 +94,7 @@ export function EmployeeAssignmentsSection({
             value={operationsEmployeeId}
             onValueChange={onOperationsEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -102,6 +107,7 @@ export function EmployeeAssignmentsSection({
             value={documentationEmployeeId}
             onValueChange={onDocumentationEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -114,6 +120,7 @@ export function EmployeeAssignmentsSection({
             value={financeEmployeeId}
             onValueChange={onFinanceEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -126,6 +133,7 @@ export function EmployeeAssignmentsSection({
             value={bookingEmployeeId}
             onValueChange={onBookingEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
 
@@ -138,6 +146,7 @@ export function EmployeeAssignmentsSection({
             value={reviewerEmployeeId}
             onValueChange={onReviewerEmployeeChange}
             placeholder={t('employees.selectEmployee')}
+            disabled={disabled}
           />
         </div>
       </div>

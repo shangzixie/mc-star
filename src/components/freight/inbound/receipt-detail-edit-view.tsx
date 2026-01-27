@@ -1007,7 +1007,7 @@ export function ReceiptDetailEditView({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" disabled={isOutbound}>
               <MoreHorizontal className="size-4" />
               <span className="sr-only">Actions</span>
             </Button>
@@ -1021,7 +1021,7 @@ export function ReceiptDetailEditView({
         </DropdownMenu>
       </div>
 
-      <fieldset disabled={isOutbound} className="space-y-4 border-0 p-0">
+      <div className="space-y-4 border-0 p-0">
         {/* 主要内容区域 */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[320px_320px_minmax(0,1fr)_minmax(0,1fr)]">
           {/* 左侧：基本信息表单 */}
@@ -1054,6 +1054,7 @@ export function ReceiptDetailEditView({
                   id="soNo"
                   placeholder="请输入SO号"
                   {...form.register('soNo')}
+                  disabled={isOutbound}
                 />
               </div>
 
@@ -1064,6 +1065,7 @@ export function ReceiptDetailEditView({
                   id="mblNo"
                   placeholder={t('receipt.fields.mblNoPlaceholder')}
                   {...form.register('mblNo')}
+                  disabled={isOutbound}
                 />
               </div>
 
@@ -1074,6 +1076,7 @@ export function ReceiptDetailEditView({
                   id="hblNo"
                   placeholder={t('receipt.fields.hblNoPlaceholder')}
                   {...form.register('hblNo')}
+                  disabled={isOutbound}
                 />
               </div>
 
@@ -1089,6 +1092,7 @@ export function ReceiptDetailEditView({
                       { shouldDirty: true }
                     )
                   }
+                  disabled={isOutbound}
                 >
                   <SelectTrigger id="transportType">
                     <SelectValue placeholder={t('transportType.placeholder')} />
@@ -1115,6 +1119,7 @@ export function ReceiptDetailEditView({
                       shouldDirty: true,
                     })
                   }
+                  disabled={isOutbound}
                 >
                   <SelectTrigger id="customsDeclarationType">
                     <SelectValue
@@ -1145,6 +1150,7 @@ export function ReceiptDetailEditView({
             <ReceiptTransportScheduleSection
               transportType={transportTypeValue}
               form={form as any}
+              disabled={isOutbound}
             />
           </FreightSection>
 
@@ -1182,6 +1188,7 @@ export function ReceiptDetailEditView({
                     weightConversionFactorInput: value,
                   }))
                 }
+                disabled={isOutbound}
               />
             </FreightSection>
 
@@ -1500,6 +1507,7 @@ export function ReceiptDetailEditView({
               {...form.register('internalRemarks')}
               placeholder={t('receipt.fields.internalRemarksPlaceholder')}
               rows={3}
+              disabled={isOutbound}
             />
           </div>
           <div className="space-y-2">
@@ -1509,6 +1517,7 @@ export function ReceiptDetailEditView({
               {...form.register('remarks')}
               placeholder={t('receipt.fields.remarksPlaceholder')}
               rows={3}
+              disabled={isOutbound}
             />
           </div>
         </div>
@@ -1573,6 +1582,7 @@ export function ReceiptDetailEditView({
                     shouldDirty: true,
                   })
                 }
+                disabled={isOutbound}
               />
 
               {/* 中间：联系资料 */}
@@ -1590,6 +1600,7 @@ export function ReceiptDetailEditView({
                       }
                       onAddNew={() => setAddCustomerDialogOpen(true)}
                       placeholder={t('selectCustomer')}
+                      disabled={isOutbound}
                     />
                   </div>
 
@@ -1602,6 +1613,7 @@ export function ReceiptDetailEditView({
                         form.setValue('shipperId', value, { shouldDirty: true })
                       }
                       placeholder={t('selectShipper')}
+                      disabled={isOutbound}
                     />
                   </div>
 
@@ -1616,6 +1628,7 @@ export function ReceiptDetailEditView({
                         })
                       }
                       placeholder={t('selectBookingAgent')}
+                      disabled={isOutbound}
                     />
                   </div>
 
@@ -1630,6 +1643,7 @@ export function ReceiptDetailEditView({
                         })
                       }
                       placeholder={t('selectCustomsAgent')}
+                      disabled={isOutbound}
                     />
                   </div>
                 </div>
@@ -1651,6 +1665,7 @@ export function ReceiptDetailEditView({
                         type="date"
                         {...form.register('singleBillCutoffDateSi')}
                         className="text-base"
+                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1662,6 +1677,7 @@ export function ReceiptDetailEditView({
                         type="date"
                         {...form.register('singleBillGateClosingTime')}
                         className="text-base"
+                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1673,6 +1689,7 @@ export function ReceiptDetailEditView({
                         type="date"
                         {...form.register('singleBillDepartureDateE')}
                         className="text-base"
+                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1684,6 +1701,7 @@ export function ReceiptDetailEditView({
                         type="date"
                         {...form.register('singleBillArrivalDateE')}
                         className="text-base"
+                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1695,6 +1713,7 @@ export function ReceiptDetailEditView({
                         type="date"
                         {...form.register('singleBillTransitDateE')}
                         className="text-base"
+                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1706,6 +1725,7 @@ export function ReceiptDetailEditView({
                         type="date"
                         {...form.register('singleBillDeliveryDateE')}
                         className="text-base"
+                        disabled={isOutbound}
                       />
                     </div>
                   </div>
@@ -1727,6 +1747,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tHbl('portOfDestinationPlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1743,6 +1764,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tHbl('portOfDischargePlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1759,6 +1781,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tHbl('portOfLoadingPlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1775,6 +1798,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tHbl('placeOfReceiptPlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1798,6 +1822,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tMbl('portOfDestinationPlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1814,6 +1839,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tMbl('portOfDischargePlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1830,6 +1856,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tMbl('portOfLoadingPlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1846,6 +1873,7 @@ export function ReceiptDetailEditView({
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder={tMbl('placeOfReceiptPlaceholder')}
+                            disabled={isOutbound}
                           />
                         )}
                       />
@@ -1856,10 +1884,13 @@ export function ReceiptDetailEditView({
             </div>
           </TabsContent>
           <TabsContent value="fees">
-            <ReceiptFeeManagementTab receiptId={receipt.id} />
+            <ReceiptFeeManagementTab
+              receiptId={receipt.id}
+              disabled={isOutbound}
+            />
           </TabsContent>
         </Tabs>
-      </fieldset>
+      </div>
 
       {/* 底部固定保存按钮 */}
       <div className="sticky bottom-0 bg-background border-t pt-4 flex justify-end">

@@ -55,6 +55,7 @@ export function ReceiptSummaryPanel({
   onWeightChange,
   onVolumeChange,
   onWeightConversionFactorChange,
+  disabled,
 }: {
   items: FreightInventoryItem[];
   transportType?: string | null;
@@ -68,6 +69,7 @@ export function ReceiptSummaryPanel({
   onWeightChange: (value: string) => void;
   onVolumeChange: (value: string) => void;
   onWeightConversionFactorChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   const t = useTranslations('Dashboard.freight.inbound.summaryPanel');
 
@@ -188,6 +190,7 @@ export function ReceiptSummaryPanel({
             inputMode="decimal"
             placeholder={String(defaultWeightConversionFactor)}
             className="h-8"
+            disabled={disabled}
           />
         </div>
         <div className="min-w-0 space-y-1">
@@ -198,6 +201,7 @@ export function ReceiptSummaryPanel({
             value={formatCeilFixed(billingTons, 2)}
             readOnly
             className="h-8 shadow-inner bg-muted/50"
+            disabled={disabled}
           />
         </div>
         <div className="min-w-0 space-y-1">
@@ -210,6 +214,7 @@ export function ReceiptSummaryPanel({
             inputMode="decimal"
             placeholder="0"
             className="h-8"
+            disabled={disabled}
           />
         </div>
       </div>
@@ -226,6 +231,7 @@ export function ReceiptSummaryPanel({
             inputMode="numeric"
             placeholder={String(measured.pieces)}
             className="h-8"
+            disabled={disabled}
           />
         </div>
         <div className="min-w-0 space-y-1">
@@ -238,6 +244,7 @@ export function ReceiptSummaryPanel({
             inputMode="decimal"
             placeholder={formatCeilFixed(measured.grossWeightKg, 2)}
             className="h-8"
+            disabled={disabled}
           />
         </div>
         <div className="min-w-0 space-y-1">
@@ -250,6 +257,7 @@ export function ReceiptSummaryPanel({
             inputMode="decimal"
             placeholder={formatScaledInt(measured.volumeM3Scaled, 2)}
             className="h-8"
+            disabled={disabled}
           />
         </div>
         <div className="min-w-0 space-y-1">
@@ -260,6 +268,7 @@ export function ReceiptSummaryPanel({
             value={formatCeilFixed(settlementWeight, 2)}
             readOnly
             className="h-8 shadow-inner bg-muted/50"
+            disabled={disabled}
           />
         </div>
       </div>
