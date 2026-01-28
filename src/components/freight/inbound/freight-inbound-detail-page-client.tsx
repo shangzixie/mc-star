@@ -156,7 +156,7 @@ export function FreightInboundDetailPageClient({
         errorMessage={deleteError}
         onConfirm={async () => {
           try {
-            await deleteReceiptMutation.mutateAsync();
+            await deleteReceiptMutation.mutateAsync(receiptId);
             toast.success(t('receiptActions.deleteSuccess'));
             router.push(getBackUrl());
           } catch (error) {
