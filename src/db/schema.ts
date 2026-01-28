@@ -246,6 +246,9 @@ export const warehouseReceipts = pgTable(
     transportType: varchar('transport_type', { length: 30 }),
     customsDeclarationType: varchar('customs_declaration_type', { length: 30 }),
     status: varchar('status', { length: 20 }).notNull().default('INBOUND'),
+    auditStatus: varchar('audit_status', { length: 20 })
+      .notNull()
+      .default('NOT_AUDITED'),
     inboundTime: timestamp('inbound_time', { withTimezone: true }).defaultNow(),
     remarks: text('remarks'),
     internalRemarks: text('internal_remarks'),

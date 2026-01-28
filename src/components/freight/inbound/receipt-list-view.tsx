@@ -81,8 +81,8 @@ import {
   useState,
 } from 'react';
 import { toast } from 'sonner';
-import { FloatingActionButton } from './floating-action-button';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
+import { FloatingActionButton } from './floating-action-button';
 import { ReceiptStatusBadge } from './receipt-status-badge';
 
 function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
@@ -245,6 +245,7 @@ export function ReceiptListView({
       'receiptNo',
       'warehouse',
       'customer',
+      'auditStatus',
       'transportType',
       'customsDeclarationType',
       'status',
@@ -342,9 +343,7 @@ export function ReceiptListView({
         mergeSelectablePageIds.every((id) => selectedIds.includes(id))
       : activeSelectionPurpose === 'delete'
         ? deleteSelectablePageIds.length > 0 &&
-          deleteSelectablePageIds.every((id) =>
-            deleteSelectedIds.includes(id)
-          )
+          deleteSelectablePageIds.every((id) => deleteSelectedIds.includes(id))
         : false;
 
   const toggleSelection = useCallback(
@@ -513,6 +512,38 @@ export function ReceiptListView({
         meta: { label: t('receiptList.columns.customer') },
         minSize: 140,
         size: 160,
+      },
+      {
+        id: 'auditStatus',
+        accessorFn: (r) =>
+          r.auditStatus ? t(`auditStatus.options.${r.auditStatus}` as any) : '',
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            label={t('receiptList.columns.auditStatus' as any)}
+          />
+        ),
+        cell: ({ row }) => {
+          const receipt = row.original;
+          const auditStatus = receipt.auditStatus;
+          if (!auditStatus) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+          const isAudited = auditStatus === 'AUDITED';
+          const colorClass = isAudited
+            ? 'text-green-600 bg-green-50'
+            : 'text-orange-600 bg-orange-50';
+          return (
+            <span
+              className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${colorClass}`}
+            >
+              {t(`auditStatus.options.${auditStatus}` as any)}
+            </span>
+          );
+        },
+        meta: { label: t('receiptList.columns.auditStatus' as any) },
+        minSize: 120,
+        size: 140,
       },
       {
         id: 'transportType',
@@ -940,6 +971,7 @@ export function ReceiptListView({
       'transportType',
       'receiptNo',
       'customer',
+      'auditStatus',
       'status',
       'commodityNames',
       'totalInitialQty',
@@ -1254,21 +1286,21 @@ export function ReceiptListView({
                             }
                           : undefined
                       }
-                    onClick={() => {
-                      if (deleteMode) {
-                        if (selectable) {
-                          toggleSelection(row.original.id);
+                      onClick={() => {
+                        if (deleteMode) {
+                          if (selectable) {
+                            toggleSelection(row.original.id);
+                          }
+                          return;
                         }
-                        return;
-                      }
-                      if (selectionMode) {
-                        if (selectable) {
-                          toggleSelection(row.original.id);
+                        if (selectionMode) {
+                          if (selectable) {
+                            toggleSelection(row.original.id);
+                          }
+                          return;
                         }
-                        return;
-                      }
-                      onSelectReceipt(row.original.id);
-                    }}
+                        onSelectReceipt(row.original.id);
+                      }}
                       data-selectable={selectable ? 'true' : 'false'}
                     >
                       {row.getVisibleCells().map((cell) => (
@@ -1327,7 +1359,9 @@ export function ReceiptListView({
         errorMessage={deleteError}
         onConfirm={handleConfirmDelete}
         confirmText={
-          deleteContext?.isBulk ? t('receiptList.delete.bulkConfirm') : undefined
+          deleteContext?.isBulk
+            ? t('receiptList.delete.bulkConfirm')
+            : undefined
         }
       />
     </div>

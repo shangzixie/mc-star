@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  AUDIT_STATUSES,
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from './constants';
@@ -191,6 +192,7 @@ export const freightWarehouseReceiptSchema = z
       .enum(WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES)
       .nullable(),
     status: z.string(),
+    auditStatus: z.enum(AUDIT_STATUSES).nullable(),
     inboundTime: isoDateTimeSchema.nullable(),
     remarks: z.string().nullable(),
     internalRemarks: z.string().nullable(),

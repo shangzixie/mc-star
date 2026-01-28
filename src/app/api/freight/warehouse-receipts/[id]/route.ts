@@ -48,6 +48,7 @@ export async function GET(
         transportType: warehouseReceipts.transportType,
         customsDeclarationType: warehouseReceipts.customsDeclarationType,
         status: warehouseReceipts.status,
+        auditStatus: warehouseReceipts.auditStatus,
         inboundTime: warehouseReceipts.inboundTime,
         remarks: warehouseReceipts.remarks,
         internalRemarks: warehouseReceipts.internalRemarks,
@@ -210,6 +211,7 @@ export async function PATCH(
           transportType: body.transportType,
           customsDeclarationType: body.customsDeclarationType,
           status: body.status,
+          auditStatus: body.auditStatus,
           inboundTime: body.inboundTime
             ? new Date(body.inboundTime)
             : undefined,

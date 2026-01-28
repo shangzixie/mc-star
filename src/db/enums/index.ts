@@ -116,6 +116,12 @@ export const PACKAGING_UNITS = [
 ] as const;
 export type PackagingUnit = (typeof PACKAGING_UNITS)[number];
 
+// 审核状态（存储英文枚举码；UI 通过 i18n 显示中文）
+// NOT_AUDITED: 未审核
+// AUDITED: 已审核
+export const AUDIT_STATUSES = ['NOT_AUDITED', 'AUDITED'] as const;
+export type AuditStatus = (typeof AUDIT_STATUSES)[number];
+
 // -----------------------------------------------------------------------------
 // Carrier options (airlines/ocean carriers)
 // -----------------------------------------------------------------------------

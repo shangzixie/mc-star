@@ -674,6 +674,14 @@
             "FORMAL_DECLARATION": "正报"
           }
         },
+        "auditStatus": {
+          "label": "审核状态",
+          "placeholder": "选择审核状态（可选）",
+          "options": {
+            "NOT_AUDITED": "未审核",
+            "AUDITED": "已审核"
+          }
+        },
         "tabs": {
           "selectReceipt": "选择/创建入库单",
           "manageItems": "录入明细"
@@ -830,6 +838,7 @@
             "receiptNo": "工作号",
             "warehouse": "仓库",
             "customer": "客户",
+            "auditStatus": "审核状态",
             "transportType": "运输类型",
             "customsDeclarationType": "报关类型",
             "remarks": "备注",
@@ -845,8 +854,7 @@
             "selectedAction": "删除选中项",
             "deleting": "删除中...",
             "bulkTitle": "删除入库单",
-            "bulkMessage":
-              "确定要删除选中的入库单吗？此操作不可撤销。",
+            "bulkMessage": "确定要删除选中的入库单吗？此操作不可撤销。",
             "bulkConfirm": "删除入库单",
             "bulkSuccess": "已删除 {{count}} 个入库单"
           }

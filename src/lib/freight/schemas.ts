@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   ALLOCATION_STATUSES,
+  AUDIT_STATUSES,
   LOCATION_TYPES,
   RECEIPT_STATUSES,
   SHIPMENT_STATUSES,
@@ -60,6 +61,7 @@ export const createWarehouseReceiptSchema = z.object({
     .enum(WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES)
     .optional(),
   status: z.enum(RECEIPT_STATUSES).optional(),
+  auditStatus: z.enum(AUDIT_STATUSES).optional(),
   inboundTime: z.string().datetime().optional(),
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
