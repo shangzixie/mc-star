@@ -358,7 +358,19 @@ export async function DELETE(
     const db = await getDb();
 
     await db.transaction(async (tx) => {
-      // Check if any items have been allocated or shipped
+      // collect receipts to delete (include child receipts if this is a merged parent)
+      const mergedChildren = await tx
+        .select({ id: warehouseReceiptMerges.childReceiptId })
+        .from(warehouseReceiptMerges)
+        .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
+
+      const childReceiptIds = mergedChildren.map((child) => child.id);
+      const receiptIdsToDelete = [
+        receiptId,
+        ...childReceiptIds.filter((id) => id !== receiptId),
+      ];
+
+      // Check if any items have been allocated or shipped across all receipts involved
       const items = await tx
         .select({
           id: inventoryItems.id,
@@ -366,9 +378,8 @@ export async function DELETE(
           currentQty: inventoryItems.currentQty,
         })
         .from(inventoryItems)
-        .where(eq(inventoryItems.receiptId, receiptId));
+        .where(inArray(inventoryItems.receiptId, receiptIdsToDelete));
 
-      // Check if any items have allocations
       const itemIds = items.map((item) => item.id);
       if (itemIds.length > 0) {
         const [allocationCount] = await tx
@@ -388,7 +399,6 @@ export async function DELETE(
         }
       }
 
-      // Check if any items have been shipped
       const hasShippedItems = items.some(
         (item) => item.currentQty < item.initialQty
       );
@@ -400,7 +410,14 @@ export async function DELETE(
         });
       }
 
-      // Delete the receipt (cascade will delete items and movements)
+      // delete child receipts first to avoid FK conflicts
+      if (childReceiptIds.length > 0) {
+        await tx
+          .delete(warehouseReceipts)
+          .where(inArray(warehouseReceipts.id, childReceiptIds));
+      }
+
+      // Delete the target receipt (cascade will delete any remaining relations)
       await tx
         .delete(warehouseReceipts)
         .where(eq(warehouseReceipts.id, receiptId));

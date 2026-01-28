@@ -838,6 +838,17 @@
             "commodityNames": "货物品名",
             "createdAt": "创建时间",
             "inboundTime": "入仓时间"
+          },
+          "delete": {
+            "start": "删除入库单",
+            "cancel": "取消",
+            "selectedAction": "删除选中项",
+            "deleting": "删除中...",
+            "bulkTitle": "删除入库单",
+            "bulkMessage":
+              "确定要删除选中的入库单吗？此操作不可撤销。",
+            "bulkConfirm": "删除入库单",
+            "bulkSuccess": "已删除 {{count}} 个入库单"
           }
         },
         "receipt": {

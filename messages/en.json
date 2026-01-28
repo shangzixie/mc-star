@@ -838,6 +838,17 @@
             "commodityNames": "Commodity Names",
             "createdAt": "Created At",
             "inboundTime": "Inbound Time"
+          },
+          "delete": {
+            "start": "Delete receipts",
+            "cancel": "Cancel",
+            "selectedAction": "Delete selected",
+            "deleting": "Deleting...",
+            "bulkTitle": "Delete receipts",
+            "bulkMessage":
+              "Are you sure you want to delete the selected receipts? This action cannot be undone.",
+            "bulkConfirm": "Delete receipts",
+            "bulkSuccess": "Deleted {{count}} receipts"
           }
         },
         "receipt": {

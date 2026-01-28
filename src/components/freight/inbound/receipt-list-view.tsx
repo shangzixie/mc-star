@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/tooltip';
 import { freightKeys } from '@/hooks/freight/query-keys';
 import {
+  useDeleteFreightWarehouseReceipt,
   useFreightWarehouseReceipts,
   useUpdateFreightWarehouseReceipt,
 } from '@/hooks/freight/use-freight-warehouse-receipts';
@@ -63,7 +64,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { FileText, Plus, Search, XIcon } from 'lucide-react';
+import { FileText, Plus, Search, Trash2, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -81,6 +82,7 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { FloatingActionButton } from './floating-action-button';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 import { ReceiptStatusBadge } from './receipt-status-badge';
 
 function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
@@ -94,6 +96,11 @@ function ReceiptListRowSkeleton({ columnCount }: { columnCount: number }) {
     </TableRow>
   );
 }
+
+type DeleteContext = {
+  ids: string[];
+  isBulk: boolean;
+};
 
 function TransportTypeCell({
   receipt,
@@ -208,11 +215,31 @@ export function ReceiptListView({
     [selectedIds, isControlled, onSelectionChange]
   );
 
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [deleteSelectedIds, setDeleteSelectedIds] = useState<string[]>([]);
+  const [deleteContext, setDeleteContext] = useState<DeleteContext | null>(
+    null
+  );
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteMutation = useDeleteFreightWarehouseReceipt();
+  const deleteDialogOpen = deleteContext !== null;
+
   useEffect(() => {
     if (!selectionMode && selectedIds.length > 0) {
       updateSelected([]);
     }
   }, [selectionMode, selectedIds.length, updateSelected]);
+  useEffect(() => {
+    if (deleteMode && selectionMode && selectedIds.length > 0) {
+      updateSelected([]);
+    }
+  }, [deleteMode, selectionMode, selectedIds.length, updateSelected]);
+  useEffect(() => {
+    if (!deleteMode && deleteSelectedIds.length > 0) {
+      setDeleteSelectedIds([]);
+    }
+  }, [deleteMode, deleteSelectedIds.length]);
   const sortableColumnIds = useMemo(
     () => [
       'receiptNo',
@@ -283,12 +310,7 @@ export function ReceiptListView({
   );
 
   const data = receiptsQuery.data ?? EMPTY_ARRAY;
-
-  const currentPageIds = useMemo(
-    () => data.map((receipt) => receipt.id),
-    [data]
-  );
-  const selectablePageIds = useMemo(
+  const mergeSelectablePageIds = useMemo(
     () =>
       data
         .filter(
@@ -299,64 +321,108 @@ export function ReceiptListView({
         .map((receipt) => receipt.id),
     [data, selectionMode]
   );
+  const deleteSelectablePageIds = useMemo(
+    () => data.map((receipt) => receipt.id),
+    [data]
+  );
+
+  const activeSelectionPurpose = deleteMode
+    ? 'delete'
+    : selectionMode
+      ? 'merge'
+      : undefined;
+
+  const selectablePageIds =
+    activeSelectionPurpose === 'delete'
+      ? deleteSelectablePageIds
+      : mergeSelectablePageIds;
   const allSelected =
-    selectionMode &&
-    selectablePageIds.length > 0 &&
-    selectablePageIds.every((id) => selectedIds.includes(id));
+    activeSelectionPurpose === 'merge'
+      ? mergeSelectablePageIds.length > 0 &&
+        mergeSelectablePageIds.every((id) => selectedIds.includes(id))
+      : activeSelectionPurpose === 'delete'
+        ? deleteSelectablePageIds.length > 0 &&
+          deleteSelectablePageIds.every((id) =>
+            deleteSelectedIds.includes(id)
+          )
+        : false;
 
   const toggleSelection = useCallback(
     (receiptId: string) => {
+      if (activeSelectionPurpose === 'delete') {
+        setDeleteSelectedIds((prev) =>
+          prev.includes(receiptId)
+            ? prev.filter((id) => id !== receiptId)
+            : [...prev, receiptId]
+        );
+        return;
+      }
       updateSelected((prev) =>
         prev.includes(receiptId)
           ? prev.filter((id) => id !== receiptId)
           : [...prev, receiptId]
       );
     },
-    [updateSelected]
+    [activeSelectionPurpose, updateSelected]
   );
 
   const isSelectableReceipt = useCallback(
     (receipt: FreightWarehouseReceiptWithRelations) =>
-      !selectionMode || (!receipt.isMergedChild && !receipt.isMergedParent),
-    [selectionMode]
+      deleteMode ||
+      !selectionMode ||
+      (!receipt.isMergedChild && !receipt.isMergedParent),
+    [deleteMode, selectionMode]
   );
 
   const columns = useMemo<
     ColumnDef<FreightWarehouseReceiptWithRelations>[]
   >(() => {
-    const cols: ColumnDef<FreightWarehouseReceiptWithRelations>[] = [
-      ...(selectionMode
-        ? [
-            {
-              id: 'select',
-              header: () => (
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={(next) =>
-                    updateSelected((prev) =>
+    const showSelectionColumn = selectionMode || deleteMode;
+    const selectColumn: ColumnDef<FreightWarehouseReceiptWithRelations> | null =
+      showSelectionColumn
+        ? {
+            id: 'select',
+            header: () => (
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={(next) => {
+                  if (activeSelectionPurpose === 'delete') {
+                    setDeleteSelectedIds((prev) =>
                       next
                         ? Array.from(new Set([...prev, ...selectablePageIds]))
                         : prev.filter((id) => !selectablePageIds.includes(id))
-                    )
+                    );
+                    return;
                   }
-                  aria-label={t('receiptList.selectAll')}
-                />
-              ),
-              cell: ({ row }) => (
-                <Checkbox
-                  checked={selectedIds.includes(row.original.id)}
-                  disabled={!isSelectableReceipt(row.original)}
-                  onCheckedChange={() => toggleSelection(row.original.id)}
-                  onClick={(event) => event.stopPropagation()}
-                  aria-label={t('receiptList.selectRow')}
-                />
-              ),
-              enableSorting: false,
-              enableHiding: false,
-              size: 44,
-            } as ColumnDef<FreightWarehouseReceiptWithRelations>,
-          ]
-        : []),
+                  updateSelected((prev) =>
+                    next
+                      ? Array.from(new Set([...prev, ...selectablePageIds]))
+                      : prev.filter((id) => !selectablePageIds.includes(id))
+                  );
+                }}
+                aria-label={t('receiptList.selectAll')}
+              />
+            ),
+            cell: ({ row }) => (
+              <Checkbox
+                checked={
+                  activeSelectionPurpose === 'delete'
+                    ? deleteSelectedIds.includes(row.original.id)
+                    : selectedIds.includes(row.original.id)
+                }
+                disabled={!isSelectableReceipt(row.original)}
+                onCheckedChange={() => toggleSelection(row.original.id)}
+                onClick={(event) => event.stopPropagation()}
+                aria-label={t('receiptList.selectRow')}
+              />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+            size: 44,
+          }
+        : null;
+
+    const baseCols: ColumnDef<FreightWarehouseReceiptWithRelations>[] = [
       {
         id: 'receiptNo',
         accessorKey: 'receiptNo',
@@ -828,10 +894,44 @@ export function ReceiptListView({
         minSize: 160,
         size: 200,
       },
+      {
+        id: 'actions',
+        header: () => null,
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-destructive"
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleteContext({ ids: [row.original.id], isBulk: false });
+            }}
+            disabled={isDeleting}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 44,
+      },
     ];
 
-    return cols;
-  }, [allSelected, data, selectionMode, selectedIds, t]);
+    return selectColumn ? [selectColumn, ...baseCols] : baseCols;
+  }, [
+    activeSelectionPurpose,
+    allSelected,
+    deleteMode,
+    deleteSelectedIds,
+    isSelectableReceipt,
+    selectionMode,
+    selectablePageIds,
+    selectedIds,
+    t,
+    toggleSelection,
+    updateSelected,
+  ]);
 
   const defaultColumnOrder = useMemo(
     () => [
@@ -924,6 +1024,35 @@ export function ReceiptListView({
     enableMultiSort: false,
   });
 
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteContext) return;
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      for (const receiptId of deleteContext.ids) {
+        await deleteMutation.mutateAsync(receiptId);
+      }
+
+      const successMessage = deleteContext.isBulk
+        ? t('receiptList.delete.bulkSuccess', {
+            count: deleteContext.ids.length,
+          })
+        : t('receiptActions.deleteSuccess');
+
+      toast.success(successMessage);
+      setDeleteMode(false);
+      setDeleteSelectedIds([]);
+      setDeleteContext(null);
+      await receiptsQuery.refetch();
+    } catch (error) {
+      const message = getFreightApiErrorMessage(error);
+      setDeleteError(message);
+      throw error;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteContext, deleteMutation, receiptsQuery, t]);
+
   useEffect(() => {
     onReceiptsDataChange?.(data);
   }, [data, onReceiptsDataChange]);
@@ -995,6 +1124,51 @@ export function ReceiptListView({
               </SelectContent>
             </Select>
           )}
+          <div className="ml-auto flex items-center gap-2">
+            {deleteMode ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDeleteMode(false);
+                    setDeleteSelectedIds([]);
+                    setDeleteContext(null);
+                    setDeleteError('');
+                  }}
+                >
+                  {t('receiptList.delete.cancel')}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleteSelectedIds.length === 0 || isDeleting}
+                  onClick={() => {
+                    if (deleteSelectedIds.length > 0) {
+                      setDeleteContext({
+                        ids: deleteSelectedIds,
+                        isBulk: true,
+                      });
+                    }
+                  }}
+                >
+                  {isDeleting
+                    ? t('receiptList.delete.deleting')
+                    : t('receiptList.delete.selectedAction')}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteMode(true)}
+                disabled={selectionMode}
+              >
+                <Trash2 className="mr-2 size-4" />
+                {t('receiptList.delete.start')}
+              </Button>
+            )}
+          </div>
         </DataTableAdvancedToolbar>
         {headerExtras ? (
           <div className="px-4 sm:px-0">{headerExtras}</div>
@@ -1080,15 +1254,21 @@ export function ReceiptListView({
                             }
                           : undefined
                       }
-                      onClick={() => {
-                        if (selectionMode) {
-                          if (selectable) {
-                            toggleSelection(row.original.id);
-                          }
-                        } else {
-                          onSelectReceipt(row.original.id);
+                    onClick={() => {
+                      if (deleteMode) {
+                        if (selectable) {
+                          toggleSelection(row.original.id);
                         }
-                      }}
+                        return;
+                      }
+                      if (selectionMode) {
+                        if (selectable) {
+                          toggleSelection(row.original.id);
+                        }
+                        return;
+                      }
+                      onSelectReceipt(row.original.id);
+                    }}
                       data-selectable={selectable ? 'true' : 'false'}
                     >
                       {row.getVisibleCells().map((cell) => (
@@ -1126,6 +1306,30 @@ export function ReceiptListView({
       ) : (
         floatingAction
       )}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteContext(null);
+            setDeleteError('');
+          }
+        }}
+        title={
+          deleteContext?.isBulk
+            ? t('receiptList.delete.bulkTitle')
+            : t('receiptActions.deleteTitle')
+        }
+        message={
+          deleteContext?.isBulk
+            ? t('receiptList.delete.bulkMessage')
+            : t('receiptActions.deleteMessage')
+        }
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+        confirmText={
+          deleteContext?.isBulk ? t('receiptList.delete.bulkConfirm') : undefined
+        }
+      />
     </div>
   );
 }

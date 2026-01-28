@@ -218,20 +218,29 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
   });
 }
 
-export function useDeleteFreightWarehouseReceipt(receiptId: string) {
+export function useDeleteFreightWarehouseReceipt(receiptId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (targetReceiptId?: string) => {
+      const id = targetReceiptId ?? receiptId;
+      if (!id) {
+        throw new Error('Receipt id is required');
+      }
+
       const { deleteWarehouseReceipt } = await import(
         '@/lib/freight/api-client'
       );
-      return deleteWarehouseReceipt(receiptId);
+
+      return deleteWarehouseReceipt(id);
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, targetReceiptId) => {
+      const id = targetReceiptId ?? receiptId;
+      if (!id) return;
+
       // Remove from cache
       queryClient.removeQueries({
-        queryKey: freightKeys.warehouseReceipt(receiptId),
+        queryKey: freightKeys.warehouseReceipt(id),
       });
       // Invalidate all receipt lists
       await queryClient.invalidateQueries({
