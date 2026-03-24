@@ -16,6 +16,32 @@ import {
 } from './routes';
 
 const intlMiddleware = createMiddleware(routing);
+const localePathPrefix = new RegExp(`^/(${LOCALES.join('|')})(?=/|$)`);
+const blockedWhenLoggedInRoutes = new Set<string>(routesNotAllowedByLoggedInUsers);
+
+function isExactOrPrefixedRoute(pathname: string, route: string): boolean {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+function buildLoginRedirectUrl(req: NextRequest): URL {
+  const callbackUrl = `${req.nextUrl.pathname}${req.nextUrl.search}`;
+  return new URL(
+    `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+    req.nextUrl
+  );
+}
+
+function hasSessionCookie(req: NextRequest): boolean {
+  if (
+    req.cookies.get('better-auth.session_token') ||
+    req.cookies.get('__Secure-better-auth.session_token')
+  ) {
+    return true;
+  }
+  return req.cookies.getAll().some(({ name }) => {
+    return name.includes('better-auth') && name.includes('session_token');
+  });
+}
 
 /**
  * 1. Next.js middleware
@@ -29,6 +55,27 @@ const intlMiddleware = createMiddleware(routing);
  */
 export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
+
+  const pathnameWithoutLocale = getPathnameWithoutLocale(nextUrl.pathname);
+
+  const isNotAllowedRoute =
+    blockedWhenLoggedInRoutes.has(pathnameWithoutLocale);
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    isExactOrPrefixedRoute(pathnameWithoutLocale, route)
+  );
+  const isAdminRoute = adminOnlyRoutes.some((route) =>
+    isExactOrPrefixedRoute(pathnameWithoutLocale, route)
+  );
+
+  // Fast path for public pages: skip cookie/session work entirely.
+  if (
+    !isNotAllowedRoute &&
+    !isProtectedRoute &&
+    !isAdminRoute &&
+    !(nextUrl.pathname.startsWith('/docs/') || nextUrl.pathname === '/docs')
+  ) {
+    return intlMiddleware(req);
+  }
 
   // Handle internal docs link redirection for internationalization
   // Check if this is a docs page without locale prefix
@@ -48,59 +95,20 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  const hasSessionCookie = req.cookies.getAll().some(({ name }) => {
-    return (
-      name === 'better-auth.session_token' ||
-      name === '__Secure-better-auth.session_token' ||
-      (name.includes('better-auth') && name.includes('session_token'))
-    );
-  });
-
-  // Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
-  const pathnameWithoutLocale = getPathnameWithoutLocale(
-    nextUrl.pathname,
-    LOCALES
-  );
+  const userHasSession = hasSessionCookie(req);
 
   // If the route can not be accessed by logged in users, redirect if the user is logged in
-  if (hasSessionCookie) {
-    const isNotAllowedRoute = routesNotAllowedByLoggedInUsers.some((route) =>
-      new RegExp(`^${route}$`).test(pathnameWithoutLocale)
-    );
-    if (isNotAllowedRoute) {
-      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
-    }
+  if (userHasSession && isNotAllowedRoute) {
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
   }
-
-  // Treat protected routes as prefixes so nested pages (e.g. /freight/shipments/123)
-  // stay protected without needing to list every sub-route.
-  const isProtectedRoute = protectedRoutes.some(
-    (route) =>
-      pathnameWithoutLocale === route ||
-      pathnameWithoutLocale.startsWith(`${route}/`)
-  );
 
   // If the route is a protected route, redirect to login if user is not logged in
-  if (!hasSessionCookie && isProtectedRoute) {
-    let callbackUrl = nextUrl.pathname;
-    if (nextUrl.search) {
-      callbackUrl += nextUrl.search;
-    }
-    const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-    return NextResponse.redirect(
-      new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
-    );
+  if (!userHasSession && isProtectedRoute) {
+    return NextResponse.redirect(buildLoginRedirectUrl(req));
   }
 
-  // Check if the route is admin-only
-  const isAdminRoute = adminOnlyRoutes.some(
-    (route) =>
-      pathnameWithoutLocale === route ||
-      pathnameWithoutLocale.startsWith(`${route}/`)
-  );
-
   // If the route is admin-only, check if user has admin role
-  if (hasSessionCookie && isAdminRoute) {
+  if (userHasSession && isAdminRoute) {
     // Only admin routes need role inspection; avoid session fetch on normal navigation.
     const sessionUrl = new URL('/api/auth/get-session', req.url);
     const { data: session } = await betterFetch<Session>(
@@ -113,14 +121,7 @@ export default async function middleware(req: NextRequest) {
     );
 
     if (!session) {
-      let callbackUrl = nextUrl.pathname;
-      if (nextUrl.search) {
-        callbackUrl += nextUrl.search;
-      }
-      const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-      return NextResponse.redirect(
-        new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
-      );
+      return NextResponse.redirect(buildLoginRedirectUrl(req));
     }
 
     const userRole = session?.user?.role;
@@ -136,9 +137,12 @@ export default async function middleware(req: NextRequest) {
 /**
  * Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
  */
-function getPathnameWithoutLocale(pathname: string, locales: string[]): string {
-  const localePattern = new RegExp(`^/(${locales.join('|')})/`);
-  return pathname.replace(localePattern, '/');
+function getPathnameWithoutLocale(pathname: string): string {
+  if (!localePathPrefix.test(pathname)) {
+    return pathname;
+  }
+  const withoutLocale = pathname.replace(localePathPrefix, '');
+  return withoutLocale || '/';
 }
 
 /**
