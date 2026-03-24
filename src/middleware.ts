@@ -29,7 +29,6 @@ const intlMiddleware = createMiddleware(routing);
  */
 export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
-  console.log('>> middleware start, pathname', nextUrl.pathname);
 
   // Handle internal docs link redirection for internationalization
   // Check if this is a docs page without locale prefix
@@ -45,25 +44,17 @@ export default async function middleware(req: NextRequest) {
       LOCALES.includes(preferredLocale)
     ) {
       const localizedPath = `/${preferredLocale}${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-      console.log(
-        '<< middleware end, redirecting docs link to preferred locale:',
-        localizedPath
-      );
       return NextResponse.redirect(new URL(localizedPath, nextUrl));
     }
   }
 
-  // do not use getSession() here, it will cause error related to edge runtime
-  // const session = await getSession();
-  // Use the request URL's origin to construct the full URL for the fetch
-  const sessionUrl = new URL('/api/auth/get-session', req.url);
-  const { data: session } = await betterFetch<Session>(sessionUrl.toString(), {
-    headers: {
-      cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
-    },
+  const hasSessionCookie = req.cookies.getAll().some(({ name }) => {
+    return (
+      name === 'better-auth.session_token' ||
+      name === '__Secure-better-auth.session_token' ||
+      (name.includes('better-auth') && name.includes('session_token'))
+    );
   });
-  const isLoggedIn = !!session;
-  // console.log('middleware, isLoggedIn', isLoggedIn);
 
   // Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
   const pathnameWithoutLocale = getPathnameWithoutLocale(
@@ -72,14 +63,11 @@ export default async function middleware(req: NextRequest) {
   );
 
   // If the route can not be accessed by logged in users, redirect if the user is logged in
-  if (isLoggedIn) {
+  if (hasSessionCookie) {
     const isNotAllowedRoute = routesNotAllowedByLoggedInUsers.some((route) =>
       new RegExp(`^${route}$`).test(pathnameWithoutLocale)
     );
     if (isNotAllowedRoute) {
-      console.log(
-        '<< middleware end, not allowed route, already logged in, redirecting to dashboard'
-      );
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
   }
@@ -91,19 +79,14 @@ export default async function middleware(req: NextRequest) {
       pathnameWithoutLocale === route ||
       pathnameWithoutLocale.startsWith(`${route}/`)
   );
-  // console.log('middleware, isProtectedRoute', isProtectedRoute);
 
   // If the route is a protected route, redirect to login if user is not logged in
-  if (!isLoggedIn && isProtectedRoute) {
+  if (!hasSessionCookie && isProtectedRoute) {
     let callbackUrl = nextUrl.pathname;
     if (nextUrl.search) {
       callbackUrl += nextUrl.search;
     }
     const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-    console.log(
-      '<< middleware end, not logged in, redirecting to login, callbackUrl',
-      callbackUrl
-    );
     return NextResponse.redirect(
       new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
     );
@@ -117,18 +100,36 @@ export default async function middleware(req: NextRequest) {
   );
 
   // If the route is admin-only, check if user has admin role
-  if (isLoggedIn && isAdminRoute) {
+  if (hasSessionCookie && isAdminRoute) {
+    // Only admin routes need role inspection; avoid session fetch on normal navigation.
+    const sessionUrl = new URL('/api/auth/get-session', req.url);
+    const { data: session } = await betterFetch<Session>(
+      sessionUrl.toString(),
+      {
+        headers: {
+          cookie: req.headers.get('cookie') || '',
+        },
+      }
+    );
+
+    if (!session) {
+      let callbackUrl = nextUrl.pathname;
+      if (nextUrl.search) {
+        callbackUrl += nextUrl.search;
+      }
+      const encodedCallbackUrl = encodeURIComponent(callbackUrl);
+      return NextResponse.redirect(
+        new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
+      );
+    }
+
     const userRole = session?.user?.role;
     if (userRole !== 'admin') {
-      console.log(
-        '<< middleware end, admin route, user is not admin, redirecting to dashboard'
-      );
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
   }
 
   // Apply intlMiddleware for all routes
-  console.log('<< middleware end, applying intlMiddleware');
   return intlMiddleware(req);
 }
 
@@ -150,8 +151,8 @@ export const config = {
   // The `matcher` is relative to the `basePath`
   matcher: [
     // Match all pathnames except for
-    // - if they start with `/api`, `/_next` or `/_vercel`
+    // - if they start with `/api`, `/_next`, `/__nextjs` or `/_vercel`
     // - if they contain a dot (e.g. `favicon.ico`)
-    '/((?!api|_next|_vercel|.*\\..*).*)',
+    '/((?!api|_next|__nextjs|_vercel|.*\\..*).*)',
   ],
 };

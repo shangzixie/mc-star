@@ -14,11 +14,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useFreightPorts } from '@/hooks/freight/use-freight-ports';
+import {
+  useFreightPortById,
+  useFreightPorts,
+} from '@/hooks/freight/use-freight-ports';
 import type { TransportNode } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
+import { AddLocationDialog } from './add-location-dialog';
 
 interface PortComboboxProps {
   value?: string; // transport_nodes.id (uuid)
@@ -26,6 +31,7 @@ interface PortComboboxProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  allowAddNew?: boolean;
 }
 
 export function PortCombobox({
@@ -34,11 +40,14 @@ export function PortCombobox({
   disabled = false,
   className,
   placeholder,
+  allowAddNew = true,
 }: PortComboboxProps) {
+  const t = useTranslations('Dashboard.freight.inbound');
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('A'); // Default to 'A'
   const [portCache, setPortCache] = useState<Record<string, TransportNode>>({});
+  const [addLocationOpen, setAddLocationOpen] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -50,6 +59,7 @@ export function PortCombobox({
   }, [searchQuery]);
 
   const { data: ports = [], isLoading } = useFreightPorts(debouncedQuery);
+  const selectedPortQuery = useFreightPortById(value);
 
   useEffect(() => {
     if (ports.length === 0) return;
@@ -65,12 +75,13 @@ export function PortCombobox({
   // Find selected port to display its label
   const selectedPort = useMemo(() => {
     if (!value) return null;
-    return portCache[value] ?? ports.find((p) => p.id === value) ?? null;
-  }, [value, portCache, ports]);
-
-  const getPortDisplayName = (port: TransportNode) => {
-    return port.nameCn || port.nameEn || port.unLocode || port.id;
-  };
+    return (
+      portCache[value] ??
+      selectedPortQuery.data ??
+      ports.find((p) => p.id === value) ??
+      null
+    );
+  }, [value, portCache, ports, selectedPortQuery.data]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -150,9 +161,33 @@ export function PortCombobox({
                 ))}
               </CommandGroup>
             )}
+            {allowAddNew && (
+              <>
+                <div className="border-t" />
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={() => {
+                      setOpen(false);
+                      setAddLocationOpen(true);
+                    }}
+                    className="text-primary"
+                  >
+                    <Plus className="mr-2 size-4" />
+                    {t('locationActions.addPort')}
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
+      <AddLocationDialog
+        open={addLocationOpen}
+        onOpenChange={setAddLocationOpen}
+        onSuccess={(locationId) => {
+          onValueChange(locationId);
+        }}
+      />
     </Popover>
   );
 }

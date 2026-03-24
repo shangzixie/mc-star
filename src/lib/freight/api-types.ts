@@ -353,6 +353,7 @@ export const freightMasterBillOfLadingSchema = z
     receiptId: z.union([uuidSchema, z.string()]),
     mblNo: z.string().nullable().optional(),
     soNo: z.string().nullable().optional(),
+    portOfDestinationAddress: z.string().nullable().optional(),
     portOfDestinationId: z.union([uuidSchema, z.string(), z.null()]),
     portOfDischargeId: z.union([uuidSchema, z.string(), z.null()]),
     portOfLoadingId: z.union([uuidSchema, z.string(), z.null()]),
@@ -368,6 +369,7 @@ export const freightMasterBillOfLadingSchema = z
     receiptId: String(data.receiptId),
     mblNo: data.mblNo ?? null,
     soNo: data.soNo ?? null,
+    portOfDestinationAddress: data.portOfDestinationAddress ?? null,
     portOfDestinationId: data.portOfDestinationId
       ? String(data.portOfDestinationId)
       : null,
@@ -435,3 +437,15 @@ export const transportNodeSchema = z
   .passthrough();
 
 export type TransportNode = z.infer<typeof transportNodeSchema>;
+
+export const freightEmployeeSchema = z
+  .object({
+    id: uuidSchema,
+    userId: z.string().nullable(),
+    fullName: z.string(),
+    branch: z.string(),
+    department: z.string(),
+  })
+  .passthrough();
+
+export type FreightEmployee = z.infer<typeof freightEmployeeSchema>;

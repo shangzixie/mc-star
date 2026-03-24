@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const mblFormSchema = z.object({
+  portOfDestinationAddress: z.string().max(500).optional(),
   portOfDestinationId: z.string().uuid().optional(),
   portOfDischargeId: z.string().uuid().optional(),
   portOfLoadingId: z.string().uuid().optional(),
@@ -42,6 +43,7 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
   const form = useForm<MBLFormData>({
     resolver: zodResolver(mblFormSchema),
     defaultValues: {
+      portOfDestinationAddress: '',
       portOfDestinationId: undefined,
       portOfDischargeId: undefined,
       portOfLoadingId: undefined,
@@ -53,6 +55,7 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
   useEffect(() => {
     if (existingMBL) {
       form.reset({
+        portOfDestinationAddress: existingMBL.portOfDestinationAddress ?? '',
         portOfDestinationId: existingMBL.portOfDestinationId ?? undefined,
         portOfDischargeId: existingMBL.portOfDischargeId ?? undefined,
         portOfLoadingId: existingMBL.portOfLoadingId ?? undefined,
@@ -128,6 +131,16 @@ export function MBLFormSection({ receiptId }: { receiptId: string }) {
                 placeholder={t('portOfDestinationPlaceholder')}
               />
             )}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="portOfDestinationAddress">
+            {t('portOfDestinationAddress')}
+          </Label>
+          <Input
+            id="portOfDestinationAddress"
+            {...form.register('portOfDestinationAddress')}
+            placeholder={t('portOfDestinationAddressPlaceholder')}
           />
         </div>
 

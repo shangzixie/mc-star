@@ -141,6 +141,7 @@ const receiptFormSchema = z.object({
   bookingAgentId: z.string().optional(),
   customsAgentId: z.string().optional(),
   // MBL port information (unified)
+  portOfDestinationAddress: z.string().max(500).optional(),
   portOfDestinationId: z.string().optional(),
   portOfDischargeId: z.string().optional(),
   portOfLoadingId: z.string().optional(),
@@ -307,6 +308,7 @@ export function ReceiptDetailEditView({
       bookingAgentId: receipt.bookingAgentId ?? '',
       customsAgentId: receipt.customsAgentId ?? '',
       // MBL port information (will be loaded from query)
+      portOfDestinationAddress: '',
       portOfDestinationId: '',
       portOfDischargeId: '',
       portOfLoadingId: '',
@@ -395,6 +397,17 @@ export function ReceiptDetailEditView({
       form.setValue('soNo', nextSoNo, { shouldDirty: false });
     }
   }, [mblQuery.data?.soNo, form]);
+
+  useEffect(() => {
+    const nextPortOfDestinationAddress =
+      mblQuery.data?.portOfDestinationAddress ?? '';
+    const current = form.getValues('portOfDestinationAddress') ?? '';
+    if (nextPortOfDestinationAddress !== current) {
+      form.setValue('portOfDestinationAddress', nextPortOfDestinationAddress, {
+        shouldDirty: false,
+      });
+    }
+  }, [mblQuery.data?.portOfDestinationAddress, form]);
 
   useEffect(() => {
     if (hblQuery.data) {
@@ -510,6 +523,7 @@ export function ReceiptDetailEditView({
       const mblPatch: Partial<{
         mblNo: string | null;
         soNo: string | null;
+        portOfDestinationAddress?: string | null;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
@@ -835,6 +849,17 @@ export function ReceiptDetailEditView({
           mblPatch.soNo = nextSoNo || null;
         }
 
+        const nextPortOfDestinationAddress = (
+          data.portOfDestinationAddress ?? ''
+        ).trim();
+        const prevPortOfDestinationAddress = (
+          mblQuery.data?.portOfDestinationAddress ?? ''
+        ).trim();
+        if (nextPortOfDestinationAddress !== prevPortOfDestinationAddress) {
+          mblPatch.portOfDestinationAddress =
+            nextPortOfDestinationAddress || null;
+        }
+
         // Check for MBL port changes
         const nextPortOfDestinationId = (data.portOfDestinationId ?? '').trim();
         const prevPortOfDestinationId = (
@@ -899,6 +924,7 @@ export function ReceiptDetailEditView({
           const createPayload: Partial<{
             mblNo?: string;
             soNo?: string;
+            portOfDestinationAddress?: string;
             portOfDestinationId?: string;
             portOfDischargeId?: string;
             portOfLoadingId?: string;
@@ -909,6 +935,13 @@ export function ReceiptDetailEditView({
           }
           if (typeof mblPatch.soNo === 'string' && mblPatch.soNo.trim()) {
             createPayload.soNo = mblPatch.soNo;
+          }
+          if (
+            typeof mblPatch.portOfDestinationAddress === 'string' &&
+            mblPatch.portOfDestinationAddress.trim()
+          ) {
+            createPayload.portOfDestinationAddress =
+              mblPatch.portOfDestinationAddress;
           }
           if (mblPatch.portOfDestinationId) {
             createPayload.portOfDestinationId = mblPatch.portOfDestinationId;
@@ -1825,6 +1858,19 @@ export function ReceiptDetailEditView({
                             disabled={isOutbound}
                           />
                         )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="portOfDestinationAddress">
+                        {tMbl('portOfDestinationAddress')}
+                      </Label>
+                      <Input
+                        id="portOfDestinationAddress"
+                        placeholder={tMbl(
+                          'portOfDestinationAddressPlaceholder'
+                        )}
+                        {...form.register('portOfDestinationAddress')}
+                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">

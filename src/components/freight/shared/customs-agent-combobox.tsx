@@ -20,12 +20,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
+import {
+  useFreightParties,
+  useFreightPartyById,
+} from '@/hooks/freight/use-freight-master-data';
 import type { FreightParty } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown, Info } from 'lucide-react';
+import { Check, ChevronsUpDown, Info, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { AddAgentDialog } from './add-agent-dialog';
 
 interface CustomsAgentComboboxProps {
   value?: string;
@@ -33,6 +37,7 @@ interface CustomsAgentComboboxProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  allowAddNew?: boolean;
 }
 
 export function CustomsAgentCombobox({
@@ -41,11 +46,16 @@ export function CustomsAgentCombobox({
   disabled = false,
   className,
   placeholder,
+  allowAddNew = true,
 }: CustomsAgentComboboxProps) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [addAgentOpen, setAddAgentOpen] = useState(false);
+  const [partyCache, setPartyCache] = useState<Record<string, FreightParty>>(
+    {}
+  );
 
   // Debounce search query
   useEffect(() => {
@@ -60,8 +70,22 @@ export function CustomsAgentCombobox({
     q: debouncedQuery,
   });
   const agents = allParties?.filter((p) => p.roles.includes('AGENT'));
+  const selectedAgentQuery = useFreightPartyById(value);
+  useEffect(() => {
+    if (!agents || agents.length === 0) return;
+    setPartyCache((prev) => {
+      const next = { ...prev };
+      for (const agent of agents) {
+        next[agent.id] = agent;
+      }
+      return next;
+    });
+  }, [agents]);
 
-  const selectedAgent = agents?.find((a) => a.id === value);
+  const selectedAgent =
+    (value ? partyCache[value] : undefined) ??
+    selectedAgentQuery.data ??
+    agents?.find((a) => a.id === value);
 
   const getAgentDisplayName = (agent: FreightParty) => {
     return agent.name || agent.code || agent.id;
@@ -116,6 +140,15 @@ export function CustomsAgentCombobox({
                         onValueChange(
                           currentValue === value ? undefined : currentValue
                         );
+                        const selected = agents.find(
+                          (agent) => agent.id === currentValue
+                        );
+                        if (selected) {
+                          setPartyCache((prev) => ({
+                            ...prev,
+                            [selected.id]: selected,
+                          }));
+                        }
                         setOpen(false);
                         setSearchQuery('');
                       }}
@@ -143,10 +176,42 @@ export function CustomsAgentCombobox({
                   ))}
                 </CommandGroup>
               )}
+              {allowAddNew && (
+                <>
+                  <div className="border-t" />
+                  <CommandGroup>
+                    <CommandItem
+                      onSelect={() => {
+                        setOpen(false);
+                        setAddAgentOpen(true);
+                      }}
+                      className="text-primary"
+                    >
+                      <Plus className="mr-2 size-4" />
+                      {t('customsAgentFields.addNew')}
+                    </CommandItem>
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+
+      <AddAgentDialog
+        open={addAgentOpen}
+        onOpenChange={setAddAgentOpen}
+        onSuccess={(agent) => {
+          setPartyCache((prev) => ({
+            ...prev,
+            [agent.id]: agent,
+          }));
+          onValueChange(agent.id);
+        }}
+        title={t('customsAgentFields.addNew')}
+        description={t('customsAgentFields.addDescription')}
+        submitLabel={t('customsAgentFields.createSuccess')}
+      />
 
       {selectedAgent && (
         <TooltipProvider>

@@ -778,6 +778,8 @@
           "description": "Master Bill of Lading information",
           "portOfDestination": "Port of Destination",
           "portOfDestinationPlaceholder": "Enter port of destination",
+          "portOfDestinationAddress": "Destination Port Address",
+          "portOfDestinationAddressPlaceholder": "Enter destination port address",
           "countryOfDestination": "Country of Destination",
           "countryOfDestinationPlaceholder": "Enter country of destination",
           "portOfDischarge": "Port of Discharge",
@@ -990,6 +992,14 @@
           "selectEmployee": "Select employee",
           "searchEmployee": "Search employee name...",
           "noEmployeeFound": "No employee found",
+          "addNewEmployee": "Add New Employee",
+          "addDescription": "Please enter internal employee information.",
+          "createSuccess": "Employee created successfully",
+          "fields": {
+            "fullName": "Full Name",
+            "branch": "Branch",
+            "department": "Department"
+          },
           "roles": {
             "sales": "Sales Representative",
             "customerService": "Customer Service",
@@ -1053,19 +1063,39 @@
           "name": "Shipper Name",
           "code": "Shipper Code",
           "contact": "Contact",
-          "address": "Address"
+          "address": "Address",
+          "addNew": "Add New Shipper",
+          "addDescription": "Please fill in shipper's basic information. Name is required.",
+          "createSuccess": "Shipper created successfully"
         },
         "bookingAgentFields": {
           "name": "Booking Agent Name",
           "code": "Booking Agent Code",
           "contact": "Contact",
-          "address": "Address"
+          "address": "Address",
+          "addNew": "Add New Booking Agent",
+          "addDescription": "Please fill in booking agent's basic information. Name is required.",
+          "createSuccess": "Booking agent created successfully"
         },
         "customsAgentFields": {
           "name": "Customs Agent Name",
           "code": "Customs Agent Code",
           "contact": "Contact",
-          "address": "Address"
+          "address": "Address",
+          "addNew": "Add New Customs Agent",
+          "addDescription": "Please fill in customs agent's basic information. Name is required.",
+          "createSuccess": "Customs agent created successfully"
+        },
+        "locationActions": {
+          "addPort": "Add New Port",
+          "addDescription": "Please enter basic port information.",
+          "createSuccess": "Port created successfully",
+          "fields": {
+            "nameCn": "Chinese Name",
+            "nameEn": "English Name",
+            "unLocode": "UN/LOCODE",
+            "countryCode": "Country Code"
+          }
         },
         "itemActions": {
           "edit": "Edit",

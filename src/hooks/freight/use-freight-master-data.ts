@@ -8,10 +8,13 @@ import {
 import {
   type FreightParty,
   type FreightWarehouse,
+  freightEmployeeSchema,
   freightPartySchema,
   freightWarehouseSchema,
+  transportNodeSchema,
 } from '@/lib/freight/api-types';
 import {
+  createLocationSchema,
   createPartySchema,
   createWarehouseSchema,
 } from '@/lib/freight/schemas';
@@ -21,6 +24,20 @@ import { freightKeys } from './query-keys';
 
 const partiesArraySchema = z.array(freightPartySchema);
 const warehousesArraySchema = z.array(freightWarehouseSchema);
+
+export function useFreightPartyById(partyId?: string) {
+  return useQuery({
+    queryKey: [...freightKeys.parties(), 'detail', partyId],
+    queryFn: async () => {
+      if (!partyId) return null;
+      return freightFetch(`/api/freight/parties/${partyId}`, {
+        schema: freightPartySchema,
+      });
+    },
+    enabled: !!partyId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export function useFreightParties(params: { q: string }) {
   return useQuery({
@@ -119,6 +136,59 @@ export function useCreateFreightWarehouse() {
     onSuccess: async (_created: FreightWarehouse) => {
       await queryClient.invalidateQueries({
         queryKey: freightKeys.warehouses(),
+      });
+    },
+  });
+}
+
+export function useCreateFreightLocation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: z.infer<typeof createLocationSchema>) => {
+      const body = createLocationSchema.parse(input);
+
+      return freightFetch('/api/freight/locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        schema: transportNodeSchema,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['freight', 'locations'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['freight-ports'],
+      });
+    },
+  });
+}
+
+export function useCreateFreightEmployee() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      fullName: string;
+      branch: string;
+      department: string;
+    }) => {
+      return freightFetch('/api/freight/employees', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+        schema: freightEmployeeSchema,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['freight', 'employees'],
       });
     },
   });

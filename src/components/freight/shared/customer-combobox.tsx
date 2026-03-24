@@ -20,7 +20,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
+import {
+  useFreightParties,
+  useFreightPartyById,
+} from '@/hooks/freight/use-freight-master-data';
 import type { FreightParty } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Info, Plus } from 'lucide-react';
@@ -48,6 +51,9 @@ export function CustomerCombobox({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [partyCache, setPartyCache] = useState<Record<string, FreightParty>>(
+    {}
+  );
 
   // Debounce search query
   useEffect(() => {
@@ -62,8 +68,22 @@ export function CustomerCombobox({
     q: debouncedQuery,
   });
   const customers = allParties?.filter((p) => p.roles.includes('CUSTOMER'));
+  const selectedCustomerQuery = useFreightPartyById(value);
+  useEffect(() => {
+    if (!customers || customers.length === 0) return;
+    setPartyCache((prev) => {
+      const next = { ...prev };
+      for (const customer of customers) {
+        next[customer.id] = customer;
+      }
+      return next;
+    });
+  }, [customers]);
 
-  const selectedCustomer = customers?.find((c) => c.id === value);
+  const selectedCustomer =
+    (value ? partyCache[value] : undefined) ??
+    selectedCustomerQuery.data ??
+    customers?.find((c) => c.id === value);
 
   const getCustomerDisplayName = (customer: FreightParty) => {
     return customer.name || customer.code || customer.id;
@@ -118,6 +138,15 @@ export function CustomerCombobox({
                         onValueChange(
                           currentValue === value ? undefined : currentValue
                         );
+                        const selected = customers.find(
+                          (customer) => customer.id === currentValue
+                        );
+                        if (selected) {
+                          setPartyCache((prev) => ({
+                            ...prev,
+                            [selected.id]: selected,
+                          }));
+                        }
                         setOpen(false);
                         setSearchQuery('');
                       }}

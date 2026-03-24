@@ -92,6 +92,10 @@ export async function POST(
     };
     if (data.mblNo !== undefined) updateData.mblNo = data.mblNo ?? null;
     if (data.soNo !== undefined) updateData.soNo = data.soNo ?? null;
+    if (data.portOfDestinationAddress !== undefined) {
+      updateData.portOfDestinationAddress =
+        data.portOfDestinationAddress ?? null;
+    }
     if (data.portOfDestinationId !== undefined) {
       updateData.portOfDestinationId = data.portOfDestinationId;
     }
@@ -111,6 +115,7 @@ export async function POST(
         receiptId: data.receiptId as any,
         mblNo: data.mblNo ?? null,
         soNo: data.soNo ?? null,
+        portOfDestinationAddress: data.portOfDestinationAddress ?? null,
         portOfDestinationId: data.portOfDestinationId as any,
         portOfDischargeId: data.portOfDischargeId as any,
         portOfLoadingId: data.portOfLoadingId as any,
@@ -167,6 +172,9 @@ export async function PATCH(
     }
     if (data.soNo !== undefined) {
       updateData.soNo = data.soNo;
+    }
+    if (data.portOfDestinationAddress !== undefined) {
+      updateData.portOfDestinationAddress = data.portOfDestinationAddress;
     }
     if (data.portOfDestinationId !== undefined) {
       updateData.portOfDestinationId = data.portOfDestinationId;

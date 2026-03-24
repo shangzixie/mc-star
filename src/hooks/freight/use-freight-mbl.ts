@@ -33,6 +33,7 @@ export function useCreateFreightMBL(receiptId: string) {
       data: Partial<{
         mblNo?: string;
         soNo?: string;
+        portOfDestinationAddress?: string;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
@@ -63,6 +64,7 @@ export function useUpdateFreightMBL(receiptId: string) {
       data: Partial<{
         mblNo?: string | null;
         soNo?: string | null;
+        portOfDestinationAddress?: string | null;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;

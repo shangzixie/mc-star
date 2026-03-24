@@ -786,6 +786,8 @@
           "description": "Master Bill of Lading 主提单信息",
           "portOfDestination": "目的港",
           "portOfDestinationPlaceholder": "请输入目的港",
+          "portOfDestinationAddress": "目的港地址",
+          "portOfDestinationAddressPlaceholder": "请输入目的港地址",
           "countryOfDestination": "目的国",
           "countryOfDestinationPlaceholder": "请输入目的国",
           "portOfDischarge": "卸货港",
@@ -999,6 +1001,14 @@
           "selectEmployee": "选择雇员",
           "searchEmployee": "搜索雇员姓名...",
           "noEmployeeFound": "未找到雇员",
+          "addNewEmployee": "新增业务员",
+          "addDescription": "请输入业务员的内部姓名信息。",
+          "createSuccess": "业务员创建成功",
+          "fields": {
+            "fullName": "姓名",
+            "branch": "分部",
+            "department": "部门"
+          },
           "roles": {
             "sales": "业务员",
             "customerService": "客服",
@@ -1062,19 +1072,39 @@
           "name": "发货人名称",
           "code": "发货人代码",
           "contact": "联系方式",
-          "address": "地址"
+          "address": "地址",
+          "addNew": "新增发货人",
+          "addDescription": "请填写发货人的基本信息，名称为必填项",
+          "createSuccess": "发货人创建成功"
         },
         "bookingAgentFields": {
           "name": "订舱代理名称",
           "code": "订舱代理代码",
           "contact": "联系方式",
-          "address": "地址"
+          "address": "地址",
+          "addNew": "新增订舱代理",
+          "addDescription": "请填写订舱代理的基本信息，名称为必填项",
+          "createSuccess": "订舱代理创建成功"
         },
         "customsAgentFields": {
           "name": "清关代理名称",
           "code": "清关代理代码",
           "contact": "联系方式",
-          "address": "地址"
+          "address": "地址",
+          "addNew": "新增清关代理",
+          "addDescription": "请填写清关代理的基本信息，名称为必填项",
+          "createSuccess": "清关代理创建成功"
+        },
+        "locationActions": {
+          "addPort": "新增港口",
+          "addDescription": "请输入港口的基础信息。",
+          "createSuccess": "港口创建成功",
+          "fields": {
+            "nameCn": "中文名",
+            "nameEn": "英文名",
+            "unLocode": "UN/LOCODE",
+            "countryCode": "国家代码"
+          }
         },
         "itemActions": {
           "edit": "编辑",

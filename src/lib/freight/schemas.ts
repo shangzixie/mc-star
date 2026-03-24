@@ -35,11 +35,20 @@ export const createPartySchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+const optionalTrimmedString = () =>
+  z
+    .string()
+    .optional()
+    .transform((value) => {
+      const trimmed = value?.trim();
+      return trimmed ? trimmed : undefined;
+    });
+
 export const createLocationSchema = z.object({
-  unLocode: z.string().min(1).max(10).optional(),
+  unLocode: optionalTrimmedString().pipe(z.string().min(1).max(10).optional()),
   nameCn: z.string().min(1),
-  nameEn: z.string().optional(),
-  countryCode: z.string().length(2).optional(),
+  nameEn: optionalTrimmedString(),
+  countryCode: optionalTrimmedString().pipe(z.string().length(2).optional()),
   type: z.enum(LOCATION_TYPES).optional(),
 });
 
@@ -244,6 +253,7 @@ export const warehouseReceiptsQuerySchema = z.object({
 export const createMasterBillOfLadingSchema = z.object({
   mblNo: z.string().max(50).optional(),
   soNo: z.string().max(50).optional(),
+  portOfDestinationAddress: z.string().max(500).optional(),
   portOfDestinationId: uuidSchema.optional(),
   portOfDischargeId: uuidSchema.optional(),
   portOfLoadingId: uuidSchema.optional(),
@@ -253,6 +263,7 @@ export const createMasterBillOfLadingSchema = z.object({
 export const updateMasterBillOfLadingSchema = z.object({
   mblNo: z.string().max(50).nullable().optional(),
   soNo: z.string().max(50).nullable().optional(),
+  portOfDestinationAddress: z.string().max(500).nullable().optional(),
   portOfDestinationId: uuidSchema.optional(),
   portOfDischargeId: uuidSchema.optional(),
   portOfLoadingId: uuidSchema.optional(),

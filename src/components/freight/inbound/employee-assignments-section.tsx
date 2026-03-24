@@ -56,6 +56,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onSalesEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -69,6 +70,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onCustomerServiceEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -82,6 +84,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onOverseasCsEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -95,6 +98,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onOperationsEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -108,6 +112,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onDocumentationEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -121,6 +126,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onFinanceEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -134,6 +140,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onBookingEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
 
@@ -147,6 +154,7 @@ export function EmployeeAssignmentsSection({
             onValueChange={onReviewerEmployeeChange}
             placeholder={t('employees.selectEmployee')}
             disabled={disabled}
+            allowAddNew
           />
         </div>
       </div>

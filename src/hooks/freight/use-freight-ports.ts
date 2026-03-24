@@ -22,3 +22,17 @@ export function useFreightPorts(query: string) {
     enabled: query.length > 0,
   });
 }
+
+export function useFreightPortById(portId?: string) {
+  return useQuery({
+    queryKey: [PORTS_QUERY_KEY, 'by-id', portId],
+    queryFn: async () => {
+      if (!portId) return null;
+      return freightFetch(`/api/freight/locations/${portId}`, {
+        schema: transportNodeSchema,
+      });
+    },
+    enabled: !!portId,
+    staleTime: 5 * 60 * 1000,
+  });
+}

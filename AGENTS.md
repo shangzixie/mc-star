@@ -1,19 +1,45 @@
-# Repository Guidelines
+# Agent Constitution & Execution Protocol
 
-## Project Structure & Module Organization
-Routes and server actions live in `src/app` (locale-aware pages in `[locale]`). Reusable UI sits in `src/components`—libraries like `ui/`, `magicui/`, `tailark/`, plus domain folders. Shared logic and AI workflows belong in `src/lib` and `src/ai`, while Drizzle schemas and migrations stay in `src/db`. Place transactional emails in `src/mail`, analytics providers in `src/analytics`, static assets in `public/`, operational scripts in `scripts/`, and marketing/docs content in `content/`.
+在开始实现前，agent 必须先阅读并更新与任务相关的文档，再进入代码修改。
 
-## Build, Test, and Development Commands
-Install dependencies with `pnpm install` and run `pnpm dev` for the local Next.js server. Use `pnpm build` to produce the optimized bundle and `pnpm start` to serve it. `pnpm lint` triggers Biome checks, while `pnpm format` applies consistent formatting. Database work flows through Drizzle: `pnpm db:generate` emits SQL from the schema, `pnpm db:migrate` applies local changes, and `pnpm db:push` syncs to remote instances. Support tooling includes `pnpm email` for the email previewer and utility scripts such as `pnpm list-users` or `pnpm fix-payments`.
+## 1) Constitution Source (Highest Priority)
 
-## Coding Style & Naming Conventions
-Biome (`biome.json`) enforces two-space indentation, single quotes, ES5 trailing commas, and required semicolons. Module filenames favour kebab-case (`dashboard-sidebar.tsx`), hooks use the `use-` prefix (`use-session.ts`), and utilities default to named exports. Tailwind utilities live in `src/styles`; extend tokens there instead of scattering magic values. Keep server-only code in files marked with `"use server"` and avoid pulling client hooks into those modules.
+项目宪法文件：
 
-## Testing Guidelines
-Automated tests are not wired into package scripts, so validate changes with `pnpm dev`, linting, and focused manual QA around auth, billing, and AI flows. When adding a runner, colocate specs with the feature using `.test.ts(x)` or `.spec.ts(x)` suffixes and document the command in your PR. Update `src/db/migrations` with fixtures whenever data changes are needed for reviewers.
+- `docs/plans/part-01-mission-and-scope.md`
 
-## Commit & Pull Request Guidelines
-Follow the Conventional Commit style (`feat:`, `fix:`, `chore:`) observed in the log. Keep commits scoped, reference issue IDs in the body, and refresh `env.example` whenever environment variables change. PRs should include a concise summary, testing notes (commands + results), screenshots for UI updates, and callouts for docs or config changes. Request review once checks pass and highlight breaking changes early.
+所有任务都必须先按这份文档解释，再进入设计和实现。
 
-## Configuration & Secrets
-Copy `env.example` to `.env` before running commands. Store production credentials with your deployment provider (Vercel, Cloudflare) and never commit secrets. Use scoped API keys for `opennextjs-cloudflare` or `wrangler`, rotate keys tied to providers in `src/ai`, and remove temporary debugging logs before merging.
+## 2) Instruction Priority
+
+发生冲突时，按以下优先级执行：
+
+1. 宪法：`docs/plans/part-01-mission-and-scope.md`
+2. 已确认的计划文档：`docs/plans/`
+3. 三层产品文档：`docs/product-development/`
+4. 用户当前任务要求
+5. 局部实现偏好
+
+若文档与代码事实不一致，应先更新文档，再调整实现；若仍有歧义，应停止猜测并向项目所有者确认。
+
+## 3) Documentation-First Rule
+
+开始编码前，agent 必须：
+
+1. 阅读 `docs/plans/README.md`
+2. 阅读 `docs/plans/part-01-mission-and-scope.md`
+3. 阅读 `docs/product-development/README.md`
+4. 阅读相关 `docs/product-development/product/`
+5. 阅读相关 `docs/product-development/handoff/`
+6. 阅读相关 `docs/product-development/coding/`
+7. 先更新相关文档
+8. 再开始代码修改
+
+## 4) Protected Docs
+
+以下文件属于治理边界，默认只读：
+
+- 根目录 `AGENTS.md`
+- `docs/plans/part-01-mission-and-scope.md`
+
+除非项目所有者明确授权，否则不得修改。

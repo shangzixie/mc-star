@@ -19,9 +19,10 @@ import {
   useFreightEmployees,
 } from '@/hooks/freight/use-freight-employees';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { AddEmployeeDialog } from './add-employee-dialog';
 
 interface EmployeeComboboxProps {
   value?: string;
@@ -29,6 +30,7 @@ interface EmployeeComboboxProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  allowAddNew?: boolean;
 }
 
 export function EmployeeCombobox({
@@ -37,11 +39,16 @@ export function EmployeeCombobox({
   disabled = false,
   className,
   placeholder,
+  allowAddNew = true,
 }: EmployeeComboboxProps) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
+  const [employeeCache, setEmployeeCache] = useState<
+    Record<string, FreightEmployee>
+  >({});
 
   // Debounce search query
   useEffect(() => {
@@ -56,7 +63,20 @@ export function EmployeeCombobox({
     q: debouncedQuery,
   });
 
-  const selectedEmployee = employees?.find((e) => e.id === value);
+  useEffect(() => {
+    if (!employees || employees.length === 0) return;
+    setEmployeeCache((prev) => {
+      const next = { ...prev };
+      for (const employee of employees) {
+        next[employee.id] = employee;
+      }
+      return next;
+    });
+  }, [employees]);
+
+  const selectedEmployee =
+    (value ? employeeCache[value] : undefined) ??
+    employees?.find((e) => e.id === value);
 
   const getEmployeeDisplayName = (employee: FreightEmployee) => {
     return employee.fullName;
@@ -139,10 +159,39 @@ export function EmployeeCombobox({
                   ))}
                 </CommandGroup>
               )}
+              {allowAddNew && (
+                <>
+                  <div className="border-t" />
+                  <CommandGroup>
+                    <CommandItem
+                      onSelect={() => {
+                        setOpen(false);
+                        setAddEmployeeOpen(true);
+                      }}
+                      className="text-primary"
+                    >
+                      <Plus className="mr-2 size-4" />
+                      {t('employees.addNewEmployee')}
+                    </CommandItem>
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+
+      <AddEmployeeDialog
+        open={addEmployeeOpen}
+        onOpenChange={setAddEmployeeOpen}
+        onSuccess={(employee) => {
+          setEmployeeCache((prev) => ({
+            ...prev,
+            [employee.id]: employee,
+          }));
+          onValueChange(employee.id);
+        }}
+      />
     </div>
   );
 }

@@ -20,12 +20,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useFreightParties } from '@/hooks/freight/use-freight-master-data';
+import {
+  useFreightParties,
+  useFreightPartyById,
+} from '@/hooks/freight/use-freight-master-data';
 import type { FreightParty } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown, Info } from 'lucide-react';
+import { Check, ChevronsUpDown, Info, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { AddShipperDialog } from './add-shipper-dialog';
 
 interface ShipperComboboxProps {
   value?: string;
@@ -33,6 +37,7 @@ interface ShipperComboboxProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  allowAddNew?: boolean;
 }
 
 export function ShipperCombobox({
@@ -41,11 +46,16 @@ export function ShipperCombobox({
   disabled = false,
   className,
   placeholder,
+  allowAddNew = true,
 }: ShipperComboboxProps) {
   const t = useTranslations('Dashboard.freight.inbound');
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [addShipperOpen, setAddShipperOpen] = useState(false);
+  const [partyCache, setPartyCache] = useState<Record<string, FreightParty>>(
+    {}
+  );
 
   // Debounce search query
   useEffect(() => {
@@ -60,8 +70,22 @@ export function ShipperCombobox({
     q: debouncedQuery,
   });
   const shippers = allParties?.filter((p) => p.roles.includes('SHIPPER'));
+  const selectedShipperQuery = useFreightPartyById(value);
+  useEffect(() => {
+    if (!shippers || shippers.length === 0) return;
+    setPartyCache((prev) => {
+      const next = { ...prev };
+      for (const shipper of shippers) {
+        next[shipper.id] = shipper;
+      }
+      return next;
+    });
+  }, [shippers]);
 
-  const selectedShipper = shippers?.find((s) => s.id === value);
+  const selectedShipper =
+    (value ? partyCache[value] : undefined) ??
+    selectedShipperQuery.data ??
+    shippers?.find((s) => s.id === value);
 
   const getShipperDisplayName = (shipper: FreightParty) => {
     return shipper.name || shipper.code || shipper.id;
@@ -116,6 +140,15 @@ export function ShipperCombobox({
                         onValueChange(
                           currentValue === value ? undefined : currentValue
                         );
+                        const selected = shippers.find(
+                          (shipper) => shipper.id === currentValue
+                        );
+                        if (selected) {
+                          setPartyCache((prev) => ({
+                            ...prev,
+                            [selected.id]: selected,
+                          }));
+                        }
                         setOpen(false);
                         setSearchQuery('');
                       }}
@@ -143,10 +176,39 @@ export function ShipperCombobox({
                   ))}
                 </CommandGroup>
               )}
+              {allowAddNew && (
+                <>
+                  <div className="border-t" />
+                  <CommandGroup>
+                    <CommandItem
+                      onSelect={() => {
+                        setOpen(false);
+                        setAddShipperOpen(true);
+                      }}
+                      className="text-primary"
+                    >
+                      <Plus className="mr-2 size-4" />
+                      {t('shipperFields.addNew')}
+                    </CommandItem>
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+
+      <AddShipperDialog
+        open={addShipperOpen}
+        onOpenChange={setAddShipperOpen}
+        onSuccess={(created) => {
+          setPartyCache((prev) => ({
+            ...prev,
+            [created.id]: created,
+          }));
+          onValueChange(created.id);
+        }}
+      />
 
       {selectedShipper && (
         <TooltipProvider>
