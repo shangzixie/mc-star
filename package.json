@@ -1,5 +1,5 @@
 {
-  "name": "mksaas-template",
+  "name": "mc-star",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,10 +23,6 @@
     "import-transport-nodes": "tsx scripts/import-transport-nodes.ts --file docs/transport_nodes_info.json",
     "content": "fumadocs-mdx",
     "email": "email dev --dir src/mail/templates --port 3333",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "knip": "knip",
     "reset-db": "tsx scripts/reset-local-db.ts"
   },
