@@ -82,6 +82,7 @@ import {
   formatCeilFixed,
   formatScaledInt,
 } from '@/lib/freight/math';
+import { getReceiptDetailItemDisplayMode } from '@/lib/freight/receipt-detail-display';
 import { Routes } from '@/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -243,9 +244,15 @@ export function ReceiptDetailEditView({
   });
 
   const items = itemsQuery.data ?? [];
-  const isMergedParent = Boolean(receipt.isMergedParent);
+  const itemDisplayMode = getReceiptDetailItemDisplayMode(receipt);
+  const shouldDisplayMergedChildItems =
+    itemDisplayMode === 'merged-child-items';
   const mergedChildItems = receipt.mergedChildItems ?? [];
   const mergedChildren = receipt.mergedChildren ?? [];
+  const repackSourceChildren = useMemo(
+    () => mergedChildren.filter((child) => child.relationType === 'REPACK'),
+    [mergedChildren]
+  );
   const mergedChildRows = useMemo(() => {
     const childMap = new Map(
       mergedChildItems.map((item) => [item.receiptId, item])
@@ -274,7 +281,7 @@ export function ReceiptDetailEditView({
     }));
   }, [mergedChildItems, mergedChildren]);
   const renderedItems = useMemo(() => items, [items]);
-  const isItemsEmpty = isMergedParent
+  const isItemsEmpty = shouldDisplayMergedChildItems
     ? mergedChildRows.length === 0
     : renderedItems.length === 0;
 
@@ -1261,7 +1268,7 @@ export function ReceiptDetailEditView({
             className="w-full min-w-0 lg:col-span-2 xl:col-span-2"
             icon={Package}
             actions={
-              isMergedParent ? null : (
+              shouldDisplayMergedChildItems ? null : (
                 <Button
                   onClick={onAddItem}
                   size="sm"
@@ -1280,7 +1287,9 @@ export function ReceiptDetailEditView({
                   className="w-full"
                   items={items}
                   transportType={transportTypeValue}
-                  bubbleSplitPercentInput={summaryInputs.bubbleSplitPercentInput}
+                  bubbleSplitPercentInput={
+                    summaryInputs.bubbleSplitPercentInput
+                  }
                   piecesInput={summaryInputs.piecesInput}
                   weightInput={summaryInputs.weightInput}
                   volumeInput={summaryInputs.volumeInput}
@@ -1322,6 +1331,24 @@ export function ReceiptDetailEditView({
               </div>
             }
           >
+            {repackSourceChildren.length > 0 ? (
+              <div className="border-b bg-muted/20 px-4 py-3 text-sm">
+                <span className="mr-2 text-muted-foreground">
+                  {t('itemsList.repackSources')}
+                </span>
+                <span className="inline-flex flex-wrap gap-2">
+                  {repackSourceChildren.map((child) => (
+                    <LocaleLink
+                      key={child.id}
+                      href={`${Routes.FreightInbound}/${child.id}?parentId=${receipt.id}`}
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      {child.receiptNo}
+                    </LocaleLink>
+                  ))}
+                </span>
+              </div>
+            ) : null}
             <Table className="w-full min-w-0">
               <TableHeader className="bg-muted">
                 <TableRow>
@@ -1386,7 +1413,7 @@ export function ReceiptDetailEditView({
                       </Empty>
                     </TableCell>
                   </TableRow>
-                ) : isMergedParent ? (
+                ) : shouldDisplayMergedChildItems ? (
                   mergedChildRows.map((child) => {
                     const aggregated = child.aggregated;
 
@@ -1560,7 +1587,7 @@ export function ReceiptDetailEditView({
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          {isMergedParent ? (
+                          {shouldDisplayMergedChildItems ? (
                             <span className="text-muted-foreground">-</span>
                           ) : (
                             <DropdownMenu>

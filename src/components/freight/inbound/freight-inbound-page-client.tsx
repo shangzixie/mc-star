@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import type { FreightWarehouseReceiptWithRelations } from '@/lib/freight/api-types';
 import { formatCeilFixed } from '@/lib/freight/math';
 import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 export function FreightInboundPageClient() {
   const t = useTranslations('Dashboard.freight.inbound');
@@ -20,6 +22,8 @@ export function FreightInboundPageClient() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [repackMode, setRepackMode] = useState(false);
   const [repackDialogOpen, setRepackDialogOpen] = useState(false);
+  const [exportMode, setExportMode] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [visibleReceipts, setVisibleReceipts] = useState<
     FreightWarehouseReceiptWithRelations[]
@@ -33,8 +37,7 @@ export function FreightInboundPageClient() {
   };
 
   const handleCreateSuccess = (receiptId: string) => {
-    setRepackMode(false);
-    setSelectedIds([]);
+    resetSelectionMode();
     const next = new URLSearchParams(searchParams.toString());
     next.set('autoEdit', '1');
     const qs = next.toString();
@@ -74,15 +77,54 @@ export function FreightInboundPageClient() {
     [selectedReceipts]
   );
 
+  const resetSelectionMode = () => {
+    setRepackMode(false);
+    setExportMode(false);
+    setSelectedIds([]);
+  };
+
+  const handleExportSelected = async () => {
+    if (selectedIds.length === 0) return;
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/freight/warehouse-receipts/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload?.error?.message ?? response.statusText ?? t('export.failed');
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download =
+        response.headers
+          .get('content-disposition')
+          ?.match(/filename="([^"]+)"/)?.[1] ?? 'warehouse-receipts.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      toast.success(t('export.success'));
+      resetSelectionMode();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('export.failed'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const headerActions = repackMode ? (
     <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        onClick={() => {
-          setRepackMode(false);
-          setSelectedIds([]);
-        }}
-      >
+      <Button variant="outline" onClick={resetSelectionMode}>
         {t('repack.cancel')}
       </Button>
       <Button
@@ -92,12 +134,41 @@ export function FreightInboundPageClient() {
         {t('repack.createSelected')}
       </Button>
     </div>
+  ) : exportMode ? (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={resetSelectionMode}>
+        {t('export.cancel')}
+      </Button>
+      <Button
+        onClick={handleExportSelected}
+        disabled={selectedIds.length === 0 || isExporting}
+      >
+        <Download className="mr-2 size-4" />
+        {isExporting ? t('export.exporting') : t('export.createSelected')}
+      </Button>
+    </div>
   ) : (
     <div className="flex items-center gap-2">
       <Button onClick={() => setCreateDialogOpen(true)}>
         {t('receipt.create')}
       </Button>
-      <Button variant="outline" onClick={() => setRepackMode(true)}>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setExportMode(true);
+          setSelectedIds([]);
+        }}
+      >
+        <Download className="mr-2 size-4" />
+        {t('export.start')}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setRepackMode(true);
+          setSelectedIds([]);
+        }}
+      >
         {t('repack.start')}
       </Button>
     </div>
@@ -144,9 +215,10 @@ export function FreightInboundPageClient() {
         onCreateReceipt={() => setCreateDialogOpen(true)}
         headerActions={headerActions}
         headerExtras={selectionSummaryNode}
-        floatingAction={repackMode ? null : undefined}
-        fixedStatus={repackMode ? 'INBOUND' : undefined}
-        selectionMode={repackMode}
+        floatingAction={repackMode || exportMode ? null : undefined}
+        fixedStatus={repackMode || exportMode ? 'INBOUND' : undefined}
+        selectionMode={repackMode || exportMode}
+        selectionBlockMerged={repackMode}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         onReceiptsDataChange={setVisibleReceipts}

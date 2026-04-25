@@ -170,6 +170,7 @@ export function ReceiptListView({
   floatingAction,
   fixedStatus,
   selectionMode = false,
+  selectionBlockMerged = true,
   selectedIds: controlledSelectedIds,
   onSelectionChange,
   onReceiptsDataChange,
@@ -183,6 +184,7 @@ export function ReceiptListView({
   floatingAction?: ReactNode | null;
   fixedStatus?: string;
   selectionMode?: boolean;
+  selectionBlockMerged?: boolean;
   selectedIds?: string[];
   onSelectionChange?: (receiptIds: string[]) => void;
   onReceiptsDataChange?: (data: FreightWarehouseReceiptWithRelations[]) => void;
@@ -317,10 +319,11 @@ export function ReceiptListView({
         .filter(
           (receipt) =>
             !selectionMode ||
+            !selectionBlockMerged ||
             (!receipt.isMergedChild && !receipt.isMergedParent)
         )
         .map((receipt) => receipt.id),
-    [data, selectionMode]
+    [data, selectionMode, selectionBlockMerged]
   );
   const deleteSelectablePageIds = useMemo(
     () => data.map((receipt) => receipt.id),
@@ -369,8 +372,9 @@ export function ReceiptListView({
     (receipt: FreightWarehouseReceiptWithRelations) =>
       deleteMode ||
       !selectionMode ||
+      !selectionBlockMerged ||
       (!receipt.isMergedChild && !receipt.isMergedParent),
-    [deleteMode, selectionMode]
+    [deleteMode, selectionMode, selectionBlockMerged]
   );
 
   const columns = useMemo<

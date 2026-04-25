@@ -48,6 +48,7 @@ import {
   formatCeilFixed,
   formatScaledInt,
 } from '@/lib/freight/math';
+import { getReceiptDetailItemDisplayMode } from '@/lib/freight/receipt-detail-display';
 import { Routes } from '@/routes';
 import {
   ArrowLeft,
@@ -97,9 +98,15 @@ export function ReceiptDetailView({
   });
 
   const items = itemsQuery.data ?? [];
-  const isMergedParent = Boolean(receipt.isMergedParent);
+  const itemDisplayMode = getReceiptDetailItemDisplayMode(receipt);
+  const shouldDisplayMergedChildItems =
+    itemDisplayMode === 'merged-child-items';
   const mergedChildItems = receipt.mergedChildItems ?? [];
   const mergedChildren = receipt.mergedChildren ?? [];
+  const repackSourceChildren = useMemo(
+    () => mergedChildren.filter((child) => child.relationType === 'REPACK'),
+    [mergedChildren]
+  );
   const mergedChildRows = useMemo(() => {
     const childMap = new Map(
       mergedChildItems.map((item) => [item.receiptId, item])
@@ -129,7 +136,7 @@ export function ReceiptDetailView({
   }, [mergedChildItems, mergedChildren]);
 
   const renderedItems = useMemo(() => items, [items]);
-  const isItemsEmpty = isMergedParent
+  const isItemsEmpty = shouldDisplayMergedChildItems
     ? mergedChildRows.length === 0
     : renderedItems.length === 0;
 
@@ -172,7 +179,7 @@ export function ReceiptDetailView({
           title={t('itemsList.title')}
           icon={Package}
           actions={
-            isMergedParent ? null : (
+            shouldDisplayMergedChildItems ? null : (
               <Button onClick={onAddItem} size="sm">
                 <Plus className="mr-2 size-4" />
                 {t('items.create')}
@@ -180,6 +187,24 @@ export function ReceiptDetailView({
             )
           }
         >
+          {repackSourceChildren.length > 0 ? (
+            <div className="border-b bg-muted/20 px-4 py-3 text-sm">
+              <span className="mr-2 text-muted-foreground">
+                {t('itemsList.repackSources')}
+              </span>
+              <span className="inline-flex flex-wrap gap-2">
+                {repackSourceChildren.map((child) => (
+                  <LocaleLink
+                    key={child.id}
+                    href={`${Routes.FreightInbound}/${child.id}?parentId=${receipt.id}`}
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    {child.receiptNo}
+                  </LocaleLink>
+                ))}
+              </span>
+            </div>
+          ) : null}
           <Table>
             <TableHeader className="bg-muted">
               <TableRow>
@@ -236,7 +261,7 @@ export function ReceiptDetailView({
                     </Empty>
                   </TableCell>
                 </TableRow>
-              ) : isMergedParent ? (
+              ) : shouldDisplayMergedChildItems ? (
                 mergedChildRows.map((child) => {
                   const aggregated = child.aggregated;
 
@@ -405,7 +430,7 @@ export function ReceiptDetailView({
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {isMergedParent ? (
+                        {shouldDisplayMergedChildItems ? (
                           <span className="text-muted-foreground">-</span>
                         ) : (
                           <DropdownMenu>

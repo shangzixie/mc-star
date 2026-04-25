@@ -930,6 +930,14 @@
             "warning": "创建成功后，旧入库单会转为出库状态。"
           }
         },
+        "export": {
+          "start": "选择现有库存",
+          "cancel": "取消",
+          "createSelected": "导出 Excel",
+          "exporting": "导出中...",
+          "success": "Excel 已创建，可下载",
+          "failed": "导出 Excel 失败"
+        },
         "items": {
           "title": "新增明细",
           "description": "新增入库明细时会自动写入库存流水（RECEIPT）。",
@@ -980,7 +988,8 @@
           }
         },
         "itemsList": {
-          "title": "入库明细列表"
+          "title": "入库明细列表",
+          "repackSources": "改包来源："
         },
         "summaryPanel": {
           "title": "费用与重量汇总",

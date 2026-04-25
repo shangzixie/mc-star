@@ -921,6 +921,14 @@
             "warning": "After creation, source receipts become outbound."
           }
         },
+        "export": {
+          "start": "Select existing inventory",
+          "cancel": "Cancel",
+          "createSelected": "Export Excel",
+          "exporting": "Exporting...",
+          "success": "Excel created and ready to download",
+          "failed": "Failed to export Excel"
+        },
         "items": {
           "title": "Add Item",
           "description": "Add inbound item lines. A RECEIPT movement will be created automatically.",
@@ -971,7 +979,8 @@
           "error": "Failed to load items"
         },
         "itemsList": {
-          "title": "Items List"
+          "title": "Items List",
+          "repackSources": "Repack sources:"
         },
         "summaryPanel": {
           "title": "Charges & Weight Summary",

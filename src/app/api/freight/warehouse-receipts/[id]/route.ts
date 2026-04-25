@@ -13,6 +13,7 @@ import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
   isMissingWarehouseReceiptColumnError,
+  isMissingWarehouseReceiptMergeColumnError,
   omitWarehouseReceiptNewColumns,
   omitWarehouseReceiptNewColumnsFromColumnMap,
 } from '@/lib/freight/db-compat';
@@ -27,6 +28,12 @@ import {
 import { eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
+
+type MergedChildReceipt = {
+  id: string;
+  receiptNo: string;
+  relationType: string | null;
+};
 
 function getReceiptSelectFields(includeNewColumns: boolean) {
   return {
@@ -169,17 +176,48 @@ export async function GET(
       };
     }
 
-    const mergedChildren = await db
-      .select({
-        id: warehouseReceipts.id,
-        receiptNo: warehouseReceipts.receiptNo,
-      })
-      .from(warehouseReceiptMerges)
-      .innerJoin(
-        warehouseReceipts,
-        eq(warehouseReceipts.id, warehouseReceiptMerges.childReceiptId)
-      )
-      .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
+    const loadMergedChildren = async (
+      includeRelationType: boolean
+    ): Promise<MergedChildReceipt[]> => {
+      if (includeRelationType) {
+        return db
+          .select({
+            id: warehouseReceipts.id,
+            receiptNo: warehouseReceipts.receiptNo,
+            relationType: warehouseReceiptMerges.relationType,
+          })
+          .from(warehouseReceiptMerges)
+          .innerJoin(
+            warehouseReceipts,
+            eq(warehouseReceipts.id, warehouseReceiptMerges.childReceiptId)
+          )
+          .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
+      }
+
+      const children = await db
+        .select({
+          id: warehouseReceipts.id,
+          receiptNo: warehouseReceipts.receiptNo,
+        })
+        .from(warehouseReceiptMerges)
+        .innerJoin(
+          warehouseReceipts,
+          eq(warehouseReceipts.id, warehouseReceiptMerges.childReceiptId)
+        )
+        .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
+
+      return children.map((child) => ({ ...child, relationType: null }));
+    };
+
+    let mergedChildren: MergedChildReceipt[];
+    try {
+      mergedChildren = await loadMergedChildren(true);
+    } catch (error) {
+      if (!isMissingWarehouseReceiptMergeColumnError(error)) {
+        throw error;
+      }
+      mergedChildren = await loadMergedChildren(false);
+    }
 
     const mergedChildIds = mergedChildren.map((child) => child.id);
     const mergedChildItems =
@@ -244,7 +282,7 @@ export async function PATCH(
         }
       }
 
-        const updateValues = {
+      const updateValues = {
         receiptNo: body.receiptNo,
         warehouseId: body.warehouseId,
         customerId: body.customerId,
@@ -256,7 +294,9 @@ export async function PATCH(
         remarks: body.remarks,
         internalRemarks: body.internalRemarks,
         manualPieces:
-          body.manualPieces != null ? `${body.manualPieces}` : body.manualPieces,
+          body.manualPieces != null
+            ? `${body.manualPieces}`
+            : body.manualPieces,
         manualWeightKg:
           body.manualWeightKg != null
             ? `${body.manualWeightKg}`
@@ -316,7 +356,7 @@ export async function PATCH(
               : undefined,
       };
 
-      let result;
+      let result: Record<string, unknown> | undefined;
       try {
         [result] = await tx
           .update(warehouseReceipts)

@@ -5,6 +5,7 @@ import {
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from './constants';
+import { WAREHOUSE_RECEIPT_RELATION_TYPES } from './receipt-relation-type';
 import { uuidSchema } from './schemas';
 
 // -----------------------------------------------------------------------------
@@ -315,6 +316,10 @@ export const freightWarehouseReceiptWithRelationsSchema =
         z.object({
           id: uuidSchema,
           receiptNo: z.string(),
+          relationType: z
+            .enum(WAREHOUSE_RECEIPT_RELATION_TYPES)
+            .nullable()
+            .optional(),
         })
       )
       .optional(),
