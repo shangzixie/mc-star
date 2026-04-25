@@ -272,6 +272,18 @@ export async function updateWarehouseReceipt(
   });
 }
 
+export async function batchUpdateWarehouseReceipts(data: unknown) {
+  const { freightBatchUpdateWarehouseReceiptsResponseSchema } = await import(
+    './api-types'
+  );
+  return freightFetch('/api/freight/warehouse-receipts/batch-update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    schema: freightBatchUpdateWarehouseReceiptsResponseSchema,
+  });
+}
+
 /**
  * Delete a warehouse receipt
  */

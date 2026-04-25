@@ -183,6 +183,22 @@ export const freightWarehouseSchema = z
 
 export type FreightWarehouse = z.infer<typeof freightWarehouseSchema>;
 
+export const freightBatchUpdateWarehouseReceiptResultSchema = z.object({
+  id: uuidSchema,
+  ok: z.boolean(),
+  message: z.string().optional(),
+});
+
+export const freightBatchUpdateWarehouseReceiptsResponseSchema = z.object({
+  successCount: z.number().int().nonnegative(),
+  failureCount: z.number().int().nonnegative(),
+  results: z.array(freightBatchUpdateWarehouseReceiptResultSchema),
+});
+
+export type FreightBatchUpdateWarehouseReceiptsResponse = z.infer<
+  typeof freightBatchUpdateWarehouseReceiptsResponseSchema
+>;
+
 export const freightWarehouseReceiptSchema = z
   .object({
     id: uuidSchema,

@@ -1,5 +1,6 @@
 'use client';
 
+import { BatchEditReceiptsDialog } from '@/components/freight/inbound/batch-edit-receipts-dialog';
 import { CreateReceiptDialog } from '@/components/freight/inbound/create-receipt-dialog';
 import { ReceiptListView } from '@/components/freight/inbound/receipt-list-view';
 import { RepackReceiptDialog } from '@/components/freight/inbound/repack-receipt-dialog';
@@ -15,6 +16,7 @@ import { toast } from 'sonner';
 
 export function FreightInboundPageClient() {
   const t = useTranslations('Dashboard.freight.inbound');
+  const batchT = t as any;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,6 +24,8 @@ export function FreightInboundPageClient() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [repackMode, setRepackMode] = useState(false);
   const [repackDialogOpen, setRepackDialogOpen] = useState(false);
+  const [batchEditMode, setBatchEditMode] = useState(false);
+  const [batchEditDialogOpen, setBatchEditDialogOpen] = useState(false);
   const [exportMode, setExportMode] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -79,6 +83,8 @@ export function FreightInboundPageClient() {
 
   const resetSelectionMode = () => {
     setRepackMode(false);
+    setBatchEditMode(false);
+    setBatchEditDialogOpen(false);
     setExportMode(false);
     setSelectedIds([]);
   };
@@ -147,10 +153,31 @@ export function FreightInboundPageClient() {
         {isExporting ? t('export.exporting') : t('export.createSelected')}
       </Button>
     </div>
+  ) : batchEditMode ? (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={resetSelectionMode}>
+        {batchT('batchEdit.cancel')}
+      </Button>
+      <Button
+        onClick={() => setBatchEditDialogOpen(true)}
+        disabled={selectedIds.length === 0}
+      >
+        {batchT('batchEdit.startAction')}
+      </Button>
+    </div>
   ) : (
     <div className="flex items-center gap-2">
       <Button onClick={() => setCreateDialogOpen(true)}>
         {t('receipt.create')}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setBatchEditMode(true);
+          setSelectedIds([]);
+        }}
+      >
+        {batchT('batchEdit.start')}
       </Button>
       <Button
         variant="outline"
@@ -206,6 +233,20 @@ export function FreightInboundPageClient() {
       </div>
       <p className="mt-2 text-xs">{t('repack.selectionSummary.warning')}</p>
     </div>
+  ) : batchEditMode ? (
+    <div className="rounded-md border border-muted/40 bg-muted/5 p-3 text-sm text-muted-foreground shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {batchT('batchEdit.selectionSummary.title')}
+      </div>
+      <div className="mt-2 text-base font-medium text-foreground tabular-nums">
+        {batchT('batchEdit.selectionSummary.selected', {
+          count: selectedIds.length,
+        })}
+      </div>
+      <p className="mt-2 text-xs">
+        {batchT('batchEdit.selectionSummary.hint')}
+      </p>
+    </div>
   ) : null;
 
   return (
@@ -215,9 +256,11 @@ export function FreightInboundPageClient() {
         onCreateReceipt={() => setCreateDialogOpen(true)}
         headerActions={headerActions}
         headerExtras={selectionSummaryNode}
-        floatingAction={repackMode || exportMode ? null : undefined}
+        floatingAction={
+          repackMode || exportMode || batchEditMode ? null : undefined
+        }
         fixedStatus={repackMode || exportMode ? 'INBOUND' : undefined}
-        selectionMode={repackMode || exportMode}
+        selectionMode={repackMode || exportMode || batchEditMode}
         selectionBlockMerged={repackMode}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
@@ -235,6 +278,13 @@ export function FreightInboundPageClient() {
         onOpenChange={setRepackDialogOpen}
         sourceReceiptIds={selectedIds}
         onSuccess={handleCreateSuccess}
+      />
+
+      <BatchEditReceiptsDialog
+        open={batchEditDialogOpen}
+        onOpenChange={setBatchEditDialogOpen}
+        selectedIds={selectedIds}
+        onSuccess={resetSelectionMode}
       />
     </div>
   );

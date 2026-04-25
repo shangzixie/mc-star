@@ -938,6 +938,42 @@
           "success": "Excel 已创建，可下载",
           "failed": "导出 Excel 失败"
         },
+        "batchEdit": {
+          "start": "批量编辑",
+          "cancel": "取消",
+          "startAction": "批量修改",
+          "title": "批量修改入库单",
+          "description": "将对选中的 {count} 个入库单应用同一项修改。",
+          "operation": "修改项",
+          "confirm": "确认修改",
+          "updating": "修改中...",
+          "success": "已更新 {count} 个入库单",
+          "partial": "批量修改完成：成功 {success} 条，失败 {failed} 条",
+          "updateFailed": "批量修改失败",
+          "voidWarning": "作废会直接修改单据状态；不符合条件的单据会被服务端拒绝。",
+          "contactHint": "仅会更新本次勾选启用的联系电话字段；未勾选字段不会被覆盖。",
+          "phonePlaceholder": "留空表示清空该字段",
+          "operations": {
+            "status": "修改状态",
+            "warehouse": "修改库房",
+            "customer": "修改客户",
+            "contact": "修改联系电话"
+          },
+          "fields": {
+            "status": "新状态",
+            "warehouse": "库房",
+            "customer": "客户",
+            "customerPhone": "客户电话",
+            "shipperPhone": "发货人电话",
+            "bookingAgentPhone": "订舱代理电话",
+            "customsAgentPhone": "清关代理电话"
+          },
+          "selectionSummary": {
+            "title": "批量编辑选中",
+            "selected": "已选 {count} 个入库单",
+            "hint": "勾选需要修改的单据后，点击“批量修改”进入统一确认。"
+          }
+        },
         "items": {
           "title": "新增明细",
           "description": "新增入库明细时会自动写入库存流水（RECEIPT）。",

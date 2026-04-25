@@ -53,6 +53,7 @@
 - `warehouse_receipts.air_type` 仅用于空运单，枚举值 `AIR | EXPRESS | H.K`
 - `warehouse_receipts.courier_tracking_no` 与 `warehouse_receipts.courier_received_at` 作为单票单条快递信息
 - 联系资料电话落在 `warehouse_receipts.customer_phone | shipper_phone | booking_agent_phone | customs_agent_phone`
+- 批量修改客户的默认语义是更新 `warehouse_receipts.customer_id` 与单据侧联系资料字段，不反向改写 `parties` 主数据
 
 ### Allocation / Outbound
 
@@ -82,6 +83,8 @@
 - 入库详情头部布局中，入库明细表需横跨右侧剩余列，避免在大屏下停在中间造成右侧空白
 - HBL 前端移除 `placeOfReceipt` 输入；MBL 前端移除 `portOfDestinationAddress` 与 `placeOfReceipt` 输入
 - freight 详情页应使用稳定、可复用的信息区块表达业务关系，避免一次性布局造成维护成本
+- 入库总列表允许进入统一的批量编辑选择模式；批量写入必须通过显式确认对话框触发
+- 批量修改联系电话等可选字段时，前端必须显式标记哪些字段参与本次更新，未启用字段不得发送覆盖值
 
 ## Backend Implementation Constraints
 
@@ -91,6 +94,9 @@
 - `PATCH /api/freight/warehouse-receipts/:id` 必须接受 `receiptNo` 的合法更新，并沿用现有 `OUTBOUND` 编辑锁定规则
 - `POST /api/freight/warehouse-receipts/merge` 必须在服务端拒绝非 `SEA_LCL` 的 `transportType`
 - `POST /api/freight/warehouse-receipts/repack` 必须在同一事务中完成新单创建、旧库存扣减、新库存生成、状态日志和父子关系记录
+- `POST /api/freight/warehouse-receipts/batch-update` 必须对每张单据逐条执行服务端校验并返回逐条结果；不得因为单条失败而静默吞掉整批状态
+- 批量状态修改必须沿用既有 `warehouse_receipt_status_logs` 写入规则；涉及父子单联动时应复用现有状态联动逻辑，而不是前端自行推断
+- `OUTBOUND` 编辑锁定规则对批量修改同样生效；仅显式允许的字段可以在锁定状态下更新
 - freight schema 变化必须同步更新校验、类型、API client、服务写入逻辑和测试
 - `POST /api/freight/warehouse-receipts/export` 是只读导出接口，必须鉴权并只允许导出 `INBOUND` 现有库存单据；不得写入库存、状态、流水或业务单据
 - 迁移与兼容逻辑必须以不破坏既有页面加载和写入为目标；具体缺列识别与重试细节以代码和测试为准

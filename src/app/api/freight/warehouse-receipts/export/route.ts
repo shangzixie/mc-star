@@ -10,6 +10,7 @@ import {
 } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, parseJson } from '@/lib/api/http';
+import { isMissingMasterBillOfLadingColumnError } from '@/lib/freight/db-compat';
 import { uuidSchema } from '@/lib/freight/schemas';
 import {
   type WarehouseReceiptExportInput,
@@ -36,42 +37,65 @@ export async function POST(request: Request) {
     const shippers = alias(parties, 'shippers');
     const mblDestinationNodes = alias(transportNodes, 'mbl_destination_nodes');
 
-    const receipts = await db
-      .select({
-        id: warehouseReceipts.id,
-        receiptNo: warehouseReceipts.receiptNo,
-        remarks: warehouseReceipts.remarks,
-        internalRemarks: warehouseReceipts.internalRemarks,
-        transportType: warehouseReceipts.transportType,
-        customsDeclarationType: warehouseReceipts.customsDeclarationType,
-        status: warehouseReceipts.status,
-        inboundTime: warehouseReceipts.inboundTime,
-        customerName: parties.name,
-        shipperName: shippers.name,
-        warehouseName: warehouses.name,
-        hblNo: houseBillsOfLading.hblNo,
-        mblPortOfDestinationAddress:
-          masterBillsOfLading.portOfDestinationAddress,
-        mblPortOfDestinationNameCn: mblDestinationNodes.nameCn,
-        mblPortOfDestinationNameEn: mblDestinationNodes.nameEn,
-      })
-      .from(warehouseReceipts)
-      .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id))
-      .leftJoin(shippers, eq(warehouseReceipts.shipperId, shippers.id))
-      .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
-      .leftJoin(
-        houseBillsOfLading,
-        eq(houseBillsOfLading.receiptId, warehouseReceipts.id)
-      )
-      .leftJoin(
-        masterBillsOfLading,
-        eq(masterBillsOfLading.receiptId, warehouseReceipts.id)
-      )
-      .leftJoin(
-        mblDestinationNodes,
-        eq(masterBillsOfLading.portOfDestinationId, mblDestinationNodes.id)
-      )
-      .where(inArray(warehouseReceipts.id, receiptIds));
+    const loadReceipts = async (includeNewColumns: boolean) => {
+      return db
+        .select({
+          id: warehouseReceipts.id,
+          receiptNo: warehouseReceipts.receiptNo,
+          remarks: warehouseReceipts.remarks,
+          internalRemarks: warehouseReceipts.internalRemarks,
+          transportType: warehouseReceipts.transportType,
+          customsDeclarationType: warehouseReceipts.customsDeclarationType,
+          status: warehouseReceipts.status,
+          inboundTime: warehouseReceipts.inboundTime,
+          customerName: parties.name,
+          shipperName: shippers.name,
+          warehouseName: warehouses.name,
+          hblNo: houseBillsOfLading.hblNo,
+          ...(includeNewColumns
+            ? {
+                mblPortOfDestinationAddress:
+                  masterBillsOfLading.portOfDestinationAddress,
+              }
+            : {}),
+          mblPortOfDestinationNameCn: mblDestinationNodes.nameCn,
+          mblPortOfDestinationNameEn: mblDestinationNodes.nameEn,
+        })
+        .from(warehouseReceipts)
+        .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id))
+        .leftJoin(shippers, eq(warehouseReceipts.shipperId, shippers.id))
+        .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
+        .leftJoin(
+          houseBillsOfLading,
+          eq(houseBillsOfLading.receiptId, warehouseReceipts.id)
+        )
+        .leftJoin(
+          masterBillsOfLading,
+          eq(masterBillsOfLading.receiptId, warehouseReceipts.id)
+        )
+        .leftJoin(
+          mblDestinationNodes,
+          eq(masterBillsOfLading.portOfDestinationId, mblDestinationNodes.id)
+        )
+        .where(inArray(warehouseReceipts.id, receiptIds));
+    };
+
+    let receipts: Array<
+      Awaited<ReturnType<typeof loadReceipts>>[number] & {
+        mblPortOfDestinationAddress?: string | null;
+      }
+    >;
+    try {
+      receipts = await loadReceipts(true);
+    } catch (error) {
+      if (!isMissingMasterBillOfLadingColumnError(error)) {
+        throw error;
+      }
+      receipts = (await loadReceipts(false)).map((receipt) => ({
+        ...receipt,
+        mblPortOfDestinationAddress: null,
+      }));
+    }
 
     const receiptById = new Map(
       receipts.map((receipt) => [receipt.id, receipt])
@@ -128,6 +152,8 @@ export async function POST(request: Request) {
       }
       return {
         ...receipt,
+        mblPortOfDestinationAddress:
+          receipt.mblPortOfDestinationAddress ?? null,
         items: itemsByReceiptId.get(id) ?? [],
       };
     });

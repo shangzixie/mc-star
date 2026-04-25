@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { getDb } from '@/db/index';
 import {
   inventoryAllocations,
@@ -21,10 +20,8 @@ import {
   updateWarehouseReceiptSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
-import {
-  getReceiptStats,
-  updateReceiptStatus,
-} from '@/lib/freight/services/receipt-status';
+import { getReceiptStats } from '@/lib/freight/services/receipt-status';
+import { updateWarehouseReceiptRecord } from '@/lib/freight/services/warehouse-receipts';
 import { eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -264,191 +261,11 @@ export async function PATCH(
 
     const db = await getDb();
     const updated = await db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select({ status: warehouseReceipts.status })
-        .from(warehouseReceipts)
-        .where(eq(warehouseReceipts.id, receiptId));
-
-      if (existing?.status === 'OUTBOUND') {
-        const invalidKeys = Object.entries(body).filter(
-          ([key, value]) => key !== 'status' && value !== undefined
-        );
-        if (invalidKeys.length > 0) {
-          throw new ApiError({
-            status: 400,
-            code: 'OUTBOUND_EDIT_LOCKED',
-            message: 'Cannot modify receipt data once status is OUTBOUND',
-          });
-        }
-      }
-
-      const updateValues = {
-        receiptNo: body.receiptNo,
-        warehouseId: body.warehouseId,
-        customerId: body.customerId,
-        transportType: body.transportType,
-        customsDeclarationType: body.customsDeclarationType,
-        status: body.status,
-        auditStatus: body.auditStatus,
-        inboundTime: body.inboundTime ? new Date(body.inboundTime) : undefined,
-        remarks: body.remarks,
-        internalRemarks: body.internalRemarks,
-        manualPieces:
-          body.manualPieces != null
-            ? `${body.manualPieces}`
-            : body.manualPieces,
-        manualWeightKg:
-          body.manualWeightKg != null
-            ? `${body.manualWeightKg}`
-            : body.manualWeightKg,
-        manualVolumeM3:
-          body.manualVolumeM3 != null
-            ? `${body.manualVolumeM3}`
-            : body.manualVolumeM3,
-        bubbleSplitPercent:
-          body.bubbleSplitPercent != null
-            ? `${body.bubbleSplitPercent}`
-            : body.bubbleSplitPercent,
-        weightConversionFactor:
-          body.weightConversionFactor != null
-            ? `${body.weightConversionFactor}`
-            : body.weightConversionFactor,
-        shipperId: body.shipperId,
-        customerPhone: body.customerPhone,
-        shipperPhone: body.shipperPhone,
-        bookingAgentId: body.bookingAgentId,
-        bookingAgentPhone: body.bookingAgentPhone,
-        customsAgentId: body.customsAgentId,
-        customsAgentPhone: body.customsAgentPhone,
-        salesEmployeeId: body.salesEmployeeId,
-        customerServiceEmployeeId: body.customerServiceEmployeeId,
-        overseasCsEmployeeId: body.overseasCsEmployeeId,
-        operationsEmployeeId: body.operationsEmployeeId,
-        documentationEmployeeId: body.documentationEmployeeId,
-        financeEmployeeId: body.financeEmployeeId,
-        bookingEmployeeId: body.bookingEmployeeId,
-        reviewerEmployeeId: body.reviewerEmployeeId,
-        airType: body.airType,
-        airCarrier: body.airCarrier,
-        airFlightNo: body.airFlightNo,
-        airFlightDate: body.airFlightDate,
-        airArrivalDateE: body.airArrivalDateE,
-        airOperationLocation: body.airOperationLocation,
-        airOperationNode: body.airOperationNode,
-        seaCarrier: body.seaCarrier,
-        seaRoute: body.seaRoute,
-        seaVesselName: body.seaVesselName,
-        seaVoyage: body.seaVoyage,
-        seaEtdE: body.seaEtdE,
-        seaEtaE: body.seaEtaE,
-        singleBillCutoffDateSi: body.singleBillCutoffDateSi,
-        singleBillGateClosingTime: body.singleBillGateClosingTime,
-        singleBillDepartureDateE: body.singleBillDepartureDateE,
-        singleBillArrivalDateE: body.singleBillArrivalDateE,
-        singleBillTransitDateE: body.singleBillTransitDateE,
-        singleBillDeliveryDateE: body.singleBillDeliveryDateE,
-        courierTrackingNo: body.courierTrackingNo,
-        courierReceivedAt:
-          body.courierReceivedAt === null
-            ? null
-            : body.courierReceivedAt
-              ? new Date(body.courierReceivedAt)
-              : undefined,
-      };
-
-      let result: Record<string, unknown> | undefined;
-      try {
-        [result] = await tx
-          .update(warehouseReceipts)
-          .set(updateValues)
-          .where(eq(warehouseReceipts.id, receiptId))
-          .returning();
-      } catch (error) {
-        if (!isMissingWarehouseReceiptColumnError(error)) {
-          throw error;
-        }
-        // Compat fallback: migration 0028 not yet applied — omit new columns
-        // from both SET and RETURNING so neither side references missing columns.
-        const safeColumns = omitWarehouseReceiptNewColumnsFromColumnMap(
-          getTableColumns(warehouseReceipts)
-        );
-        [result] = await tx
-          .update(warehouseReceipts)
-          .set(omitWarehouseReceiptNewColumns(updateValues))
-          .where(eq(warehouseReceipts.id, receiptId))
-          .returning(safeColumns);
-      }
-
-      if (!result) {
-        throw new ApiError({
-          status: 404,
-          code: 'WAREHOUSE_RECEIPT_NOT_FOUND',
-          message: 'Warehouse receipt not found',
-        });
-      }
-
-      if (body.status && existing && body.status !== existing.status) {
-        const children = await tx
-          .select({
-            id: warehouseReceipts.id,
-            status: warehouseReceipts.status,
-          })
-          .from(warehouseReceipts)
-          .innerJoin(
-            warehouseReceiptMerges,
-            eq(warehouseReceiptMerges.childReceiptId, warehouseReceipts.id)
-          )
-          .where(eq(warehouseReceiptMerges.parentReceiptId, receiptId));
-
-        const shouldCascade = body.status === 'OUTBOUND' && children.length > 0;
-        const batchId = shouldCascade ? randomUUID() : null;
-
-        await tx.insert(warehouseReceiptStatusLogs).values({
-          receiptId,
-          fromStatus: existing.status,
-          toStatus: body.status,
-          changedBy: user.id,
-          reason: shouldCascade
-            ? 'BATCH_PARENT_OUTBOUND'
-            : 'MANUAL_STATUS_UPDATE',
-          batchId,
-        });
-
-        if (shouldCascade) {
-          const childUpdates = children.filter(
-            (child) => child.status !== 'OUTBOUND'
-          );
-
-          if (childUpdates.length > 0) {
-            const childIds = childUpdates.map((child) => child.id);
-            await tx
-              .update(warehouseReceipts)
-              .set({ status: 'OUTBOUND' })
-              .where(inArray(warehouseReceipts.id, childIds));
-
-            await tx.insert(warehouseReceiptStatusLogs).values(
-              childUpdates.map((child) => ({
-                receiptId: child.id,
-                fromStatus: child.status,
-                toStatus: 'OUTBOUND',
-                changedBy: user.id,
-                reason: 'BATCH_CHILD_OUTBOUND',
-                batchId,
-              }))
-            );
-          }
-        }
-      }
-
-      // Auto-update status if not explicitly set
-      if (!body.status) {
-        await updateReceiptStatus(receiptId, tx, {
-          changedBy: user.id,
-          reason: 'AUTO_STATUS_UPDATE',
-        });
-      }
-
-      return result;
+      return updateWarehouseReceiptRecord(tx, {
+        receiptId,
+        body,
+        userId: user.id,
+      });
     });
 
     return jsonOk({ data: updated });

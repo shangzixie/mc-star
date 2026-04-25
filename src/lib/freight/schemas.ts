@@ -125,6 +125,66 @@ export const createWarehouseReceiptSchema = z.object({
 export const updateWarehouseReceiptSchema =
   createWarehouseReceiptSchema.partial();
 
+const batchUpdateReceiptIdsSchema = z.array(uuidSchema).min(1);
+
+const batchUpdateContactChangesSchema = z
+  .object({
+    customerPhoneEnabled: z.boolean().optional(),
+    customerPhone: z.string().max(50).nullable().optional(),
+    shipperPhoneEnabled: z.boolean().optional(),
+    shipperPhone: z.string().max(50).nullable().optional(),
+    bookingAgentPhoneEnabled: z.boolean().optional(),
+    bookingAgentPhone: z.string().max(50).nullable().optional(),
+    customsAgentPhoneEnabled: z.boolean().optional(),
+    customsAgentPhone: z.string().max(50).nullable().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const enabled =
+      value.customerPhoneEnabled ||
+      value.shipperPhoneEnabled ||
+      value.bookingAgentPhoneEnabled ||
+      value.customsAgentPhoneEnabled;
+
+    if (!enabled) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'At least one contact field must be enabled',
+      });
+    }
+  });
+
+export const batchUpdateWarehouseReceiptsSchema = z.discriminatedUnion(
+  'operation',
+  [
+    z.object({
+      ids: batchUpdateReceiptIdsSchema,
+      operation: z.literal('status'),
+      changes: z.object({
+        status: z.enum(RECEIPT_STATUSES),
+      }),
+    }),
+    z.object({
+      ids: batchUpdateReceiptIdsSchema,
+      operation: z.literal('warehouse'),
+      changes: z.object({
+        warehouseId: uuidSchema,
+      }),
+    }),
+    z.object({
+      ids: batchUpdateReceiptIdsSchema,
+      operation: z.literal('customer'),
+      changes: z.object({
+        customerId: uuidSchema,
+      }),
+    }),
+    z.object({
+      ids: batchUpdateReceiptIdsSchema,
+      operation: z.literal('contact'),
+      changes: batchUpdateContactChangesSchema,
+    }),
+  ]
+);
+
 export const mergeWarehouseReceiptsSchema = createWarehouseReceiptSchema.extend(
   {
     transportType: z.enum(MERGE_RECEIPT_TRANSPORT_TYPES),

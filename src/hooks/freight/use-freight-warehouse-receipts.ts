@@ -10,6 +10,7 @@ import {
 } from '@/lib/freight/api-types';
 import {
   addInventoryItemSchema,
+  batchUpdateWarehouseReceiptsSchema,
   createWarehouseReceiptSchema,
   mergeWarehouseReceiptsSchema,
   repackWarehouseReceiptsSchema,
@@ -250,6 +251,27 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
         updated
       );
       // Invalidate all receipt lists
+      await queryClient.invalidateQueries({
+        queryKey: freightKeys.warehouseReceipts(),
+      });
+    },
+  });
+}
+
+export function useBatchUpdateFreightWarehouseReceipts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      input: z.infer<typeof batchUpdateWarehouseReceiptsSchema>
+    ) => {
+      const body = batchUpdateWarehouseReceiptsSchema.parse(input);
+      const { batchUpdateWarehouseReceipts } = await import(
+        '@/lib/freight/api-client'
+      );
+      return batchUpdateWarehouseReceipts(body);
+    },
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: freightKeys.warehouseReceipts(),
       });
