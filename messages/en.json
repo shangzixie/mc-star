@@ -896,6 +896,31 @@
             "internalRemarksPlaceholder": "Enter internal remarks (optional)"
           }
         },
+        "repack": {
+          "start": "Repack goods",
+          "cancel": "Cancel",
+          "createSelected": "Create repack receipt",
+          "title": "Repack goods",
+          "description": "Move the selected {count} source receipts out and create a new receipt.",
+          "warning": "After creation, source receipts become outbound, their inventory is reduced to 0, and the new receipt receives copied available item lines.",
+          "create": "Create repack receipt",
+          "creating": "Creating...",
+          "success": "Repack receipt created",
+          "fields": {
+            "receiptNo": "New receipt no",
+            "receiptNoPlaceholder": "Enter new receipt number"
+          },
+          "validation": {
+            "receiptNoRequired": "New receipt number is required"
+          },
+          "selectionSummary": {
+            "title": "Selected repack totals",
+            "pieces": "Available pieces",
+            "weight": "Weight",
+            "volume": "Volume",
+            "warning": "Submitting will change selected source receipts to outbound."
+          }
+        },
         "items": {
           "title": "Add Item",
           "description": "Add inbound item lines. A RECEIPT movement will be created automatically.",

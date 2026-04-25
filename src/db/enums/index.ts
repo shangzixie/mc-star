@@ -104,6 +104,8 @@ export const MOVEMENT_REF_TYPES = [
   'LOAD',
   'SHIP',
   'ADJUST',
+  'REPACK_OUT',
+  'REPACK_IN',
 ] as const;
 export type MovementRefType = (typeof MOVEMENT_REF_TYPES)[number];
 

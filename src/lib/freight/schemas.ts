@@ -132,6 +132,14 @@ export const mergeWarehouseReceiptsSchema = createWarehouseReceiptSchema.extend(
   }
 );
 
+export const repackWarehouseReceiptsSchema = createWarehouseReceiptSchema
+  .pick({
+    receiptNo: true,
+  })
+  .extend({
+    sourceReceiptIds: z.array(uuidSchema).min(1),
+  });
+
 export const addInventoryItemSchema = z.object({
   receiptId: uuidSchema,
   commodityName: z.string().optional(),

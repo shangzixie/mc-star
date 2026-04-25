@@ -905,6 +905,31 @@
             "internalRemarksPlaceholder": "请输入内部备注（可选）"
           }
         },
+        "repack": {
+          "start": "货物改包",
+          "cancel": "取消",
+          "createSelected": "创建改包单",
+          "title": "货物改包",
+          "description": "将选中的 {count} 个旧入库单转出，并创建新的承接入库单。",
+          "warning": "创建成功后，旧入库单会转为出库状态，旧库存扣为 0；新入库单会逐条复制旧单可用明细。",
+          "create": "创建改包单",
+          "creating": "创建中...",
+          "success": "改包入库单已创建",
+          "fields": {
+            "receiptNo": "新入库单号",
+            "receiptNoPlaceholder": "请输入新入库单号"
+          },
+          "validation": {
+            "receiptNoRequired": "请输入新入库单号"
+          },
+          "selectionSummary": {
+            "title": "改包选中合计",
+            "pieces": "剩余件数",
+            "weight": "重量",
+            "volume": "体积",
+            "warning": "提交后选中旧单会变为出库状态。"
+          }
+        },
         "items": {
           "title": "新增明细",
           "description": "新增入库明细时会自动写入库存流水（RECEIPT）。",

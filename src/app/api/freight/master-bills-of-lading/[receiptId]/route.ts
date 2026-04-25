@@ -3,13 +3,49 @@ import { masterBillsOfLading, warehouseReceipts } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
+  isMissingMasterBillOfLadingColumnError,
+  omitMasterBillOfLadingNewColumns,
+  omitMasterBillOfLadingNewColumnsFromColumnMap,
+} from '@/lib/freight/db-compat';
+import {
   createMasterBillOfLadingSchema,
   updateMasterBillOfLadingSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
-import { eq } from 'drizzle-orm';
+import { eq, getTableColumns } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
+
+function getMasterBillSelectFields(includeNewColumns: boolean) {
+  return {
+    id: masterBillsOfLading.id,
+    receiptId: masterBillsOfLading.receiptId,
+    mblNo: masterBillsOfLading.mblNo,
+    soNo: masterBillsOfLading.soNo,
+    ...(includeNewColumns
+      ? {
+          portOfDestinationAddress:
+            masterBillsOfLading.portOfDestinationAddress,
+        }
+      : {}),
+    portOfDestinationId: masterBillsOfLading.portOfDestinationId,
+    portOfDischargeId: masterBillsOfLading.portOfDischargeId,
+    portOfLoadingId: masterBillsOfLading.portOfLoadingId,
+    placeOfReceiptId: masterBillsOfLading.placeOfReceiptId,
+    createdAt: masterBillsOfLading.createdAt,
+    updatedAt: masterBillsOfLading.updatedAt,
+  };
+}
+
+function withStableMasterBillShape<T extends Record<string, unknown> | null>(
+  mbl: T
+) {
+  if (!mbl || 'portOfDestinationAddress' in mbl) return mbl;
+  return {
+    ...mbl,
+    portOfDestinationAddress: null,
+  };
+}
 
 /**
  * GET /api/freight/master-bills-of-lading/[receiptId]
@@ -40,14 +76,26 @@ export async function GET(
       });
     }
 
-    // Get MBL for this receipt
-    const [mbl] = await db
-      .select()
-      .from(masterBillsOfLading)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId));
+    const loadMbl = async (includeNewColumns: boolean) => {
+      const [loaded] = await db
+        .select(getMasterBillSelectFields(includeNewColumns))
+        .from(masterBillsOfLading)
+        .where(eq(masterBillsOfLading.receiptId, validReceiptId));
+      return loaded;
+    };
+
+    let mbl: Awaited<ReturnType<typeof loadMbl>>;
+    try {
+      mbl = await loadMbl(true);
+    } catch (error) {
+      if (!isMissingMasterBillOfLadingColumnError(error)) {
+        throw error;
+      }
+      mbl = await loadMbl(false);
+    }
 
     // Return null if no MBL exists yet (not an error)
-    return jsonOk({ data: mbl ?? null });
+    return jsonOk({ data: withStableMasterBillShape(mbl ?? null) });
   } catch (error) {
     return jsonError(error as Error);
   }
@@ -109,25 +157,48 @@ export async function POST(
       updateData.placeOfReceiptId = data.placeOfReceiptId;
     }
 
-    const [upserted] = await db
-      .insert(masterBillsOfLading)
-      .values({
-        receiptId: data.receiptId as any,
-        mblNo: data.mblNo ?? null,
-        soNo: data.soNo ?? null,
-        portOfDestinationAddress: data.portOfDestinationAddress ?? null,
-        portOfDestinationId: data.portOfDestinationId as any,
-        portOfDischargeId: data.portOfDischargeId as any,
-        portOfLoadingId: data.portOfLoadingId as any,
-        placeOfReceiptId: data.placeOfReceiptId as any,
-      })
-      .onConflictDoUpdate({
-        target: masterBillsOfLading.receiptId,
-        set: updateData,
-      })
-      .returning();
+    const insertValues = {
+      receiptId: data.receiptId as any,
+      mblNo: data.mblNo ?? null,
+      soNo: data.soNo ?? null,
+      portOfDestinationAddress: data.portOfDestinationAddress ?? null,
+      portOfDestinationId: data.portOfDestinationId as any,
+      portOfDischargeId: data.portOfDischargeId as any,
+      portOfLoadingId: data.portOfLoadingId as any,
+      placeOfReceiptId: data.placeOfReceiptId as any,
+    };
 
-    return jsonOk({ data: upserted }, { status: 201 });
+    let upserted: (Record<string, unknown> & { id: string }) | undefined;
+    try {
+      [upserted] = await db
+        .insert(masterBillsOfLading)
+        .values(insertValues)
+        .onConflictDoUpdate({
+          target: masterBillsOfLading.receiptId,
+          set: updateData,
+        })
+        .returning();
+    } catch (error) {
+      if (!isMissingMasterBillOfLadingColumnError(error)) {
+        throw error;
+      }
+      const safeColumns = omitMasterBillOfLadingNewColumnsFromColumnMap(
+        getTableColumns(masterBillsOfLading)
+      );
+      [upserted] = await db
+        .insert(masterBillsOfLading)
+        .values(omitMasterBillOfLadingNewColumns(insertValues))
+        .onConflictDoUpdate({
+          target: masterBillsOfLading.receiptId,
+          set: omitMasterBillOfLadingNewColumns(updateData),
+        })
+        .returning(safeColumns);
+    }
+
+    return jsonOk(
+      { data: withStableMasterBillShape(upserted ?? null) },
+      { status: 201 }
+    );
   } catch (error) {
     return jsonError(error as Error);
   }
@@ -150,7 +221,7 @@ export async function PATCH(
 
     // Check if MBL exists
     const [existingMbl] = await db
-      .select()
+      .select({ id: masterBillsOfLading.id })
       .from(masterBillsOfLading)
       .where(eq(masterBillsOfLading.receiptId, validReceiptId));
 
@@ -165,7 +236,9 @@ export async function PATCH(
     const body = await parseJson(request, updateMasterBillOfLadingSchema);
     const data = body;
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, any> = {
+      updatedAt: new Date(),
+    };
 
     if (data.mblNo !== undefined) {
       updateData.mblNo = data.mblNo;
@@ -188,13 +261,28 @@ export async function PATCH(
     if (data.placeOfReceiptId !== undefined) {
       updateData.placeOfReceiptId = data.placeOfReceiptId;
     }
-    const [updatedMbl] = await db
-      .update(masterBillsOfLading)
-      .set(updateData)
-      .where(eq(masterBillsOfLading.receiptId, validReceiptId))
-      .returning();
+    let updatedMbl: (Record<string, unknown> & { id: string }) | undefined;
+    try {
+      [updatedMbl] = await db
+        .update(masterBillsOfLading)
+        .set(updateData)
+        .where(eq(masterBillsOfLading.receiptId, validReceiptId))
+        .returning();
+    } catch (error) {
+      if (!isMissingMasterBillOfLadingColumnError(error)) {
+        throw error;
+      }
+      const safeColumns = omitMasterBillOfLadingNewColumnsFromColumnMap(
+        getTableColumns(masterBillsOfLading)
+      );
+      [updatedMbl] = await db
+        .update(masterBillsOfLading)
+        .set(omitMasterBillOfLadingNewColumns(updateData))
+        .where(eq(masterBillsOfLading.receiptId, validReceiptId))
+        .returning(safeColumns);
+    }
 
-    return jsonOk({ data: updatedMbl });
+    return jsonOk({ data: withStableMasterBillShape(updatedMbl ?? null) });
   } catch (error) {
     return jsonError(error as Error);
   }

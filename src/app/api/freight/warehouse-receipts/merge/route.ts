@@ -67,7 +67,9 @@ export async function POST(request: Request) {
         remarks: body.remarks,
         internalRemarks: body.internalRemarks,
         manualPieces:
-          body.manualPieces != null ? `${body.manualPieces}` : body.manualPieces,
+          body.manualPieces != null
+            ? `${body.manualPieces}`
+            : body.manualPieces,
         manualWeightKg:
           body.manualWeightKg != null
             ? `${body.manualWeightKg}`
@@ -124,7 +126,7 @@ export async function POST(request: Request) {
           : undefined,
       };
 
-      let parentReceipt;
+      let parentReceipt: ({ id: string } & Record<string, unknown>) | undefined;
       try {
         [parentReceipt] = await tx
           .insert(warehouseReceipts)
@@ -143,6 +145,14 @@ export async function POST(request: Request) {
           .insert(warehouseReceipts)
           .values(omitWarehouseReceiptNewColumns(values))
           .returning(safeColumns);
+      }
+
+      if (!parentReceipt) {
+        throw new ApiError({
+          status: 500,
+          code: 'WAREHOUSE_RECEIPT_CREATE_FAILED',
+          message: 'Failed to create merged warehouse receipt',
+        });
       }
 
       if (items.length > 0 && totalQty > 0) {
@@ -169,6 +179,7 @@ export async function POST(request: Request) {
         receiptIds.map((childReceiptId) => ({
           parentReceiptId: parentReceipt.id,
           childReceiptId,
+          relationType: 'MERGE',
           createdBy: user.id,
         }))
       );

@@ -397,6 +397,9 @@ export const warehouseReceiptMerges = pgTable(
     childReceiptId: uuid('child_receipt_id')
       .notNull()
       .references(() => warehouseReceipts.id, { onDelete: 'cascade' }),
+    relationType: varchar('relation_type', { length: 20 })
+      .notNull()
+      .default('MERGE'),
     createdBy: text('created_by').references(() => user.id, {
       onDelete: 'set null',
     }),

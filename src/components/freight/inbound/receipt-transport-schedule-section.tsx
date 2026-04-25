@@ -34,9 +34,13 @@ import { RECEIPT_STATUSES } from '@/lib/freight/constants';
 import { AIR_OPERATION_NODES } from '@/lib/freight/local-receipt-transport-schedule';
 import { AlertCircle, Calendar } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
+import {
+  RECEIPT_TRANSPORT_SIDEBAR_FIELD_ORDER,
+  type ReceiptTransportSidebarFieldKey,
+} from './receipt-transport-schedule-layout';
 
 export function ReceiptTransportScheduleSection({
   transportType,
@@ -50,6 +54,7 @@ export function ReceiptTransportScheduleSection({
   const t = useTranslations(
     'Dashboard.freight.inbound.transportSchedule'
   ) as any;
+  const tCourier = useTranslations('Dashboard.freight.inbound.courier') as any;
   const { data: warehouses } = useFreightWarehouses({ q: '' });
   const createWarehouseMutation = useCreateFreightWarehouse();
   const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
@@ -113,169 +118,195 @@ export function ReceiptTransportScheduleSection({
     return null;
   }, [form.watch('seaEtdE'), form.watch('seaEtaE'), t]);
 
-  const warehouseField = (
+  const fieldSections: Record<ReceiptTransportSidebarFieldKey, ReactNode> =
+    {
+      warehouse: (
+        <div className="space-y-2">
+          <Label htmlFor="warehouseId">{t('warehouseField.label')}</Label>
+          <WarehouseCombobox
+            value={warehouseIdValue || undefined}
+            onValueChange={(value) =>
+              form.setValue('warehouseId', value ?? '', { shouldDirty: true })
+            }
+            onAddNew={() => setWarehouseDialogOpen(true)}
+            placeholder={t('warehouseField.placeholder')}
+            disabled={disabled}
+          />
+          <Dialog
+            open={warehouseDialogOpen}
+            onOpenChange={setWarehouseDialogOpen}
+          >
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{t('warehouseField.dialog.title')}</DialogTitle>
+                <DialogDescription>
+                  {t('warehouseField.dialog.description')}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="wh-name">
+                    {t('warehouseField.dialog.name')} *
+                  </Label>
+                  <Input
+                    id="wh-name"
+                    value={warehouseFormData.name}
+                    onChange={(e) =>
+                      setWarehouseFormData({
+                        ...warehouseFormData,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder={t('warehouseField.dialog.namePlaceholder')}
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wh-address">
+                    {t('warehouseField.dialog.address')}
+                  </Label>
+                  <Input
+                    id="wh-address"
+                    value={warehouseFormData.address}
+                    onChange={(e) =>
+                      setWarehouseFormData({
+                        ...warehouseFormData,
+                        address: e.target.value,
+                      })
+                    }
+                    placeholder={t('warehouseField.dialog.addressPlaceholder')}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="wh-contact">
+                      {t('warehouseField.dialog.contact')}
+                    </Label>
+                    <Input
+                      id="wh-contact"
+                      value={warehouseFormData.contactPerson}
+                      onChange={(e) =>
+                        setWarehouseFormData({
+                          ...warehouseFormData,
+                          contactPerson: e.target.value,
+                        })
+                      }
+                      placeholder={t('warehouseField.dialog.contactPlaceholder')}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wh-phone">
+                      {t('warehouseField.dialog.phone')}
+                    </Label>
+                    <Input
+                      id="wh-phone"
+                      value={warehouseFormData.phone}
+                      onChange={(e) =>
+                        setWarehouseFormData({
+                          ...warehouseFormData,
+                          phone: e.target.value,
+                        })
+                      }
+                      placeholder={t('warehouseField.dialog.phonePlaceholder')}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wh-remarks">
+                    {t('warehouseField.dialog.remarks')}
+                  </Label>
+                  <Textarea
+                    id="wh-remarks"
+                    value={warehouseFormData.remarks}
+                    onChange={(e) =>
+                      setWarehouseFormData({
+                        ...warehouseFormData,
+                        remarks: e.target.value,
+                      })
+                    }
+                    placeholder={t('warehouseField.dialog.remarksPlaceholder')}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setWarehouseDialogOpen(false)}
+                  type="button"
+                >
+                  {t('warehouseField.dialog.cancel')}
+                </Button>
+                <Button
+                  onClick={handleCreateWarehouse}
+                  type="button"
+                  disabled={
+                    createWarehouseMutation.isPending ||
+                    !warehouseFormData.name.trim()
+                  }
+                >
+                  {createWarehouseMutation.isPending
+                    ? t('warehouseField.dialog.creating')
+                    : t('warehouseField.dialog.create')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      ),
+      courierTrackingNo: (
+        <div className="space-y-2">
+          <Label htmlFor="courierTrackingNo">{tCourier('trackingNo')}</Label>
+          <Input
+            id="courierTrackingNo"
+            {...form.register('courierTrackingNo')}
+            placeholder={tCourier('trackingNoPlaceholder')}
+            disabled={disabled}
+          />
+        </div>
+      ),
+      courierReceivedAt: (
+        <div className="space-y-2">
+          <Label htmlFor="courierReceivedAt">{tCourier('receivedAt')}</Label>
+          <Input
+            id="courierReceivedAt"
+            type="datetime-local"
+            {...form.register('courierReceivedAt')}
+            disabled={disabled}
+          />
+        </div>
+      ),
+      status: (
+        <div className="space-y-2">
+          <Label htmlFor="status">{t('status.label')}</Label>
+          <Select
+            value={form.watch('status') ?? undefined}
+            onValueChange={(value) =>
+              form.setValue('status', value ?? '', {
+                shouldDirty: true,
+              })
+            }
+          >
+            <SelectTrigger id="status">
+              <SelectValue placeholder={t('status.label')} />
+            </SelectTrigger>
+            <SelectContent>
+              {RECEIPT_STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {t(`status.${status.toLowerCase()}` as any)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ),
+    };
+
+  const sidebarFields = (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="warehouseId">{t('warehouseField.label')}</Label>
-        <WarehouseCombobox
-          value={warehouseIdValue || undefined}
-          onValueChange={(value) =>
-            form.setValue('warehouseId', value ?? '', { shouldDirty: true })
-          }
-          onAddNew={() => setWarehouseDialogOpen(true)}
-          placeholder={t('warehouseField.placeholder')}
-          disabled={disabled}
-        />
-        <Dialog
-          open={warehouseDialogOpen}
-          onOpenChange={setWarehouseDialogOpen}
-        >
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{t('warehouseField.dialog.title')}</DialogTitle>
-              <DialogDescription>
-                {t('warehouseField.dialog.description')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* 库房名称 */}
-              <div className="space-y-2">
-                <Label htmlFor="wh-name">
-                  {t('warehouseField.dialog.name')} *
-                </Label>
-                <Input
-                  id="wh-name"
-                  value={warehouseFormData.name}
-                  onChange={(e) =>
-                    setWarehouseFormData({
-                      ...warehouseFormData,
-                      name: e.target.value,
-                    })
-                  }
-                  placeholder={t('warehouseField.dialog.namePlaceholder')}
-                  autoFocus
-                />
-              </div>
-
-              {/* 地址 */}
-              <div className="space-y-2">
-                <Label htmlFor="wh-address">
-                  {t('warehouseField.dialog.address')}
-                </Label>
-                <Input
-                  id="wh-address"
-                  value={warehouseFormData.address}
-                  onChange={(e) =>
-                    setWarehouseFormData({
-                      ...warehouseFormData,
-                      address: e.target.value,
-                    })
-                  }
-                  placeholder={t('warehouseField.dialog.addressPlaceholder')}
-                />
-              </div>
-
-              {/* 联系人 & 电话 */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="wh-contact">
-                    {t('warehouseField.dialog.contact')}
-                  </Label>
-                  <Input
-                    id="wh-contact"
-                    value={warehouseFormData.contactPerson}
-                    onChange={(e) =>
-                      setWarehouseFormData({
-                        ...warehouseFormData,
-                        contactPerson: e.target.value,
-                      })
-                    }
-                    placeholder={t('warehouseField.dialog.contactPlaceholder')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="wh-phone">
-                    {t('warehouseField.dialog.phone')}
-                  </Label>
-                  <Input
-                    id="wh-phone"
-                    value={warehouseFormData.phone}
-                    onChange={(e) =>
-                      setWarehouseFormData({
-                        ...warehouseFormData,
-                        phone: e.target.value,
-                      })
-                    }
-                    placeholder={t('warehouseField.dialog.phonePlaceholder')}
-                  />
-                </div>
-              </div>
-
-              {/* 备注 */}
-              <div className="space-y-2">
-                <Label htmlFor="wh-remarks">
-                  {t('warehouseField.dialog.remarks')}
-                </Label>
-                <Textarea
-                  id="wh-remarks"
-                  value={warehouseFormData.remarks}
-                  onChange={(e) =>
-                    setWarehouseFormData({
-                      ...warehouseFormData,
-                      remarks: e.target.value,
-                    })
-                  }
-                  placeholder={t('warehouseField.dialog.remarksPlaceholder')}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setWarehouseDialogOpen(false)}
-                type="button"
-              >
-                {t('warehouseField.dialog.cancel')}
-              </Button>
-              <Button
-                onClick={handleCreateWarehouse}
-                type="button"
-                disabled={
-                  createWarehouseMutation.isPending ||
-                  !warehouseFormData.name.trim()
-                }
-              >
-                {createWarehouseMutation.isPending
-                  ? t('warehouseField.dialog.creating')
-                  : t('warehouseField.dialog.create')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="status">{t('status.label')}</Label>
-        <Select
-          value={form.watch('status') ?? undefined}
-          onValueChange={(value) =>
-            form.setValue('status', value ?? '', {
-              shouldDirty: true,
-            })
-          }
-        >
-          <SelectTrigger id="status">
-            <SelectValue placeholder={t('status.label')} />
-          </SelectTrigger>
-          <SelectContent>
-            {RECEIPT_STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {t(`status.${status.toLowerCase()}` as any)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {RECEIPT_TRANSPORT_SIDEBAR_FIELD_ORDER.map((fieldKey) => (
+        <div key={fieldKey}>{fieldSections[fieldKey]}</div>
+      ))}
     </div>
   );
 
@@ -497,7 +528,7 @@ export function ReceiptTransportScheduleSection({
   return (
     <div className="space-y-4">
       {renderTransportContent()}
-      {warehouseField}
+      {sidebarFields}
     </div>
   );
 }

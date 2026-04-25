@@ -47,6 +47,7 @@
 - `inventory_movements` 是审计流水，不应缺失关键入库/出库记录
 - `warehouse_receipts.status` 统一使用 `INBOUND | OUTBOUND | VOID`
 - 新建入库单默认状态必须为 `INBOUND`
+- 货物改包创建的新入库单默认 `INBOUND`，被选择的旧入库单必须转为 `OUTBOUND`
 - `warehouse_receipts.receipt_no` 是可修正业务标识；在单据未进入 `OUTBOUND` 前允许通过 PATCH 更新，但仍保持唯一约束
 - `warehouse_receipts.inbound_time` 允许在详情页编辑（ISO datetime 输入）
 - `warehouse_receipts.air_type` 仅用于空运单，枚举值 `AIR | EXPRESS | H.K`
@@ -62,6 +63,8 @@
 - `shipped_qty <= loaded_qty`
 - 最终库存扣减发生在 `SHIPPED`
 - 任何 `SHIPPED` 扣库存完成后，必须同步触发所属 `warehouse_receipts` 状态重算
+- 货物改包是库存转移动作，不经过出货状态机；旧库存扣减和新库存生成必须写入 `inventory_movements`
+- 入库单父子关系必须区分集拼合并与货物改包，避免两类流程共享关系表时语义混淆
 
 ## Frontend Constraints
 
@@ -71,8 +74,10 @@
 - 详情页返回操作应优先 `router.back()`，无历史时再回落到列表 URL
 - 集拼出库 sidebar 的“合并创建”运输类型选项必须限制为 `SEA_LCL`
 - 普通入库/总操作入口的运输类型选项必须排除 `SEA_LCL`，避免与集拼合并创建入口重叠
+- 总操作入口的货物改包应作为创建模式呈现，不加入运输类型选项
 - 联系资料区块需展示并编辑各合作方电话字段
-- 快递信息通过独立卡片+弹窗编辑，不并入费用表格行模型
+- 快递信息在入库详情页中并入船期区块，位于库房名称下方，不再保留独立快递信息卡片
+- 入库详情头部布局中，入库明细表需横跨右侧剩余列，避免在大屏下停在中间造成右侧空白
 - HBL 前端移除 `placeOfReceipt` 输入；MBL 前端移除 `portOfDestinationAddress` 与 `placeOfReceipt` 输入
 - freight 详情页应使用稳定、可复用的信息区块表达业务关系，避免一次性布局造成维护成本
 
@@ -83,6 +88,7 @@
 - 同一业务动作的写规则不能在多个 Route 中重复实现
 - `PATCH /api/freight/warehouse-receipts/:id` 必须接受 `receiptNo` 的合法更新，并沿用现有 `OUTBOUND` 编辑锁定规则
 - `POST /api/freight/warehouse-receipts/merge` 必须在服务端拒绝非 `SEA_LCL` 的 `transportType`
+- `POST /api/freight/warehouse-receipts/repack` 必须在同一事务中完成新单创建、旧库存扣减、新库存生成、状态日志和父子关系记录
 - freight schema 变化必须同步更新校验、类型、API client、服务写入逻辑和测试
 - 迁移与兼容逻辑必须以不破坏既有页面加载和写入为目标；具体缺列识别与重试细节以代码和测试为准
 - 数据库连接、目标环境和迁移参数属于配置或运维信息，不写入长期契约文档

@@ -1240,7 +1240,7 @@ export function ReceiptDetailEditView({
             </div>
           </FreightSection>
 
-          {/* 右侧：船期 / 快递 / 商品明细表格 */}
+          {/* 右侧：船期 / 商品明细表格 */}
           <FreightSection
             title={
               transportTypeValue === 'AIR_FREIGHT'
@@ -1256,36 +1256,9 @@ export function ReceiptDetailEditView({
             />
           </FreightSection>
 
-          <FreightSection title={t('courier.title')} className="min-w-0">
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="courierTrackingNo">
-                  {t('courier.trackingNo')}
-                </Label>
-                <Input
-                  id="courierTrackingNo"
-                  {...form.register('courierTrackingNo')}
-                  placeholder={t('courier.trackingNoPlaceholder')}
-                  disabled={isOutbound}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="courierReceivedAt">
-                  {t('courier.receivedAt')}
-                </Label>
-                <Input
-                  id="courierReceivedAt"
-                  type="datetime-local"
-                  {...form.register('courierReceivedAt')}
-                  disabled={isOutbound}
-                />
-              </div>
-            </div>
-          </FreightSection>
-
           <FreightTableSection
             title={t('itemsList.title')}
-            className="w-full min-w-0 lg:col-span-2 xl:col-span-1"
+            className="w-full min-w-0 lg:col-span-2 xl:col-span-2"
             icon={Package}
             actions={
               isMergedParent ? null : (
