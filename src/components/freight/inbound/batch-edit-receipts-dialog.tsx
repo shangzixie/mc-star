@@ -22,13 +22,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useBatchUpdateFreightWarehouseReceipts } from '@/hooks/freight/use-freight-warehouse-receipts';
+import { useDeleteFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
+import {
+  BATCH_EDIT_RECEIPT_OPERATIONS,
+  type BatchEditReceiptOperation,
+  getIsBatchEditSubmitDisabled,
+} from '@/lib/freight/batch-edit-receipts';
 import { RECEIPT_STATUSES, type ReceiptStatus } from '@/lib/freight/constants';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 
-type BatchEditOperation = 'status' | 'warehouse' | 'customer' | 'contact';
 type ContactFieldKey =
   | 'customerPhone'
   | 'shipperPhone'
@@ -70,12 +76,16 @@ export function BatchEditReceiptsDialog({
   const t = useTranslations('Dashboard.freight.inbound');
   const batchT = t as any;
   const batchUpdateMutation = useBatchUpdateFreightWarehouseReceipts();
-  const [operation, setOperation] = useState<BatchEditOperation>('status');
+  const deleteMutation = useDeleteFreightWarehouseReceipt();
+  const [operation, setOperation] =
+    useState<BatchEditReceiptOperation>('status');
   const [status, setStatus] = useState<ReceiptStatus>('INBOUND');
   const [warehouseId, setWarehouseId] = useState<string | undefined>();
   const [customerId, setCustomerId] = useState<string | undefined>();
   const [contactEnabled, setContactEnabled] = useState(INITIAL_CONTACT_ENABLED);
   const [contactValues, setContactValues] = useState(INITIAL_CONTACT_VALUES);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -85,6 +95,8 @@ export function BatchEditReceiptsDialog({
     setCustomerId(undefined);
     setContactEnabled(INITIAL_CONTACT_ENABLED);
     setContactValues(INITIAL_CONTACT_VALUES);
+    setDeleteConfirmOpen(false);
+    setDeleteError('');
   }, [open]);
 
   const enabledContactCount = useMemo(
@@ -92,15 +104,39 @@ export function BatchEditReceiptsDialog({
     [contactEnabled]
   );
 
-  const isSubmitDisabled =
-    selectedIds.length === 0 ||
-    batchUpdateMutation.isPending ||
-    (operation === 'warehouse' && !warehouseId) ||
-    (operation === 'customer' && !customerId) ||
-    (operation === 'contact' && enabledContactCount === 0);
+  const isSubmitDisabled = getIsBatchEditSubmitDisabled({
+    operation,
+    selectedCount: selectedIds.length,
+    isPending: batchUpdateMutation.isPending || deleteMutation.isPending,
+    warehouseId,
+    customerId,
+    enabledContactCount,
+  });
+
+  const handleConfirmDelete = async () => {
+    setDeleteError('');
+    try {
+      for (const receiptId of selectedIds) {
+        await deleteMutation.mutateAsync(receiptId);
+      }
+      toast.success(
+        batchT('batchEdit.deleteSuccess', { count: selectedIds.length })
+      );
+      setDeleteConfirmOpen(false);
+      onOpenChange(false);
+      onSuccess();
+    } catch (error) {
+      setDeleteError(getFreightApiErrorMessage(error));
+      throw error;
+    }
+  };
 
   const handleSubmit = async () => {
     if (isSubmitDisabled) return;
+    if (operation === 'delete') {
+      setDeleteConfirmOpen(true);
+      return;
+    }
 
     try {
       const payload =
@@ -177,25 +213,18 @@ export function BatchEditReceiptsDialog({
             <Select
               value={operation}
               onValueChange={(value) =>
-                setOperation(value as BatchEditOperation)
+                setOperation(value as BatchEditReceiptOperation)
               }
             >
               <SelectTrigger id="batch-operation">
                 <SelectValue placeholder={batchT('batchEdit.operation')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="status">
-                  {batchT('batchEdit.operations.status')}
-                </SelectItem>
-                <SelectItem value="warehouse">
-                  {batchT('batchEdit.operations.warehouse')}
-                </SelectItem>
-                <SelectItem value="customer">
-                  {batchT('batchEdit.operations.customer')}
-                </SelectItem>
-                <SelectItem value="contact">
-                  {batchT('batchEdit.operations.contact')}
-                </SelectItem>
+                {BATCH_EDIT_RECEIPT_OPERATIONS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {batchT(`batchEdit.operations.${item}`)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -292,6 +321,14 @@ export function BatchEditReceiptsDialog({
               </p>
             </div>
           ) : null}
+
+          {operation === 'delete' ? (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+              {batchT('batchEdit.deleteWarning', {
+                count: selectedIds.length,
+              })}
+            </div>
+          ) : null}
         </div>
 
         <DialogFooter>
@@ -299,16 +336,33 @@ export function BatchEditReceiptsDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            disabled={deleteMutation.isPending}
           >
             {t('receiptActions.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitDisabled}>
-            {batchUpdateMutation.isPending
+            {batchUpdateMutation.isPending || deleteMutation.isPending
               ? batchT('batchEdit.updating')
               : batchT('batchEdit.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={(nextOpen) => {
+          setDeleteConfirmOpen(nextOpen);
+          if (!nextOpen) {
+            setDeleteError('');
+          }
+        }}
+        title={batchT('receiptList.delete.bulkTitle')}
+        message={batchT('receiptList.delete.bulkMessage')}
+        confirmText={batchT('receiptList.delete.bulkConfirm')}
+        cancelText={batchT('receiptActions.cancel')}
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+      />
     </Dialog>
   );
 }

@@ -1160,51 +1160,6 @@ export function ReceiptListView({
               </SelectContent>
             </Select>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            {deleteMode ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setDeleteMode(false);
-                    setDeleteSelectedIds([]);
-                    setDeleteContext(null);
-                    setDeleteError('');
-                  }}
-                >
-                  {t('receiptList.delete.cancel')}
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={deleteSelectedIds.length === 0 || isDeleting}
-                  onClick={() => {
-                    if (deleteSelectedIds.length > 0) {
-                      setDeleteContext({
-                        ids: deleteSelectedIds,
-                        isBulk: true,
-                      });
-                    }
-                  }}
-                >
-                  {isDeleting
-                    ? t('receiptList.delete.deleting')
-                    : t('receiptList.delete.selectedAction')}
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteMode(true)}
-                disabled={selectionMode}
-              >
-                <Trash2 className="mr-2 size-4" />
-                {t('receiptList.delete.start')}
-              </Button>
-            )}
-          </div>
         </DataTableAdvancedToolbar>
         {headerExtras ? (
           <div className="px-4 sm:px-0">{headerExtras}</div>

@@ -957,7 +957,8 @@
             "status": "修改状态",
             "warehouse": "修改库房",
             "customer": "修改客户",
-            "contact": "修改联系电话"
+            "contact": "修改联系电话",
+            "delete": "批量删除"
           },
           "fields": {
             "status": "新状态",
@@ -972,7 +973,9 @@
             "title": "批量编辑选中",
             "selected": "已选 {count} 个入库单",
             "hint": "勾选需要修改的单据后，点击“批量修改”进入统一确认。"
-          }
+          },
+          "deleteWarning": "将删除选中的 {count} 个入库单。此操作不可撤销；若有单据已分配或出库，服务端会拒绝删除。",
+          "deleteSuccess": "已删除 {count} 个入库单"
         },
         "items": {
           "title": "新增明细",
