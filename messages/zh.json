@@ -665,6 +665,15 @@
             "RAIL_FREIGHT": "铁路运输"
           }
         },
+        "airType": {
+          "label": "航空类型",
+          "placeholder": "请选择航空类型",
+          "options": {
+            "AIR": "AIR",
+            "EXPRESS": "EXPRESS",
+            "HK": "H.K"
+          }
+        },
         "customsDeclarationType": {
           "label": "报关类型",
           "placeholder": "选择报关类型（可选）",
@@ -806,6 +815,7 @@
         "singleBill": {
           "title": "单套提单",
           "fields": {
+            "inboundTime": "入仓时间",
             "cutoffDateSi": "截单日期 (SI)",
             "gateClosingTime": "截关时间",
             "departureDateE": "离港日期 (E)",
@@ -813,6 +823,15 @@
             "transitDateE": "预计转运日期 (E)",
             "deliveryDateE": "预计派送日期 (E)"
           }
+        },
+        "courier": {
+          "title": "快递信息",
+          "description": "维护单票快递单号与收货时间",
+          "trackingNo": "快递单号",
+          "trackingNoPlaceholder": "请输入快递单号",
+          "receivedAt": "收货时间",
+          "edit": "编辑快递信息",
+          "done": "完成"
         },
         "hbl": {
           "title": "HBL",

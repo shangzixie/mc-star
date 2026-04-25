@@ -7,6 +7,10 @@ import {
 } from '@/db/schema';
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
+import {
+  isMissingWarehouseReceiptColumnError,
+  omitWarehouseReceiptNewColumns,
+} from '@/lib/freight/db-compat';
 import { mergeWarehouseReceiptsSchema } from '@/lib/freight/schemas';
 import { inArray } from 'drizzle-orm';
 
@@ -51,65 +55,89 @@ export async function POST(request: Request) {
       );
       const mergedUnit = unitCandidates.length === 1 ? unitCandidates[0] : null;
 
-      const [parentReceipt] = await tx
-        .insert(warehouseReceipts)
-        .values({
-          receiptNo: body.receiptNo,
-          warehouseId: body.warehouseId,
-          customerId: body.customerId,
-          transportType: body.transportType,
-          customsDeclarationType: body.customsDeclarationType,
-          status: body.status ?? 'INBOUND',
-          inboundTime: body.inboundTime
-            ? new Date(body.inboundTime)
-            : undefined,
-          remarks: body.remarks,
-          internalRemarks: body.internalRemarks,
-          manualPieces:
-            body.manualPieces != null
-              ? `${body.manualPieces}`
-              : body.manualPieces,
-          manualWeightKg:
-            body.manualWeightKg != null
-              ? `${body.manualWeightKg}`
-              : body.manualWeightKg,
-          manualVolumeM3:
-            body.manualVolumeM3 != null
-              ? `${body.manualVolumeM3}`
-              : body.manualVolumeM3,
-          bubbleSplitPercent:
-            body.bubbleSplitPercent != null
-              ? `${body.bubbleSplitPercent}`
-              : body.bubbleSplitPercent,
-          weightConversionFactor:
-            body.weightConversionFactor != null
-              ? `${body.weightConversionFactor}`
-              : body.weightConversionFactor,
-          shipperId: body.shipperId,
-          bookingAgentId: body.bookingAgentId,
-          customsAgentId: body.customsAgentId,
-          salesEmployeeId: body.salesEmployeeId,
-          customerServiceEmployeeId: body.customerServiceEmployeeId,
-          overseasCsEmployeeId: body.overseasCsEmployeeId,
-          operationsEmployeeId: body.operationsEmployeeId,
-          documentationEmployeeId: body.documentationEmployeeId,
-          financeEmployeeId: body.financeEmployeeId,
-          bookingEmployeeId: body.bookingEmployeeId,
-          reviewerEmployeeId: body.reviewerEmployeeId,
-          airCarrier: body.airCarrier,
-          airFlightNo: body.airFlightNo,
-          airFlightDate: body.airFlightDate,
-          airArrivalDateE: body.airArrivalDateE,
-          airOperationLocation: body.airOperationLocation,
-          airOperationNode: body.airOperationNode,
-          seaCarrier: body.seaCarrier,
-          seaRoute: body.seaRoute,
-          seaVesselName: body.seaVesselName,
-          seaVoyage: body.seaVoyage,
-          seaEtdE: body.seaEtdE,
-          seaEtaE: body.seaEtaE,
-        })
-        .returning();
+      const values = {
+        receiptNo: body.receiptNo,
+        warehouseId: body.warehouseId,
+        customerId: body.customerId,
+        transportType: body.transportType,
+        customsDeclarationType: body.customsDeclarationType,
+        status: body.status ?? 'INBOUND',
+        inboundTime: body.inboundTime ? new Date(body.inboundTime) : undefined,
+        remarks: body.remarks,
+        internalRemarks: body.internalRemarks,
+        manualPieces:
+          body.manualPieces != null ? `${body.manualPieces}` : body.manualPieces,
+        manualWeightKg:
+          body.manualWeightKg != null
+            ? `${body.manualWeightKg}`
+            : body.manualWeightKg,
+        manualVolumeM3:
+          body.manualVolumeM3 != null
+            ? `${body.manualVolumeM3}`
+            : body.manualVolumeM3,
+        bubbleSplitPercent:
+          body.bubbleSplitPercent != null
+            ? `${body.bubbleSplitPercent}`
+            : body.bubbleSplitPercent,
+        weightConversionFactor:
+          body.weightConversionFactor != null
+            ? `${body.weightConversionFactor}`
+            : body.weightConversionFactor,
+        shipperId: body.shipperId,
+        customerPhone: body.customerPhone,
+        shipperPhone: body.shipperPhone,
+        bookingAgentId: body.bookingAgentId,
+        bookingAgentPhone: body.bookingAgentPhone,
+        customsAgentId: body.customsAgentId,
+        customsAgentPhone: body.customsAgentPhone,
+        salesEmployeeId: body.salesEmployeeId,
+        customerServiceEmployeeId: body.customerServiceEmployeeId,
+        overseasCsEmployeeId: body.overseasCsEmployeeId,
+        operationsEmployeeId: body.operationsEmployeeId,
+        documentationEmployeeId: body.documentationEmployeeId,
+        financeEmployeeId: body.financeEmployeeId,
+        bookingEmployeeId: body.bookingEmployeeId,
+        reviewerEmployeeId: body.reviewerEmployeeId,
+        airType: body.airType,
+        airCarrier: body.airCarrier,
+        airFlightNo: body.airFlightNo,
+        airFlightDate: body.airFlightDate,
+        airArrivalDateE: body.airArrivalDateE,
+        airOperationLocation: body.airOperationLocation,
+        airOperationNode: body.airOperationNode,
+        seaCarrier: body.seaCarrier,
+        seaRoute: body.seaRoute,
+        seaVesselName: body.seaVesselName,
+        seaVoyage: body.seaVoyage,
+        seaEtdE: body.seaEtdE,
+        seaEtaE: body.seaEtaE,
+        singleBillCutoffDateSi: body.singleBillCutoffDateSi,
+        singleBillGateClosingTime: body.singleBillGateClosingTime,
+        singleBillDepartureDateE: body.singleBillDepartureDateE,
+        singleBillArrivalDateE: body.singleBillArrivalDateE,
+        singleBillTransitDateE: body.singleBillTransitDateE,
+        singleBillDeliveryDateE: body.singleBillDeliveryDateE,
+        courierTrackingNo: body.courierTrackingNo,
+        courierReceivedAt: body.courierReceivedAt
+          ? new Date(body.courierReceivedAt)
+          : undefined,
+      };
+
+      let parentReceipt;
+      try {
+        [parentReceipt] = await tx
+          .insert(warehouseReceipts)
+          .values(values)
+          .returning();
+      } catch (error) {
+        if (!isMissingWarehouseReceiptColumnError(error)) {
+          throw error;
+        }
+        [parentReceipt] = await tx
+          .insert(warehouseReceipts)
+          .values(omitWarehouseReceiptNewColumns(values))
+          .returning();
+      }
 
       if (items.length > 0 && totalQty > 0) {
         const [createdItem] = await tx

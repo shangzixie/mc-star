@@ -180,6 +180,11 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       financeEmployeeId?: string | null;
       bookingEmployeeId?: string | null;
       reviewerEmployeeId?: string | null;
+      customerPhone?: string | null;
+      shipperPhone?: string | null;
+      bookingAgentPhone?: string | null;
+      customsAgentPhone?: string | null;
+      airType?: string | null;
       airCarrier?: string | null;
       airFlightNo?: string | null;
       airFlightDate?: string | null;
@@ -198,6 +203,8 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
       singleBillArrivalDateE?: string | null;
       singleBillTransitDateE?: string | null;
       singleBillDeliveryDateE?: string | null;
+      courierTrackingNo?: string | null;
+      courierReceivedAt?: string | null;
     }) => {
       const { updateWarehouseReceipt } = await import(
         '@/lib/freight/api-client'

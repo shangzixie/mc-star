@@ -94,6 +94,16 @@ export function BookingAgentCombobox({
   const getAgentSecondaryInfo = (agent: FreightParty) => {
     const parts: string[] = [];
     if (agent.code) parts.push(agent.code);
+    if (
+      agent.contactInfo &&
+      typeof agent.contactInfo === 'object' &&
+      !Array.isArray(agent.contactInfo)
+    ) {
+      const phone = (agent.contactInfo as Record<string, unknown>).phone;
+      if (typeof phone === 'string' && phone.trim()) {
+        parts.push(phone.trim());
+      }
+    }
     return parts.join(' • ');
   };
 

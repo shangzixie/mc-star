@@ -92,6 +92,16 @@ export function CustomerCombobox({
   const getCustomerSecondaryInfo = (customer: FreightParty) => {
     const parts: string[] = [];
     if (customer.code) parts.push(customer.code);
+    if (
+      customer.contactInfo &&
+      typeof customer.contactInfo === 'object' &&
+      !Array.isArray(customer.contactInfo)
+    ) {
+      const phone = (customer.contactInfo as Record<string, unknown>).phone;
+      if (typeof phone === 'string' && phone.trim()) {
+        parts.push(phone.trim());
+      }
+    }
     return parts.join(' • ');
   };
 

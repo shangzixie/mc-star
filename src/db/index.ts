@@ -24,7 +24,14 @@ function getState(): DbState {
 
 function isConnectionClosedError(error: unknown) {
   const msg = error instanceof Error ? error.message : String(error);
-  return msg.includes('CONNECTION_CLOSED') || msg.includes('connection closed');
+  const code = (error as NodeJS.ErrnoException)?.code ?? '';
+  return (
+    msg.includes('CONNECTION_CLOSED') ||
+    msg.includes('connection closed') ||
+    code === 'CONNECT_TIMEOUT' ||
+    code === 'ECONNRESET' ||
+    code === 'ECONNREFUSED'
+  );
 }
 
 export async function getDb() {

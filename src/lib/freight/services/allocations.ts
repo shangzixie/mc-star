@@ -19,6 +19,7 @@ import {
   nextStatusAfterPick,
 } from '../allocation-state';
 import { RESERVED_ALLOCATION_STATUSES } from '../constants';
+import { updateReceiptStatus } from './receipt-status';
 
 type Tx = Parameters<
   Awaited<ReturnType<typeof getDb>>['transaction']
@@ -43,11 +44,17 @@ function mapAllocationRow(
 }
 
 async function lockInventoryItem(tx: Tx, inventoryItemId: string) {
-  const rows = await tx.execute<{ id: string; current_qty: number }>(
-    sql`select id, current_qty from inventory_items where id = ${inventoryItemId} for update`
+  const rows = await tx.execute<{
+    id: string;
+    current_qty: number;
+    receipt_id: string;
+  }>(
+    sql`select id, current_qty, receipt_id from inventory_items where id = ${inventoryItemId} for update`
   );
 
-  const row = (rows as Array<{ id: string; current_qty: number }>)[0];
+  const row = (
+    rows as Array<{ id: string; current_qty: number; receipt_id: string }>
+  )[0];
   if (!row) {
     throw new ApiError({
       status: 404,
@@ -265,6 +272,7 @@ export async function loadAllocation(input: {
 export async function shipAllocation(input: {
   allocationId: string;
   shippedQty: number;
+  changedBy?: string | null;
 }) {
   const db = await getDb();
   return db.transaction(async (tx) => {
@@ -310,6 +318,11 @@ export async function shipAllocation(input: {
         currentQty: lockedItem.current_qty - input.shippedQty,
       })
       .where(eq(inventoryItems.id, allocation.inventoryItemId));
+
+    await updateReceiptStatus(lockedItem.receipt_id, tx, {
+      changedBy: input.changedBy ?? null,
+      reason: 'AUTO_STATUS_UPDATE',
+    });
 
     const [updated] = await tx
       .select()

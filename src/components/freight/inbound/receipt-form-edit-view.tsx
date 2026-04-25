@@ -131,7 +131,9 @@ export function ReceiptFormEditView({
           data.customsDeclarationType || undefined;
       }
       if (data.inboundTime !== formatDateTimeLocalValue(receipt.inboundTime)) {
-        payload.inboundTime = data.inboundTime;
+        payload.inboundTime = data.inboundTime
+          ? new Date(data.inboundTime).toISOString()
+          : undefined;
       }
       if (data.remarks !== (receipt.remarks ?? '')) {
         payload.remarks = data.remarks;

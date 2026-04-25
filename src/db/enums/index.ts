@@ -64,6 +64,10 @@ export const WAREHOUSE_RECEIPT_TRANSPORT_TYPES = [
 export type WarehouseReceiptTransportType =
   (typeof WAREHOUSE_RECEIPT_TRANSPORT_TYPES)[number];
 
+export const WAREHOUSE_RECEIPT_AIR_TYPES = ['AIR', 'EXPRESS', 'H.K'] as const;
+export type WarehouseReceiptAirType =
+  (typeof WAREHOUSE_RECEIPT_AIR_TYPES)[number];
+
 export const WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES = [
   // 报关类型（存储英文枚举码；UI 通过 i18n 显示中文）
   // NO_DECLARATION: 不报关

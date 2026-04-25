@@ -8,11 +8,20 @@ import { AddCustomerDialog } from '@/components/freight/shared/add-customer-dial
 import { BookingAgentCombobox } from '@/components/freight/shared/booking-agent-combobox';
 import { CustomerCombobox } from '@/components/freight/shared/customer-combobox';
 import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-combobox';
+import { EmployeeCombobox } from '@/components/freight/shared/employee-combobox';
 import { PortCombobox } from '@/components/freight/shared/port-combobox';
 import { ShipperCombobox } from '@/components/freight/shared/shipper-combobox';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +71,7 @@ import {
   useUpdateFreightMBL,
 } from '@/hooks/freight/use-freight-mbl';
 import { useUpdateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
-import { LocaleLink, useLocaleRouter } from '@/i18n/navigation';
+import { LocaleLink } from '@/i18n/navigation';
 import { getFreightApiErrorMessage } from '@/lib/freight/api-client';
 import type {
   FreightInventoryItem,
@@ -70,6 +79,7 @@ import type {
 } from '@/lib/freight/api-types';
 import {
   RECEIPT_STATUSES,
+  WAREHOUSE_RECEIPT_AIR_TYPES,
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from '@/lib/freight/constants';
@@ -103,6 +113,7 @@ const receiptFormSchema = z.object({
   status: z.enum(RECEIPT_STATUSES).optional(),
   transportType: z.enum(WAREHOUSE_RECEIPT_TRANSPORT_TYPES).optional(),
   customsDeclarationType: z.string().optional(),
+  inboundTime: z.string().optional(),
   mblNo: z.string().max(50).optional(),
   soNo: z.string().max(50).optional(),
   hblNo: z.string().max(50).optional(),
@@ -115,6 +126,7 @@ const receiptFormSchema = z.object({
   remarks: z.string().optional(),
   internalRemarks: z.string().optional(),
   // Transport schedule (stored in DB)
+  airType: z.enum(WAREHOUSE_RECEIPT_AIR_TYPES).optional(),
   airCarrier: z.string().max(200).optional(),
   airFlightNo: z.string().max(100).optional(),
   airFlightDate: z.string().max(20).optional(),
@@ -128,7 +140,6 @@ const receiptFormSchema = z.object({
   seaEtdE: z.string().max(20).optional(),
   seaEtaE: z.string().max(20).optional(),
   // Employee assignments
-  salesEmployeeId: z.string().optional(),
   customerServiceEmployeeId: z.string().optional(),
   overseasCsEmployeeId: z.string().optional(),
   operationsEmployeeId: z.string().optional(),
@@ -138,18 +149,22 @@ const receiptFormSchema = z.object({
   reviewerEmployeeId: z.string().optional(),
   // Contact information - parties
   shipperId: z.string().optional(),
+  customerPhone: z.string().max(50).optional(),
+  salesEmployeeId: z.string().optional(),
+  shipperPhone: z.string().max(50).optional(),
   bookingAgentId: z.string().optional(),
+  bookingAgentPhone: z.string().max(50).optional(),
   customsAgentId: z.string().optional(),
+  customsAgentPhone: z.string().max(50).optional(),
+  courierTrackingNo: z.string().max(120).optional(),
+  courierReceivedAt: z.string().optional(),
   // MBL port information (unified)
-  portOfDestinationAddress: z.string().max(500).optional(),
   portOfDestinationId: z.string().optional(),
   portOfDischargeId: z.string().optional(),
   portOfLoadingId: z.string().optional(),
-  placeOfReceiptId: z.string().optional(),
   hblPortOfDestinationId: z.string().optional(),
   hblPortOfDischargeId: z.string().optional(),
   hblPortOfLoadingId: z.string().optional(),
-  hblPlaceOfReceiptId: z.string().optional(),
 });
 
 type ReceiptFormData = z.infer<typeof receiptFormSchema>;
@@ -169,6 +184,26 @@ function parseReceiptNumeric(value: string | null | undefined): number | null {
   if (value == null) return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function formatDateTimeLocalValue(value: string | null | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toIsoStringFromDateTimeLocal(
+  value: string | undefined
+): string | null {
+  const trimmed = (value ?? '').trim();
+  if (!trimmed) return null;
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
 }
 
 export function ReceiptDetailEditView({
@@ -200,9 +235,8 @@ export function ReceiptDetailEditView({
   const tCustomerColumns = useTranslations(
     'Dashboard.freight.settings.customers.columns'
   );
-  const router = useLocaleRouter();
-
   const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
+  const [courierDialogOpen, setCourierDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
 
   const mblQuery = useFreightMBL(receipt.id);
@@ -270,6 +304,7 @@ export function ReceiptDetailEditView({
       status: (receipt.status as ReceiptFormData['status']) ?? undefined,
       transportType: receipt.transportType ?? undefined,
       customsDeclarationType: receipt.customsDeclarationType ?? '',
+      inboundTime: formatDateTimeLocalValue(receipt.inboundTime),
       mblNo: '',
       soNo: '',
       hblNo: '',
@@ -282,6 +317,7 @@ export function ReceiptDetailEditView({
       remarks: receipt.remarks ?? '',
       internalRemarks: receipt.internalRemarks ?? '',
       // Transport schedule (stored in DB)
+      airType: (receipt.airType as ReceiptFormData['airType']) ?? undefined,
       airCarrier: receipt.airCarrier ?? '',
       airFlightNo: receipt.airFlightNo ?? '',
       airFlightDate: receipt.airFlightDate ?? '',
@@ -295,7 +331,6 @@ export function ReceiptDetailEditView({
       seaEtdE: receipt.seaEtdE ?? '',
       seaEtaE: receipt.seaEtaE ?? '',
       // Employee assignments (stored in DB)
-      salesEmployeeId: receipt.salesEmployeeId ?? '',
       customerServiceEmployeeId: receipt.customerServiceEmployeeId ?? '',
       overseasCsEmployeeId: receipt.overseasCsEmployeeId ?? '',
       operationsEmployeeId: receipt.operationsEmployeeId ?? '',
@@ -305,18 +340,22 @@ export function ReceiptDetailEditView({
       reviewerEmployeeId: receipt.reviewerEmployeeId ?? '',
       // Contact information - parties (stored in DB)
       shipperId: receipt.shipperId ?? '',
+      customerPhone: receipt.customerPhone ?? '',
+      salesEmployeeId: receipt.salesEmployeeId ?? '',
+      shipperPhone: receipt.shipperPhone ?? '',
       bookingAgentId: receipt.bookingAgentId ?? '',
+      bookingAgentPhone: receipt.bookingAgentPhone ?? '',
       customsAgentId: receipt.customsAgentId ?? '',
+      customsAgentPhone: receipt.customsAgentPhone ?? '',
+      courierTrackingNo: receipt.courierTrackingNo ?? '',
+      courierReceivedAt: formatDateTimeLocalValue(receipt.courierReceivedAt),
       // MBL port information (will be loaded from query)
-      portOfDestinationAddress: '',
       portOfDestinationId: '',
       portOfDischargeId: '',
       portOfLoadingId: '',
-      placeOfReceiptId: '',
       hblPortOfDestinationId: '',
       hblPortOfDischargeId: '',
       hblPortOfLoadingId: '',
-      hblPlaceOfReceiptId: '',
     },
   });
 
@@ -399,17 +438,6 @@ export function ReceiptDetailEditView({
   }, [mblQuery.data?.soNo, form]);
 
   useEffect(() => {
-    const nextPortOfDestinationAddress =
-      mblQuery.data?.portOfDestinationAddress ?? '';
-    const current = form.getValues('portOfDestinationAddress') ?? '';
-    if (nextPortOfDestinationAddress !== current) {
-      form.setValue('portOfDestinationAddress', nextPortOfDestinationAddress, {
-        shouldDirty: false,
-      });
-    }
-  }, [mblQuery.data?.portOfDestinationAddress, form]);
-
-  useEffect(() => {
     if (hblQuery.data) {
       const updates: Record<string, string> = {};
       const trackedFields: Array<
@@ -419,7 +447,6 @@ export function ReceiptDetailEditView({
         ['hblPortOfDestinationId', hblQuery.data.portOfDestinationId ?? ''],
         ['hblPortOfDischargeId', hblQuery.data.portOfDischargeId ?? ''],
         ['hblPortOfLoadingId', hblQuery.data.portOfLoadingId ?? ''],
-        ['hblPlaceOfReceiptId', hblQuery.data.placeOfReceiptId ?? ''],
       ];
 
       trackedFields.forEach(([field, nextValue]) => {
@@ -459,12 +486,6 @@ export function ReceiptDetailEditView({
       const currentPortOfLoadingId = form.getValues('portOfLoadingId') ?? '';
       if (nextPortOfLoadingId !== currentPortOfLoadingId) {
         updates.portOfLoadingId = nextPortOfLoadingId;
-      }
-
-      const nextPlaceOfReceiptId = mblQuery.data.placeOfReceiptId ?? '';
-      const currentPlaceOfReceiptId = form.getValues('placeOfReceiptId') ?? '';
-      if (nextPlaceOfReceiptId !== currentPlaceOfReceiptId) {
-        updates.placeOfReceiptId = nextPlaceOfReceiptId;
       }
 
       if (Object.keys(updates).length > 0) {
@@ -517,17 +538,14 @@ export function ReceiptDetailEditView({
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
-        placeOfReceiptId?: string;
       }> = {};
 
       const mblPatch: Partial<{
         mblNo: string | null;
         soNo: string | null;
-        portOfDestinationAddress?: string | null;
         portOfDestinationId?: string;
         portOfDischargeId?: string;
         portOfLoadingId?: string;
-        placeOfReceiptId?: string;
       }> = {};
 
       if (allowDetailUpdates) {
@@ -549,6 +567,13 @@ export function ReceiptDetailEditView({
         ) {
           payload.customsDeclarationType =
             data.customsDeclarationType || undefined;
+        }
+        const nextInboundTime = toIsoStringFromDateTimeLocal(data.inboundTime);
+        const prevInboundTime = receipt.inboundTime
+          ? new Date(receipt.inboundTime).toISOString()
+          : null;
+        if (nextInboundTime !== prevInboundTime) {
+          payload.inboundTime = nextInboundTime;
         }
         if (data.remarks !== (receipt.remarks ?? '')) {
           payload.remarks = data.remarks;
@@ -579,17 +604,54 @@ export function ReceiptDetailEditView({
         if (nextShipperId !== prevShipperId) {
           payload.shipperId = nextShipperId || null;
         }
+        const nextCustomerPhone = (data.customerPhone ?? '').trim();
+        const prevCustomerPhone = (receipt.customerPhone ?? '').trim();
+        if (nextCustomerPhone !== prevCustomerPhone) {
+          payload.customerPhone = nextCustomerPhone || null;
+        }
+
+        const nextShipperPhone = (data.shipperPhone ?? '').trim();
+        const prevShipperPhone = (receipt.shipperPhone ?? '').trim();
+        if (nextShipperPhone !== prevShipperPhone) {
+          payload.shipperPhone = nextShipperPhone || null;
+        }
 
         const nextBookingAgentId = (data.bookingAgentId ?? '').trim();
         const prevBookingAgentId = (receipt.bookingAgentId ?? '').trim();
         if (nextBookingAgentId !== prevBookingAgentId) {
           payload.bookingAgentId = nextBookingAgentId || null;
         }
+        const nextBookingAgentPhone = (data.bookingAgentPhone ?? '').trim();
+        const prevBookingAgentPhone = (receipt.bookingAgentPhone ?? '').trim();
+        if (nextBookingAgentPhone !== prevBookingAgentPhone) {
+          payload.bookingAgentPhone = nextBookingAgentPhone || null;
+        }
 
         const nextCustomsAgentId = (data.customsAgentId ?? '').trim();
         const prevCustomsAgentId = (receipt.customsAgentId ?? '').trim();
         if (nextCustomsAgentId !== prevCustomsAgentId) {
           payload.customsAgentId = nextCustomsAgentId || null;
+        }
+        const nextCustomsAgentPhone = (data.customsAgentPhone ?? '').trim();
+        const prevCustomsAgentPhone = (receipt.customsAgentPhone ?? '').trim();
+        if (nextCustomsAgentPhone !== prevCustomsAgentPhone) {
+          payload.customsAgentPhone = nextCustomsAgentPhone || null;
+        }
+
+        const nextCourierTrackingNo = (data.courierTrackingNo ?? '').trim();
+        const prevCourierTrackingNo = (receipt.courierTrackingNo ?? '').trim();
+        if (nextCourierTrackingNo !== prevCourierTrackingNo) {
+          payload.courierTrackingNo = nextCourierTrackingNo || null;
+        }
+
+        const nextCourierReceivedAt = toIsoStringFromDateTimeLocal(
+          data.courierReceivedAt
+        );
+        const prevCourierReceivedAt = receipt.courierReceivedAt
+          ? new Date(receipt.courierReceivedAt).toISOString()
+          : null;
+        if (nextCourierReceivedAt !== prevCourierReceivedAt) {
+          payload.courierReceivedAt = nextCourierReceivedAt;
         }
 
         const nextSingleBillCutoffDateSi = (
@@ -755,19 +817,17 @@ export function ReceiptDetailEditView({
           hblPatch.portOfLoadingId = nextHblPortOfLoadingId || undefined;
         }
 
-        const nextHblPlaceOfReceiptId = (data.hblPlaceOfReceiptId ?? '').trim();
-        const prevHblPlaceOfReceiptId = (
-          hblQuery.data?.placeOfReceiptId ?? ''
-        ).trim();
-        if (nextHblPlaceOfReceiptId !== prevHblPlaceOfReceiptId) {
-          hblPatch.placeOfReceiptId = nextHblPlaceOfReceiptId || undefined;
-        }
-
         // Transport schedule (nullable - allow clearing)
         const nextAirCarrier = (data.airCarrier ?? '').trim();
         const prevAirCarrier = (receipt.airCarrier ?? '').trim();
         if (nextAirCarrier !== prevAirCarrier) {
           payload.airCarrier = nextAirCarrier || null;
+        }
+
+        const nextAirType = (data.airType ?? '').trim();
+        const prevAirType = (receipt.airType ?? '').trim();
+        if (nextAirType !== prevAirType) {
+          payload.airType = nextAirType || null;
         }
 
         const nextAirFlightNo = (data.airFlightNo ?? '').trim();
@@ -849,17 +909,6 @@ export function ReceiptDetailEditView({
           mblPatch.soNo = nextSoNo || null;
         }
 
-        const nextPortOfDestinationAddress = (
-          data.portOfDestinationAddress ?? ''
-        ).trim();
-        const prevPortOfDestinationAddress = (
-          mblQuery.data?.portOfDestinationAddress ?? ''
-        ).trim();
-        if (nextPortOfDestinationAddress !== prevPortOfDestinationAddress) {
-          mblPatch.portOfDestinationAddress =
-            nextPortOfDestinationAddress || null;
-        }
-
         // Check for MBL port changes
         const nextPortOfDestinationId = (data.portOfDestinationId ?? '').trim();
         const prevPortOfDestinationId = (
@@ -883,14 +932,6 @@ export function ReceiptDetailEditView({
         ).trim();
         if (nextPortOfLoadingId !== prevPortOfLoadingId) {
           mblPatch.portOfLoadingId = nextPortOfLoadingId || undefined;
-        }
-
-        const nextPlaceOfReceiptId = (data.placeOfReceiptId ?? '').trim();
-        const prevPlaceOfReceiptId = (
-          mblQuery.data?.placeOfReceiptId ?? ''
-        ).trim();
-        if (nextPlaceOfReceiptId !== prevPlaceOfReceiptId) {
-          mblPatch.placeOfReceiptId = nextPlaceOfReceiptId || undefined;
         }
       }
 
@@ -924,24 +965,15 @@ export function ReceiptDetailEditView({
           const createPayload: Partial<{
             mblNo?: string;
             soNo?: string;
-            portOfDestinationAddress?: string;
             portOfDestinationId?: string;
             portOfDischargeId?: string;
             portOfLoadingId?: string;
-            placeOfReceiptId?: string;
           }> = {};
           if (typeof mblPatch.mblNo === 'string' && mblPatch.mblNo.trim()) {
             createPayload.mblNo = mblPatch.mblNo;
           }
           if (typeof mblPatch.soNo === 'string' && mblPatch.soNo.trim()) {
             createPayload.soNo = mblPatch.soNo;
-          }
-          if (
-            typeof mblPatch.portOfDestinationAddress === 'string' &&
-            mblPatch.portOfDestinationAddress.trim()
-          ) {
-            createPayload.portOfDestinationAddress =
-              mblPatch.portOfDestinationAddress;
           }
           if (mblPatch.portOfDestinationId) {
             createPayload.portOfDestinationId = mblPatch.portOfDestinationId;
@@ -952,10 +984,6 @@ export function ReceiptDetailEditView({
           if (mblPatch.portOfLoadingId) {
             createPayload.portOfLoadingId = mblPatch.portOfLoadingId;
           }
-          if (mblPatch.placeOfReceiptId) {
-            createPayload.placeOfReceiptId = mblPatch.placeOfReceiptId;
-          }
-
           if (Object.keys(createPayload).length > 0) {
             await createMblMutation.mutateAsync(createPayload);
           }
@@ -971,7 +999,6 @@ export function ReceiptDetailEditView({
             portOfDestinationId?: string;
             portOfDischargeId?: string;
             portOfLoadingId?: string;
-            placeOfReceiptId?: string;
           }> = {};
 
           if (typeof hblPatch.hblNo === 'string' && hblPatch.hblNo.trim()) {
@@ -986,10 +1013,6 @@ export function ReceiptDetailEditView({
           if (hblPatch.portOfLoadingId) {
             createPayload.portOfLoadingId = hblPatch.portOfLoadingId;
           }
-          if (hblPatch.placeOfReceiptId) {
-            createPayload.placeOfReceiptId = hblPatch.placeOfReceiptId;
-          }
-
           if (Object.keys(createPayload).length > 0) {
             await createHblMutation.mutateAsync(createPayload);
           }
@@ -1168,6 +1191,52 @@ export function ReceiptDetailEditView({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* 航空类型（仅空运） */}
+              {transportTypeValue === 'AIR_FREIGHT' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="airType">{t('airType.label')}</Label>
+                  <Select
+                    value={form.watch('airType') ?? undefined}
+                    onValueChange={(value) =>
+                      form.setValue(
+                        'airType',
+                        value as ReceiptFormData['airType'],
+                        {
+                          shouldDirty: true,
+                        }
+                      )
+                    }
+                    disabled={isOutbound}
+                  >
+                    <SelectTrigger id="airType">
+                      <SelectValue placeholder={t('airType.placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WAREHOUSE_RECEIPT_AIR_TYPES.map((airType) => (
+                        <SelectItem key={airType} value={airType}>
+                          {t(
+                            `airType.options.${airType === 'H.K' ? 'HK' : airType}` as any
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
+
+              {/* 入仓时间 */}
+              <div className="space-y-2">
+                <Label htmlFor="inboundTime">
+                  {t('receiptList.columns.inboundTime')}
+                </Label>
+                <Input
+                  id="inboundTime"
+                  type="datetime-local"
+                  {...form.register('inboundTime')}
+                  disabled={isOutbound}
+                />
+              </div>
             </div>
           </FreightSection>
 
@@ -1188,42 +1257,84 @@ export function ReceiptDetailEditView({
           </FreightSection>
 
           {/* 右侧：汇总 + 商品明细表格 */}
-          <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-2 2xl:grid-cols-[380px_1fr]">
-            <FreightSection title={tSummaryPanel('title')}>
-              <ReceiptSummaryPanel
-                items={items}
-                transportType={transportTypeValue}
-                bubbleSplitPercentInput={summaryInputs.bubbleSplitPercentInput}
-                piecesInput={summaryInputs.piecesInput}
-                weightInput={summaryInputs.weightInput}
-                volumeInput={summaryInputs.volumeInput}
-                weightConversionFactorInput={
-                  summaryInputs.weightConversionFactorInput
-                }
-                onBubbleSplitPercentChange={(value) =>
-                  setSummaryInputs((prev) => ({
-                    ...prev,
-                    bubbleSplitPercentInput: value,
-                  }))
-                }
-                onPiecesChange={(value) =>
-                  setSummaryInputs((prev) => ({ ...prev, piecesInput: value }))
-                }
-                onWeightChange={(value) =>
-                  setSummaryInputs((prev) => ({ ...prev, weightInput: value }))
-                }
-                onVolumeChange={(value) =>
-                  setSummaryInputs((prev) => ({ ...prev, volumeInput: value }))
-                }
-                onWeightConversionFactorChange={(value) =>
-                  setSummaryInputs((prev) => ({
-                    ...prev,
-                    weightConversionFactorInput: value,
-                  }))
-                }
-                disabled={isOutbound}
-              />
-            </FreightSection>
+          <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-2">
+            <div className="grid gap-4 2xl:grid-cols-[380px_380px_minmax(0,1fr)]">
+              <FreightSection title={tSummaryPanel('title')}>
+                <ReceiptSummaryPanel
+                  items={items}
+                  transportType={transportTypeValue}
+                  bubbleSplitPercentInput={
+                    summaryInputs.bubbleSplitPercentInput
+                  }
+                  piecesInput={summaryInputs.piecesInput}
+                  weightInput={summaryInputs.weightInput}
+                  volumeInput={summaryInputs.volumeInput}
+                  weightConversionFactorInput={
+                    summaryInputs.weightConversionFactorInput
+                  }
+                  onBubbleSplitPercentChange={(value) =>
+                    setSummaryInputs((prev) => ({
+                      ...prev,
+                      bubbleSplitPercentInput: value,
+                    }))
+                  }
+                  onPiecesChange={(value) =>
+                    setSummaryInputs((prev) => ({
+                      ...prev,
+                      piecesInput: value,
+                    }))
+                  }
+                  onWeightChange={(value) =>
+                    setSummaryInputs((prev) => ({
+                      ...prev,
+                      weightInput: value,
+                    }))
+                  }
+                  onVolumeChange={(value) =>
+                    setSummaryInputs((prev) => ({
+                      ...prev,
+                      volumeInput: value,
+                    }))
+                  }
+                  onWeightConversionFactorChange={(value) =>
+                    setSummaryInputs((prev) => ({
+                      ...prev,
+                      weightConversionFactorInput: value,
+                    }))
+                  }
+                  disabled={isOutbound}
+                />
+              </FreightSection>
+
+              <FreightSection title={t('courier.title')}>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      {t('courier.trackingNo')}
+                    </div>
+                    <div className="text-sm">
+                      {form.watch('courierTrackingNo')?.trim() || '-'}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      {t('courier.receivedAt')}
+                    </div>
+                    <div className="text-sm">
+                      {form.watch('courierReceivedAt')?.trim() || '-'}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCourierDialogOpen(true)}
+                    disabled={isOutbound}
+                  >
+                    {t('courier.edit')}
+                  </Button>
+                </div>
+              </FreightSection>
+            </div>
 
             <FreightTableSection
               title={t('itemsList.title')}
@@ -1565,7 +1676,6 @@ export function ReceiptDetailEditView({
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[320px_320px_minmax(0,1fr)_minmax(0,1fr)]">
               {/* 左侧：内部资料 */}
               <EmployeeAssignmentsSection
-                salesEmployeeId={form.watch('salesEmployeeId')}
                 customerServiceEmployeeId={form.watch(
                   'customerServiceEmployeeId'
                 )}
@@ -1575,11 +1685,6 @@ export function ReceiptDetailEditView({
                 financeEmployeeId={form.watch('financeEmployeeId')}
                 bookingEmployeeId={form.watch('bookingEmployeeId')}
                 reviewerEmployeeId={form.watch('reviewerEmployeeId')}
-                onSalesEmployeeChange={(value) =>
-                  form.setValue('salesEmployeeId', value ?? '', {
-                    shouldDirty: true,
-                  })
-                }
                 onCustomerServiceEmployeeChange={(value) =>
                   form.setValue('customerServiceEmployeeId', value ?? '', {
                     shouldDirty: true,
@@ -1635,6 +1740,18 @@ export function ReceiptDetailEditView({
                       placeholder={t('selectCustomer')}
                       disabled={isOutbound}
                     />
+                    <Label
+                      htmlFor="customerPhone"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {t('customerFields.phone')}
+                    </Label>
+                    <Input
+                      id="customerPhone"
+                      placeholder={t('customerFields.phonePlaceholder')}
+                      {...form.register('customerPhone')}
+                      disabled={isOutbound}
+                    />
                   </div>
 
                   {/* 发货人 */}
@@ -1647,6 +1764,36 @@ export function ReceiptDetailEditView({
                       }
                       placeholder={t('selectShipper')}
                       disabled={isOutbound}
+                    />
+                    <Label
+                      htmlFor="shipperPhone"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {t('customerFields.phone')}
+                    </Label>
+                    <Input
+                      id="shipperPhone"
+                      placeholder={t('customerFields.phonePlaceholder')}
+                      {...form.register('shipperPhone')}
+                      disabled={isOutbound}
+                    />
+                  </div>
+
+                  {/* 业务员 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="salesEmployeeId">
+                      {t('employees.roles.sales')}
+                    </Label>
+                    <EmployeeCombobox
+                      value={form.watch('salesEmployeeId')}
+                      onValueChange={(value) =>
+                        form.setValue('salesEmployeeId', value ?? '', {
+                          shouldDirty: true,
+                        })
+                      }
+                      placeholder={t('employees.selectEmployee')}
+                      disabled={isOutbound}
+                      allowAddNew
                     />
                   </div>
 
@@ -1661,6 +1808,18 @@ export function ReceiptDetailEditView({
                         })
                       }
                       placeholder={t('selectBookingAgent')}
+                      disabled={isOutbound}
+                    />
+                    <Label
+                      htmlFor="bookingAgentPhone"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {t('customerFields.phone')}
+                    </Label>
+                    <Input
+                      id="bookingAgentPhone"
+                      placeholder={t('customerFields.phonePlaceholder')}
+                      {...form.register('bookingAgentPhone')}
                       disabled={isOutbound}
                     />
                   </div>
@@ -1678,6 +1837,18 @@ export function ReceiptDetailEditView({
                       placeholder={t('selectCustomsAgent')}
                       disabled={isOutbound}
                     />
+                    <Label
+                      htmlFor="customsAgentPhone"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {t('customerFields.phone')}
+                    </Label>
+                    <Input
+                      id="customsAgentPhone"
+                      placeholder={t('customerFields.phonePlaceholder')}
+                      {...form.register('customsAgentPhone')}
+                      disabled={isOutbound}
+                    />
                   </div>
                 </div>
               </FreightSection>
@@ -1689,6 +1860,18 @@ export function ReceiptDetailEditView({
                   className="w-full min-w-0"
                 >
                   <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="singleBillInboundTime">
+                        {tSingleBill('fields.inboundTime')}
+                      </Label>
+                      <Input
+                        id="singleBillInboundTime"
+                        type="datetime-local"
+                        {...form.register('inboundTime')}
+                        className="text-base"
+                        disabled={isOutbound}
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="singleBillCutoffDateSi">
                         {tSingleBill('fields.cutoffDateSi')}
@@ -1819,23 +2002,6 @@ export function ReceiptDetailEditView({
                         )}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hblPlaceOfReceiptId">
-                        {tHbl('placeOfReceipt')}
-                      </Label>
-                      <Controller
-                        control={form.control}
-                        name="hblPlaceOfReceiptId"
-                        render={({ field }) => (
-                          <PortCombobox
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={tHbl('placeOfReceiptPlaceholder')}
-                            disabled={isOutbound}
-                          />
-                        )}
-                      />
-                    </div>
                   </div>
                 </FreightSection>
                 <FreightSection
@@ -1858,19 +2024,6 @@ export function ReceiptDetailEditView({
                             disabled={isOutbound}
                           />
                         )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="portOfDestinationAddress">
-                        {tMbl('portOfDestinationAddress')}
-                      </Label>
-                      <Input
-                        id="portOfDestinationAddress"
-                        placeholder={tMbl(
-                          'portOfDestinationAddressPlaceholder'
-                        )}
-                        {...form.register('portOfDestinationAddress')}
-                        disabled={isOutbound}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1907,23 +2060,6 @@ export function ReceiptDetailEditView({
                         )}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="placeOfReceiptId">
-                        {tMbl('placeOfReceipt')}
-                      </Label>
-                      <Controller
-                        control={form.control}
-                        name="placeOfReceiptId"
-                        render={({ field }) => (
-                          <PortCombobox
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={tMbl('placeOfReceiptPlaceholder')}
-                            disabled={isOutbound}
-                          />
-                        )}
-                      />
-                    </div>
                   </div>
                 </FreightSection>
               </div>
@@ -1945,6 +2081,51 @@ export function ReceiptDetailEditView({
           {isSaving ? tCommon('saving') : tCommon('save')}
         </Button>
       </div>
+
+      <Dialog open={courierDialogOpen} onOpenChange={setCourierDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('courier.title')}</DialogTitle>
+            <DialogDescription>{t('courier.description')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="courierTrackingNo">
+                {t('courier.trackingNo')}
+              </Label>
+              <Input
+                id="courierTrackingNo"
+                {...form.register('courierTrackingNo')}
+                placeholder={t('courier.trackingNoPlaceholder')}
+                disabled={isOutbound}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="courierReceivedAt">
+                {t('courier.receivedAt')}
+              </Label>
+              <Input
+                id="courierReceivedAt"
+                type="datetime-local"
+                {...form.register('courierReceivedAt')}
+                disabled={isOutbound}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCourierDialogOpen(false)}
+            >
+              {tCommon('cancel')}
+            </Button>
+            <Button type="button" onClick={() => setCourierDialogOpen(false)}>
+              {t('courier.done')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Customer Dialog */}
       <AddCustomerDialog

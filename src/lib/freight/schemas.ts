@@ -6,6 +6,7 @@ import {
   RECEIPT_STATUSES,
   SHIPMENT_STATUSES,
   TRANSPORT_MODES,
+  WAREHOUSE_RECEIPT_AIR_TYPES,
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from './constants';
@@ -81,8 +82,12 @@ export const createWarehouseReceiptSchema = z.object({
   weightConversionFactor: z.number().optional().nullable(),
   // Contact information
   shipperId: uuidSchema.nullable().optional(),
+  customerPhone: z.string().max(50).nullable().optional(),
+  shipperPhone: z.string().max(50).nullable().optional(),
   bookingAgentId: uuidSchema.nullable().optional(),
+  bookingAgentPhone: z.string().max(50).nullable().optional(),
   customsAgentId: uuidSchema.nullable().optional(),
+  customsAgentPhone: z.string().max(50).nullable().optional(),
   // Employee assignments
   salesEmployeeId: uuidSchema.nullable().optional(),
   customerServiceEmployeeId: uuidSchema.nullable().optional(),
@@ -93,6 +98,7 @@ export const createWarehouseReceiptSchema = z.object({
   bookingEmployeeId: uuidSchema.nullable().optional(),
   reviewerEmployeeId: uuidSchema.nullable().optional(),
   // Transport schedule (stored in DB; yyyy-mm-dd)
+  airType: z.enum(WAREHOUSE_RECEIPT_AIR_TYPES).nullable().optional(),
   airCarrier: z.string().max(200).nullable().optional(),
   airFlightNo: z.string().max(100).nullable().optional(),
   airFlightDate: z.string().max(20).nullable().optional(),
@@ -111,6 +117,8 @@ export const createWarehouseReceiptSchema = z.object({
   singleBillArrivalDateE: z.string().max(20).nullable().optional(),
   singleBillTransitDateE: z.string().max(20).nullable().optional(),
   singleBillDeliveryDateE: z.string().max(20).nullable().optional(),
+  courierTrackingNo: z.string().max(120).nullable().optional(),
+  courierReceivedAt: z.string().datetime().nullable().optional(),
 });
 
 export const mergeWarehouseReceiptsSchema = createWarehouseReceiptSchema.extend(

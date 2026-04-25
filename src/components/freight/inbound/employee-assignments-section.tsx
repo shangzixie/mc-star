@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
 
 interface EmployeeAssignmentsSectionProps {
-  salesEmployeeId?: string;
   customerServiceEmployeeId?: string;
   overseasCsEmployeeId?: string;
   operationsEmployeeId?: string;
@@ -14,7 +13,6 @@ interface EmployeeAssignmentsSectionProps {
   financeEmployeeId?: string;
   bookingEmployeeId?: string;
   reviewerEmployeeId?: string;
-  onSalesEmployeeChange: (value: string | undefined) => void;
   onCustomerServiceEmployeeChange: (value: string | undefined) => void;
   onOverseasCsEmployeeChange: (value: string | undefined) => void;
   onOperationsEmployeeChange: (value: string | undefined) => void;
@@ -25,7 +23,6 @@ interface EmployeeAssignmentsSectionProps {
 }
 
 export function EmployeeAssignmentsSection({
-  salesEmployeeId,
   customerServiceEmployeeId,
   overseasCsEmployeeId,
   operationsEmployeeId,
@@ -33,7 +30,6 @@ export function EmployeeAssignmentsSection({
   financeEmployeeId,
   bookingEmployeeId,
   reviewerEmployeeId,
-  onSalesEmployeeChange,
   onCustomerServiceEmployeeChange,
   onOverseasCsEmployeeChange,
   onOperationsEmployeeChange,
@@ -48,18 +44,6 @@ export function EmployeeAssignmentsSection({
   return (
     <FreightSection title={t('employees.title')}>
       <div className="grid gap-4">
-        {/* 业务员 - Sales */}
-        <div className="space-y-2">
-          <Label htmlFor="salesEmployee">{t('employees.roles.sales')}</Label>
-          <EmployeeCombobox
-            value={salesEmployeeId}
-            onValueChange={onSalesEmployeeChange}
-            placeholder={t('employees.selectEmployee')}
-            disabled={disabled}
-            allowAddNew
-          />
-        </div>
-
         {/* 客服 - Customer Service */}
         <div className="space-y-2">
           <Label htmlFor="customerServiceEmployee">

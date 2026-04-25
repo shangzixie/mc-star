@@ -110,7 +110,12 @@ export function EditReceiptDialog({
 
   const onSubmit = async (data: EditReceiptFormData) => {
     try {
-      await updateMutation.mutateAsync(data);
+      await updateMutation.mutateAsync({
+        ...data,
+        inboundTime: data.inboundTime
+          ? new Date(data.inboundTime).toISOString()
+          : undefined,
+      });
       toast.success(
         t('Dashboard.freight.inbound.receiptActions.updateSuccess')
       );

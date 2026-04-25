@@ -235,6 +235,11 @@ export async function updateWarehouseReceipt(
     financeEmployeeId?: string | null;
     bookingEmployeeId?: string | null;
     reviewerEmployeeId?: string | null;
+    customerPhone?: string | null;
+    shipperPhone?: string | null;
+    bookingAgentPhone?: string | null;
+    customsAgentPhone?: string | null;
+    airType?: string | null;
     airCarrier?: string | null;
     airFlightNo?: string | null;
     airFlightDate?: string | null;
@@ -253,6 +258,8 @@ export async function updateWarehouseReceipt(
     singleBillArrivalDateE?: string | null;
     singleBillTransitDateE?: string | null;
     singleBillDeliveryDateE?: string | null;
+    courierTrackingNo?: string | null;
+    courierReceivedAt?: string | null;
   }
 ) {
   const { freightWarehouseReceiptSchema } = await import('./api-types');

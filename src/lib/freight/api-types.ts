@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   AUDIT_STATUSES,
+  WAREHOUSE_RECEIPT_AIR_TYPES,
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from './constants';
@@ -203,8 +204,12 @@ export const freightWarehouseReceiptSchema = z
     weightConversionFactor: z.string().nullable().optional(),
     // Contact information
     shipperId: uuidSchema.nullable().optional(),
+    customerPhone: z.string().nullable().optional(),
+    shipperPhone: z.string().nullable().optional(),
     bookingAgentId: uuidSchema.nullable().optional(),
+    bookingAgentPhone: z.string().nullable().optional(),
     customsAgentId: uuidSchema.nullable().optional(),
+    customsAgentPhone: z.string().nullable().optional(),
     // Employee assignments
     salesEmployeeId: uuidSchema.nullable().optional(),
     customerServiceEmployeeId: uuidSchema.nullable().optional(),
@@ -215,6 +220,7 @@ export const freightWarehouseReceiptSchema = z
     bookingEmployeeId: uuidSchema.nullable().optional(),
     reviewerEmployeeId: uuidSchema.nullable().optional(),
     // Transport schedule (yyyy-mm-dd)
+    airType: z.enum(WAREHOUSE_RECEIPT_AIR_TYPES).nullable().optional(),
     airCarrier: z.string().nullable().optional(),
     airFlightNo: z.string().nullable().optional(),
     airFlightDate: z.string().nullable().optional(),
@@ -233,6 +239,8 @@ export const freightWarehouseReceiptSchema = z
     singleBillArrivalDateE: z.string().nullable().optional(),
     singleBillTransitDateE: z.string().nullable().optional(),
     singleBillDeliveryDateE: z.string().nullable().optional(),
+    courierTrackingNo: z.string().nullable().optional(),
+    courierReceivedAt: isoDateTimeSchema.nullable().optional(),
     createdAt: isoDateTimeSchema.nullable(),
   })
   .passthrough();

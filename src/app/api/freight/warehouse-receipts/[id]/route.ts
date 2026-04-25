@@ -12,6 +12,10 @@ import {
 import { requireUser } from '@/lib/api/auth';
 import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
+  isMissingWarehouseReceiptColumnError,
+  omitWarehouseReceiptNewColumns,
+} from '@/lib/freight/db-compat';
+import {
   createWarehouseReceiptSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
@@ -27,6 +31,95 @@ const updateReceiptSchema = createWarehouseReceiptSchema.partial().omit({
   receiptNo: true,
 });
 
+function getReceiptSelectFields(includeNewColumns: boolean) {
+  return {
+    id: warehouseReceipts.id,
+    receiptNo: warehouseReceipts.receiptNo,
+    warehouseId: warehouseReceipts.warehouseId,
+    customerId: warehouseReceipts.customerId,
+    transportType: warehouseReceipts.transportType,
+    customsDeclarationType: warehouseReceipts.customsDeclarationType,
+    status: warehouseReceipts.status,
+    auditStatus: warehouseReceipts.auditStatus,
+    inboundTime: warehouseReceipts.inboundTime,
+    remarks: warehouseReceipts.remarks,
+    internalRemarks: warehouseReceipts.internalRemarks,
+    manualPieces: warehouseReceipts.manualPieces,
+    manualWeightKg: warehouseReceipts.manualWeightKg,
+    manualVolumeM3: warehouseReceipts.manualVolumeM3,
+    bubbleSplitPercent: warehouseReceipts.bubbleSplitPercent,
+    weightConversionFactor: warehouseReceipts.weightConversionFactor,
+    shipperId: warehouseReceipts.shipperId,
+    ...(includeNewColumns
+      ? {
+          customerPhone: warehouseReceipts.customerPhone,
+          shipperPhone: warehouseReceipts.shipperPhone,
+          bookingAgentPhone: warehouseReceipts.bookingAgentPhone,
+          customsAgentPhone: warehouseReceipts.customsAgentPhone,
+          airType: warehouseReceipts.airType,
+          courierTrackingNo: warehouseReceipts.courierTrackingNo,
+          courierReceivedAt: warehouseReceipts.courierReceivedAt,
+        }
+      : {}),
+    bookingAgentId: warehouseReceipts.bookingAgentId,
+    customsAgentId: warehouseReceipts.customsAgentId,
+    salesEmployeeId: warehouseReceipts.salesEmployeeId,
+    customerServiceEmployeeId: warehouseReceipts.customerServiceEmployeeId,
+    overseasCsEmployeeId: warehouseReceipts.overseasCsEmployeeId,
+    operationsEmployeeId: warehouseReceipts.operationsEmployeeId,
+    documentationEmployeeId: warehouseReceipts.documentationEmployeeId,
+    financeEmployeeId: warehouseReceipts.financeEmployeeId,
+    bookingEmployeeId: warehouseReceipts.bookingEmployeeId,
+    reviewerEmployeeId: warehouseReceipts.reviewerEmployeeId,
+    airCarrier: warehouseReceipts.airCarrier,
+    airFlightNo: warehouseReceipts.airFlightNo,
+    airFlightDate: warehouseReceipts.airFlightDate,
+    airArrivalDateE: warehouseReceipts.airArrivalDateE,
+    airOperationLocation: warehouseReceipts.airOperationLocation,
+    airOperationNode: warehouseReceipts.airOperationNode,
+    seaCarrier: warehouseReceipts.seaCarrier,
+    seaRoute: warehouseReceipts.seaRoute,
+    seaVesselName: warehouseReceipts.seaVesselName,
+    seaVoyage: warehouseReceipts.seaVoyage,
+    seaEtdE: warehouseReceipts.seaEtdE,
+    seaEtaE: warehouseReceipts.seaEtaE,
+    singleBillCutoffDateSi: warehouseReceipts.singleBillCutoffDateSi,
+    singleBillGateClosingTime: warehouseReceipts.singleBillGateClosingTime,
+    singleBillDepartureDateE: warehouseReceipts.singleBillDepartureDateE,
+    singleBillArrivalDateE: warehouseReceipts.singleBillArrivalDateE,
+    singleBillTransitDateE: warehouseReceipts.singleBillTransitDateE,
+    singleBillDeliveryDateE: warehouseReceipts.singleBillDeliveryDateE,
+    createdAt: warehouseReceipts.createdAt,
+    warehouse: {
+      id: warehouses.id,
+      name: warehouses.name,
+      address: warehouses.address,
+      contactPerson: warehouses.contactPerson,
+      phone: warehouses.phone,
+      metadata: warehouses.metadata,
+      remarks: warehouses.remarks,
+      isActive: warehouses.isActive,
+      createdAt: warehouses.createdAt,
+      updatedAt: warehouses.updatedAt,
+    },
+    customer: {
+      id: parties.id,
+      code: parties.code,
+      name: parties.name,
+      roles: parties.roles,
+      taxNo: parties.taxNo,
+      contactInfo: parties.contactInfo,
+      address: parties.address,
+      remarks: parties.remarks,
+      isActive: parties.isActive,
+      createdAt: parties.createdAt,
+      updatedAt: parties.updatedAt,
+    },
+    isMergedParent: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.parentReceiptId} = ${warehouseReceipts.id})`,
+    isMergedChild: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.childReceiptId} = ${warehouseReceipts.id})`,
+  };
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -38,94 +131,45 @@ export async function GET(
 
     const db = await getDb();
 
-    // Get receipt with joined warehouse and customer
-    const [receipt] = await db
-      .select({
-        id: warehouseReceipts.id,
-        receiptNo: warehouseReceipts.receiptNo,
-        warehouseId: warehouseReceipts.warehouseId,
-        customerId: warehouseReceipts.customerId,
-        transportType: warehouseReceipts.transportType,
-        customsDeclarationType: warehouseReceipts.customsDeclarationType,
-        status: warehouseReceipts.status,
-        auditStatus: warehouseReceipts.auditStatus,
-        inboundTime: warehouseReceipts.inboundTime,
-        remarks: warehouseReceipts.remarks,
-        internalRemarks: warehouseReceipts.internalRemarks,
-        manualPieces: warehouseReceipts.manualPieces,
-        manualWeightKg: warehouseReceipts.manualWeightKg,
-        manualVolumeM3: warehouseReceipts.manualVolumeM3,
-        bubbleSplitPercent: warehouseReceipts.bubbleSplitPercent,
-        weightConversionFactor: warehouseReceipts.weightConversionFactor,
-        shipperId: warehouseReceipts.shipperId,
-        bookingAgentId: warehouseReceipts.bookingAgentId,
-        customsAgentId: warehouseReceipts.customsAgentId,
-        salesEmployeeId: warehouseReceipts.salesEmployeeId,
-        customerServiceEmployeeId: warehouseReceipts.customerServiceEmployeeId,
-        overseasCsEmployeeId: warehouseReceipts.overseasCsEmployeeId,
-        operationsEmployeeId: warehouseReceipts.operationsEmployeeId,
-        documentationEmployeeId: warehouseReceipts.documentationEmployeeId,
-        financeEmployeeId: warehouseReceipts.financeEmployeeId,
-        bookingEmployeeId: warehouseReceipts.bookingEmployeeId,
-        reviewerEmployeeId: warehouseReceipts.reviewerEmployeeId,
-        airCarrier: warehouseReceipts.airCarrier,
-        airFlightNo: warehouseReceipts.airFlightNo,
-        airFlightDate: warehouseReceipts.airFlightDate,
-        airArrivalDateE: warehouseReceipts.airArrivalDateE,
-        airOperationLocation: warehouseReceipts.airOperationLocation,
-        airOperationNode: warehouseReceipts.airOperationNode,
-        seaCarrier: warehouseReceipts.seaCarrier,
-        seaRoute: warehouseReceipts.seaRoute,
-        seaVesselName: warehouseReceipts.seaVesselName,
-        seaVoyage: warehouseReceipts.seaVoyage,
-        seaEtdE: warehouseReceipts.seaEtdE,
-        seaEtaE: warehouseReceipts.seaEtaE,
-        singleBillCutoffDateSi: warehouseReceipts.singleBillCutoffDateSi,
-        singleBillGateClosingTime: warehouseReceipts.singleBillGateClosingTime,
-        singleBillDepartureDateE: warehouseReceipts.singleBillDepartureDateE,
-        singleBillArrivalDateE: warehouseReceipts.singleBillArrivalDateE,
-        singleBillTransitDateE: warehouseReceipts.singleBillTransitDateE,
-        singleBillDeliveryDateE: warehouseReceipts.singleBillDeliveryDateE,
-        createdAt: warehouseReceipts.createdAt,
-        warehouse: {
-          id: warehouses.id,
-          name: warehouses.name,
-          address: warehouses.address,
-          contactPerson: warehouses.contactPerson,
-          phone: warehouses.phone,
-          metadata: warehouses.metadata,
-          remarks: warehouses.remarks,
-          isActive: warehouses.isActive,
-          createdAt: warehouses.createdAt,
-          updatedAt: warehouses.updatedAt,
-        },
-        customer: {
-          id: parties.id,
-          code: parties.code,
-          name: parties.name,
-          roles: parties.roles,
-          taxNo: parties.taxNo,
-          contactInfo: parties.contactInfo,
-          address: parties.address,
-          remarks: parties.remarks,
-          isActive: parties.isActive,
-          createdAt: parties.createdAt,
-          updatedAt: parties.updatedAt,
-        },
-        isMergedParent: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.parentReceiptId} = ${warehouseReceipts.id})`,
-        isMergedChild: sql<boolean>`exists(select 1 from ${warehouseReceiptMerges} where ${warehouseReceiptMerges.childReceiptId} = ${warehouseReceipts.id})`,
-      })
-      .from(warehouseReceipts)
-      .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
-      .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id))
-      .where(eq(warehouseReceipts.id, receiptId));
+    const loadReceipt = async (includeNewColumns: boolean) => {
+      const [loaded] = await db
+        .select(getReceiptSelectFields(includeNewColumns))
+        .from(warehouseReceipts)
+        .leftJoin(warehouses, eq(warehouseReceipts.warehouseId, warehouses.id))
+        .leftJoin(parties, eq(warehouseReceipts.customerId, parties.id))
+        .where(eq(warehouseReceipts.id, receiptId));
+      return loaded;
+    };
 
+    let receipt: Awaited<ReturnType<typeof loadReceipt>>;
+    try {
+      receipt = await loadReceipt(true);
+    } catch (error) {
+      if (!isMissingWarehouseReceiptColumnError(error)) {
+        throw error;
+      }
+      receipt = await loadReceipt(false);
+    }
     if (!receipt) {
       throw new ApiError({
         status: 404,
         code: 'WAREHOUSE_RECEIPT_NOT_FOUND',
         message: 'Warehouse receipt not found',
       });
+    }
+
+    if (!('customerPhone' in receipt)) {
+      // Keep response shape stable when DB is not migrated yet.
+      receipt = {
+        ...receipt,
+        customerPhone: null,
+        shipperPhone: null,
+        bookingAgentPhone: null,
+        customsAgentPhone: null,
+        airType: null,
+        courierTrackingNo: null,
+        courierReceivedAt: null,
+      };
     }
 
     const mergedChildren = await db
@@ -203,72 +247,94 @@ export async function PATCH(
         }
       }
 
-      const [result] = await tx
-        .update(warehouseReceipts)
-        .set({
-          warehouseId: body.warehouseId,
-          customerId: body.customerId,
-          transportType: body.transportType,
-          customsDeclarationType: body.customsDeclarationType,
-          status: body.status,
-          auditStatus: body.auditStatus,
-          inboundTime: body.inboundTime
-            ? new Date(body.inboundTime)
-            : undefined,
-          remarks: body.remarks,
-          internalRemarks: body.internalRemarks,
-          manualPieces:
-            body.manualPieces != null
-              ? `${body.manualPieces}`
-              : body.manualPieces,
-          manualWeightKg:
-            body.manualWeightKg != null
-              ? `${body.manualWeightKg}`
-              : body.manualWeightKg,
-          manualVolumeM3:
-            body.manualVolumeM3 != null
-              ? `${body.manualVolumeM3}`
-              : body.manualVolumeM3,
-          bubbleSplitPercent:
-            body.bubbleSplitPercent != null
-              ? `${body.bubbleSplitPercent}`
-              : body.bubbleSplitPercent,
-          weightConversionFactor:
-            body.weightConversionFactor != null
-              ? `${body.weightConversionFactor}`
-              : body.weightConversionFactor,
-          shipperId: body.shipperId,
-          bookingAgentId: body.bookingAgentId,
-          customsAgentId: body.customsAgentId,
-          salesEmployeeId: body.salesEmployeeId,
-          customerServiceEmployeeId: body.customerServiceEmployeeId,
-          overseasCsEmployeeId: body.overseasCsEmployeeId,
-          operationsEmployeeId: body.operationsEmployeeId,
-          documentationEmployeeId: body.documentationEmployeeId,
-          financeEmployeeId: body.financeEmployeeId,
-          bookingEmployeeId: body.bookingEmployeeId,
-          reviewerEmployeeId: body.reviewerEmployeeId,
-          airCarrier: body.airCarrier,
-          airFlightNo: body.airFlightNo,
-          airFlightDate: body.airFlightDate,
-          airArrivalDateE: body.airArrivalDateE,
-          airOperationLocation: body.airOperationLocation,
-          airOperationNode: body.airOperationNode,
-          seaCarrier: body.seaCarrier,
-          seaRoute: body.seaRoute,
-          seaVesselName: body.seaVesselName,
-          seaVoyage: body.seaVoyage,
-          seaEtdE: body.seaEtdE,
-          seaEtaE: body.seaEtaE,
-          singleBillCutoffDateSi: body.singleBillCutoffDateSi,
-          singleBillGateClosingTime: body.singleBillGateClosingTime,
-          singleBillDepartureDateE: body.singleBillDepartureDateE,
-          singleBillArrivalDateE: body.singleBillArrivalDateE,
-          singleBillTransitDateE: body.singleBillTransitDateE,
-          singleBillDeliveryDateE: body.singleBillDeliveryDateE,
-        })
-        .where(eq(warehouseReceipts.id, receiptId))
-        .returning();
+      const updateValues = {
+        warehouseId: body.warehouseId,
+        customerId: body.customerId,
+        transportType: body.transportType,
+        customsDeclarationType: body.customsDeclarationType,
+        status: body.status,
+        auditStatus: body.auditStatus,
+        inboundTime: body.inboundTime ? new Date(body.inboundTime) : undefined,
+        remarks: body.remarks,
+        internalRemarks: body.internalRemarks,
+        manualPieces:
+          body.manualPieces != null ? `${body.manualPieces}` : body.manualPieces,
+        manualWeightKg:
+          body.manualWeightKg != null
+            ? `${body.manualWeightKg}`
+            : body.manualWeightKg,
+        manualVolumeM3:
+          body.manualVolumeM3 != null
+            ? `${body.manualVolumeM3}`
+            : body.manualVolumeM3,
+        bubbleSplitPercent:
+          body.bubbleSplitPercent != null
+            ? `${body.bubbleSplitPercent}`
+            : body.bubbleSplitPercent,
+        weightConversionFactor:
+          body.weightConversionFactor != null
+            ? `${body.weightConversionFactor}`
+            : body.weightConversionFactor,
+        shipperId: body.shipperId,
+        customerPhone: body.customerPhone,
+        shipperPhone: body.shipperPhone,
+        bookingAgentId: body.bookingAgentId,
+        bookingAgentPhone: body.bookingAgentPhone,
+        customsAgentId: body.customsAgentId,
+        customsAgentPhone: body.customsAgentPhone,
+        salesEmployeeId: body.salesEmployeeId,
+        customerServiceEmployeeId: body.customerServiceEmployeeId,
+        overseasCsEmployeeId: body.overseasCsEmployeeId,
+        operationsEmployeeId: body.operationsEmployeeId,
+        documentationEmployeeId: body.documentationEmployeeId,
+        financeEmployeeId: body.financeEmployeeId,
+        bookingEmployeeId: body.bookingEmployeeId,
+        reviewerEmployeeId: body.reviewerEmployeeId,
+        airType: body.airType,
+        airCarrier: body.airCarrier,
+        airFlightNo: body.airFlightNo,
+        airFlightDate: body.airFlightDate,
+        airArrivalDateE: body.airArrivalDateE,
+        airOperationLocation: body.airOperationLocation,
+        airOperationNode: body.airOperationNode,
+        seaCarrier: body.seaCarrier,
+        seaRoute: body.seaRoute,
+        seaVesselName: body.seaVesselName,
+        seaVoyage: body.seaVoyage,
+        seaEtdE: body.seaEtdE,
+        seaEtaE: body.seaEtaE,
+        singleBillCutoffDateSi: body.singleBillCutoffDateSi,
+        singleBillGateClosingTime: body.singleBillGateClosingTime,
+        singleBillDepartureDateE: body.singleBillDepartureDateE,
+        singleBillArrivalDateE: body.singleBillArrivalDateE,
+        singleBillTransitDateE: body.singleBillTransitDateE,
+        singleBillDeliveryDateE: body.singleBillDeliveryDateE,
+        courierTrackingNo: body.courierTrackingNo,
+        courierReceivedAt:
+          body.courierReceivedAt === null
+            ? null
+            : body.courierReceivedAt
+              ? new Date(body.courierReceivedAt)
+              : undefined,
+      };
+
+      let result;
+      try {
+        [result] = await tx
+          .update(warehouseReceipts)
+          .set(updateValues)
+          .where(eq(warehouseReceipts.id, receiptId))
+          .returning();
+      } catch (error) {
+        if (!isMissingWarehouseReceiptColumnError(error)) {
+          throw error;
+        }
+        [result] = await tx
+          .update(warehouseReceipts)
+          .set(omitWarehouseReceiptNewColumns(updateValues))
+          .where(eq(warehouseReceipts.id, receiptId))
+          .returning();
+      }
 
       if (!result) {
         throw new ApiError({

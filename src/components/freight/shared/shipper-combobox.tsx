@@ -94,6 +94,16 @@ export function ShipperCombobox({
   const getShipperSecondaryInfo = (shipper: FreightParty) => {
     const parts: string[] = [];
     if (shipper.code) parts.push(shipper.code);
+    if (
+      shipper.contactInfo &&
+      typeof shipper.contactInfo === 'object' &&
+      !Array.isArray(shipper.contactInfo)
+    ) {
+      const phone = (shipper.contactInfo as Record<string, unknown>).phone;
+      if (typeof phone === 'string' && phone.trim()) {
+        parts.push(phone.trim());
+      }
+    }
     return parts.join(' • ');
   };
 

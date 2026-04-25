@@ -665,6 +665,15 @@
             "RAIL_FREIGHT": "Rail Freight"
           }
         },
+        "airType": {
+          "label": "Air Type",
+          "placeholder": "Select air type",
+          "options": {
+            "AIR": "AIR",
+            "EXPRESS": "EXPRESS",
+            "HK": "H.K"
+          }
+        },
         "customsDeclarationType": {
           "label": "Customs Declaration",
           "placeholder": "Select customs declaration type (optional)",
@@ -798,6 +807,7 @@
         "singleBill": {
           "title": "Single Bill",
           "fields": {
+            "inboundTime": "Inbound Time",
             "cutoffDateSi": "Cut-off date (SI)",
             "gateClosingTime": "Gate closing date (SI)",
             "departureDateE": "Departure date (E)",
@@ -805,6 +815,15 @@
             "transitDateE": "Estimated transit date (E)",
             "deliveryDateE": "Estimated delivery date (E)"
           }
+        },
+        "courier": {
+          "title": "Courier Information",
+          "description": "Maintain one tracking number and received time per receipt",
+          "trackingNo": "Tracking Number",
+          "trackingNoPlaceholder": "Enter tracking number",
+          "receivedAt": "Received Time",
+          "edit": "Edit Courier Info",
+          "done": "Done"
         },
         "hbl": {
           "title": "HBL",

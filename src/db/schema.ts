@@ -267,12 +267,16 @@ export const warehouseReceipts = pgTable(
     shipperId: uuid('shipper_id').references(() => parties.id, {
       onDelete: 'set null',
     }),
+    customerPhone: varchar('customer_phone', { length: 50 }),
+    shipperPhone: varchar('shipper_phone', { length: 50 }),
     bookingAgentId: uuid('booking_agent_id').references(() => parties.id, {
       onDelete: 'set null',
     }),
+    bookingAgentPhone: varchar('booking_agent_phone', { length: 50 }),
     customsAgentId: uuid('customs_agent_id').references(() => parties.id, {
       onDelete: 'set null',
     }),
+    customsAgentPhone: varchar('customs_agent_phone', { length: 50 }),
     // Employee assignments
     salesEmployeeId: uuid('sales_employee_id').references(() => employees.id, {
       onDelete: 'set null',
@@ -303,6 +307,7 @@ export const warehouseReceipts = pgTable(
       onDelete: 'set null',
     }),
     // Transport schedule (stored in DB)
+    airType: varchar('air_type', { length: 20 }),
     airCarrier: varchar('air_carrier', { length: 200 }),
     airFlightNo: varchar('air_flight_no', { length: 100 }),
     airFlightDate: varchar('air_flight_date', { length: 20 }), // yyyy-mm-dd
@@ -333,6 +338,8 @@ export const warehouseReceipts = pgTable(
     singleBillDeliveryDateE: varchar('single_bill_delivery_date_e', {
       length: 20,
     }),
+    courierTrackingNo: varchar('courier_tracking_no', { length: 120 }),
+    courierReceivedAt: timestamp('courier_received_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
