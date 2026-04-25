@@ -76,6 +76,7 @@
 - 业务写操作（创建、状态推进、扣减、联动更新）优先放在 `src/lib/freight/services/**`
 - 同一业务动作的写规则不能在多个 Route 中重复实现
 - `warehouse_receipts` 新增字段必须同步更新：schema、zod schema、api types、api client、route select/update 映射
+- `warehouse_receipts` 新字段兼容降级判定必须同时识别 `warehouse_receipts.<column> does not exist` 与 `column "<column>" does not exist` 两种数据库错误文本
 - Supabase 数据迁移脚本必须兼容 pooler 连接（`*.pooler.supabase.com:6543`）与直连（`db.<ref>.supabase.co:5432`），并优先允许通过完整 URL 配置连接参数
 - 当前默认 Supabase 目标环境（2026-04-25）为 `ofndvijutedbjpccnmqq`（`aws-1-ap-northeast-1.pooler.supabase.com:6543`）；旧环境 `aqokzwbthhaywigdnapb` 仅用于迁移源，不应继续作为应用默认写入库
 

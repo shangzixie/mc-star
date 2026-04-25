@@ -8,6 +8,16 @@ const warehouseReceiptNewColumnKeys = [
   'customsAgentPhone',
 ] as const;
 
+const warehouseReceiptNewColumnNames = [
+  'air_type',
+  'courier_tracking_no',
+  'courier_received_at',
+  'customer_phone',
+  'shipper_phone',
+  'booking_agent_phone',
+  'customs_agent_phone',
+] as const;
+
 function hasErrorCodeAndMessage(
   error: unknown
 ): error is { code?: string; message?: string } {
@@ -17,9 +27,14 @@ function hasErrorCodeAndMessage(
 export function isMissingWarehouseReceiptColumnError(error: unknown): boolean {
   if (!hasErrorCodeAndMessage(error)) return false;
   if (error.code !== '42703') return false;
+  if (!error.message?.includes('does not exist')) return false;
+
+  if (error.message.includes('warehouse_receipts.')) return true;
+
   return Boolean(
-    error.message?.includes('warehouse_receipts.') &&
-      error.message?.includes('does not exist')
+    warehouseReceiptNewColumnNames.some((column) =>
+      error.message?.includes(column)
+    )
   );
 }
 
