@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   isMissingMasterBillOfLadingColumnError,
-  isMissingWarehouseReceiptMergeColumnError,
   isMissingWarehouseReceiptColumnError,
+  isMissingWarehouseReceiptMergeColumnError,
   omitMasterBillOfLadingNewColumnsFromColumnMap,
   omitWarehouseReceiptMergeNewColumns,
   omitWarehouseReceiptNewColumnsFromColumnMap,

@@ -121,6 +121,7 @@ export function useRepackFreightWarehouseReceipts() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    retry: false,
     mutationFn: async (
       input: z.infer<typeof repackWarehouseReceiptsSchema>
     ) => {

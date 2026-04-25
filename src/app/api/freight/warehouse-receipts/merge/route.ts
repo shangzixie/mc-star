@@ -13,7 +13,7 @@ import {
   omitWarehouseReceiptNewColumnsFromColumnMap,
 } from '@/lib/freight/db-compat';
 import { mergeWarehouseReceiptsSchema } from '@/lib/freight/schemas';
-import { getTableColumns, inArray } from 'drizzle-orm';
+import { getTableColumns, inArray, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -175,14 +175,33 @@ export async function POST(request: Request) {
         });
       }
 
-      await tx.insert(warehouseReceiptMerges).values(
-        receiptIds.map((childReceiptId) => ({
-          parentReceiptId: parentReceipt.id,
-          childReceiptId,
-          relationType: 'MERGE',
-          createdBy: user.id,
-        }))
-      );
+      const relationTypeColumns = await tx.execute<{ exists: boolean }>(sql`
+        select exists (
+          select 1
+          from information_schema.columns
+          where table_schema = 'public'
+            and table_name = 'warehouse_receipt_merges'
+            and column_name = 'relation_type'
+        ) as "exists"
+      `);
+      const hasRelationTypeColumn = Boolean(relationTypeColumns[0]?.exists);
+      for (const childReceiptId of receiptIds) {
+        if (hasRelationTypeColumn) {
+          await tx.execute(sql`
+            insert into warehouse_receipt_merges
+              (parent_receipt_id, child_receipt_id, relation_type, created_by)
+            values
+              (${parentReceipt.id}, ${childReceiptId}, 'MERGE', ${user.id})
+          `);
+        } else {
+          await tx.execute(sql`
+            insert into warehouse_receipt_merges
+              (parent_receipt_id, child_receipt_id, created_by)
+            values
+              (${parentReceipt.id}, ${childReceiptId}, ${user.id})
+          `);
+        }
+      }
 
       return parentReceipt;
     });

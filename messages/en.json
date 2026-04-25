@@ -902,7 +902,7 @@
           "createSelected": "Create repack receipt",
           "title": "Repack goods",
           "description": "Move the selected {count} source receipts out and create a new receipt.",
-          "warning": "After creation, source receipts become outbound, their inventory is reduced to 0, and the new receipt receives copied available item lines.",
+          "warning": "After creation, source receipts become outbound.",
           "create": "Create repack receipt",
           "creating": "Creating...",
           "success": "Repack receipt created",
@@ -918,7 +918,7 @@
             "pieces": "Available pieces",
             "weight": "Weight",
             "volume": "Volume",
-            "warning": "Submitting will change selected source receipts to outbound."
+            "warning": "After creation, source receipts become outbound."
           }
         },
         "items": {
