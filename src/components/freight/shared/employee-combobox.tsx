@@ -66,11 +66,15 @@ export function EmployeeCombobox({
   useEffect(() => {
     if (!employees || employees.length === 0) return;
     setEmployeeCache((prev) => {
+      let changed = false;
       const next = { ...prev };
       for (const employee of employees) {
-        next[employee.id] = employee;
+        if (next[employee.id] !== employee) {
+          next[employee.id] = employee;
+          changed = true;
+        }
       }
-      return next;
+      return changed ? next : prev;
     });
   }, [employees]);
 

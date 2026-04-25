@@ -64,11 +64,15 @@ export function PortCombobox({
   useEffect(() => {
     if (ports.length === 0) return;
     setPortCache((prev) => {
+      let changed = false;
       const next = { ...prev };
       for (const port of ports) {
-        next[port.id] = port;
+        if (next[port.id] !== port) {
+          next[port.id] = port;
+          changed = true;
+        }
       }
-      return next;
+      return changed ? next : prev;
     });
   }, [ports]);
 

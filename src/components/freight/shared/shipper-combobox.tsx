@@ -28,7 +28,7 @@ import type { FreightParty } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Info, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AddShipperDialog } from './add-shipper-dialog';
 
 interface ShipperComboboxProps {
@@ -69,23 +69,30 @@ export function ShipperCombobox({
   const { data: allParties, isLoading } = useFreightParties({
     q: debouncedQuery,
   });
-  const shippers = allParties?.filter((p) => p.roles.includes('SHIPPER'));
+  const shippers = useMemo(
+    () => allParties?.filter((p) => p.roles.includes('SHIPPER')) ?? [],
+    [allParties]
+  );
   const selectedShipperQuery = useFreightPartyById(value);
   useEffect(() => {
-    if (!shippers || shippers.length === 0) return;
+    if (shippers.length === 0) return;
     setPartyCache((prev) => {
+      let changed = false;
       const next = { ...prev };
       for (const shipper of shippers) {
-        next[shipper.id] = shipper;
+        if (next[shipper.id] !== shipper) {
+          next[shipper.id] = shipper;
+          changed = true;
+        }
       }
-      return next;
+      return changed ? next : prev;
     });
   }, [shippers]);
 
   const selectedShipper =
     (value ? partyCache[value] : undefined) ??
     selectedShipperQuery.data ??
-    shippers?.find((s) => s.id === value);
+    shippers.find((s) => s.id === value);
 
   const getShipperDisplayName = (shipper: FreightParty) => {
     return shipper.name || shipper.code || shipper.id;
@@ -140,7 +147,7 @@ export function ShipperCombobox({
               <CommandEmpty>
                 {isLoading ? t('loading') : t('noShipperFound')}
               </CommandEmpty>
-              {shippers && shippers.length > 0 && (
+              {shippers.length > 0 && (
                 <CommandGroup>
                   {shippers.map((shipper) => (
                     <CommandItem

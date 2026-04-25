@@ -26,14 +26,21 @@ function hasErrorCodeAndMessage(
 
 export function isMissingWarehouseReceiptColumnError(error: unknown): boolean {
   if (!hasErrorCodeAndMessage(error)) return false;
-  if (error.code !== '42703') return false;
-  if (!error.message?.includes('does not exist')) return false;
+  const code =
+    typeof error.code === 'string' && error.code.length > 0
+      ? error.code
+      : undefined;
+  const message = error.message?.toLowerCase();
+  if (!message?.includes('does not exist')) return false;
 
-  if (error.message.includes('warehouse_receipts.')) return true;
+  // Prefer SQLSTATE 42703 when available, but tolerate wrappers that drop code.
+  if (code && code !== '42703') return false;
+
+  if (message.includes('warehouse_receipts.')) return true;
 
   return Boolean(
     warehouseReceiptNewColumnNames.some((column) =>
-      error.message?.includes(column)
+      message.includes(column)
     )
   );
 }

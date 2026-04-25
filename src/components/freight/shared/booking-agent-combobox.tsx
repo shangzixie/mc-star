@@ -28,7 +28,7 @@ import type { FreightParty } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Info, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AddAgentDialog } from './add-agent-dialog';
 
 interface BookingAgentComboboxProps {
@@ -69,23 +69,30 @@ export function BookingAgentCombobox({
   const { data: allParties, isLoading } = useFreightParties({
     q: debouncedQuery,
   });
-  const agents = allParties?.filter((p) => p.roles.includes('AGENT'));
+  const agents = useMemo(
+    () => allParties?.filter((p) => p.roles.includes('AGENT')) ?? [],
+    [allParties]
+  );
   const selectedAgentQuery = useFreightPartyById(value);
   useEffect(() => {
-    if (!agents || agents.length === 0) return;
+    if (agents.length === 0) return;
     setPartyCache((prev) => {
+      let changed = false;
       const next = { ...prev };
       for (const agent of agents) {
-        next[agent.id] = agent;
+        if (next[agent.id] !== agent) {
+          next[agent.id] = agent;
+          changed = true;
+        }
       }
-      return next;
+      return changed ? next : prev;
     });
   }, [agents]);
 
   const selectedAgent =
     (value ? partyCache[value] : undefined) ??
     selectedAgentQuery.data ??
-    agents?.find((a) => a.id === value);
+    agents.find((a) => a.id === value);
 
   const getAgentDisplayName = (agent: FreightParty) => {
     return agent.name || agent.code || agent.id;
@@ -140,7 +147,7 @@ export function BookingAgentCombobox({
               <CommandEmpty>
                 {isLoading ? t('loading') : t('noBookingAgentFound')}
               </CommandEmpty>
-              {agents && agents.length > 0 && (
+              {agents.length > 0 && (
                 <CommandGroup>
                   {agents.map((agent) => (
                     <CommandItem

@@ -49,6 +49,7 @@
 6. 出库 `SHIPPED` 后必须回写并重算所属入库单状态，避免库存与单据状态漂移
 7. 若环境未完成最新 `warehouse_receipts` 迁移，接口需降级读取/写入旧字段，避免页面直接加载失败
 8. `warehouse_receipts` 缺列降级逻辑需兼容两类 PostgreSQL 报错文本：`warehouse_receipts.<column> does not exist` 与 `column "<column>" does not exist`
+9. 缺列降级判定不能仅依赖 SQLSTATE `42703`；当驱动或错误包装层未透出 code 时，仍需基于报错文本触发降级
 
 ## UX Notes
 

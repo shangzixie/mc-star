@@ -28,7 +28,7 @@ import type { FreightParty } from '@/lib/freight/api-types';
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Info, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface CustomerComboboxProps {
   value?: string;
@@ -67,23 +67,30 @@ export function CustomerCombobox({
   const { data: allParties, isLoading } = useFreightParties({
     q: debouncedQuery,
   });
-  const customers = allParties?.filter((p) => p.roles.includes('CUSTOMER'));
+  const customers = useMemo(
+    () => allParties?.filter((p) => p.roles.includes('CUSTOMER')) ?? [],
+    [allParties]
+  );
   const selectedCustomerQuery = useFreightPartyById(value);
   useEffect(() => {
-    if (!customers || customers.length === 0) return;
+    if (customers.length === 0) return;
     setPartyCache((prev) => {
+      let changed = false;
       const next = { ...prev };
       for (const customer of customers) {
-        next[customer.id] = customer;
+        if (next[customer.id] !== customer) {
+          next[customer.id] = customer;
+          changed = true;
+        }
       }
-      return next;
+      return changed ? next : prev;
     });
   }, [customers]);
 
   const selectedCustomer =
     (value ? partyCache[value] : undefined) ??
     selectedCustomerQuery.data ??
-    customers?.find((c) => c.id === value);
+    customers.find((c) => c.id === value);
 
   const getCustomerDisplayName = (customer: FreightParty) => {
     return customer.name || customer.code || customer.id;
@@ -138,7 +145,7 @@ export function CustomerCombobox({
               <CommandEmpty>
                 {isLoading ? t('loading') : t('noCustomerFound')}
               </CommandEmpty>
-              {customers && customers.length > 0 && (
+              {customers.length > 0 && (
                 <CommandGroup>
                   {customers.map((customer) => (
                     <CommandItem

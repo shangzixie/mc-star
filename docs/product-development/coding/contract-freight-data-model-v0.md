@@ -69,6 +69,7 @@
 - 联系资料区块需展示并编辑各合作方电话字段
 - 快递信息通过独立卡片+弹窗编辑，不并入费用表格行模型
 - HBL 前端移除 `placeOfReceipt` 输入；MBL 前端移除 `portOfDestinationAddress` 与 `placeOfReceipt` 输入
+- 组合框（combobox）中的本地缓存同步 effect 必须避免“每次 render 都 setState”，派生数组依赖需 `useMemo` 或做变更检测，防止 `Maximum update depth exceeded`
 
 ## Backend Implementation Constraints
 
@@ -77,6 +78,7 @@
 - 同一业务动作的写规则不能在多个 Route 中重复实现
 - `warehouse_receipts` 新增字段必须同步更新：schema、zod schema、api types、api client、route select/update 映射
 - `warehouse_receipts` 新字段兼容降级判定必须同时识别 `warehouse_receipts.<column> does not exist` 与 `column "<column>" does not exist` 两种数据库错误文本
+- 缺列降级逻辑不得强依赖 SQLSTATE `42703`；若 error code 缺失但缺列文本匹配，仍必须触发降级分支
 - Supabase 数据迁移脚本必须兼容 pooler 连接（`*.pooler.supabase.com:6543`）与直连（`db.<ref>.supabase.co:5432`），并优先允许通过完整 URL 配置连接参数
 - 当前默认 Supabase 目标环境（2026-04-25）为 `ofndvijutedbjpccnmqq`（`aws-1-ap-northeast-1.pooler.supabase.com:6543`）；旧环境 `aqokzwbthhaywigdnapb` 仅用于迁移源，不应继续作为应用默认写入库
 
