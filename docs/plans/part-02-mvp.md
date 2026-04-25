@@ -41,11 +41,13 @@ MVP 聚焦一个内部可用的发货管理后台，先跑通最小业务闭环�
 - 创建流程尽量拆成最少必填后再补录
 - 复杂对象通过分区块编辑，不强求一次填完
 
-## Existing Detailed References
+## Historical References
 
-- 数据关系：`docs/RELATIONS.md`
-- 出货后端与 API：`docs/FREIGHT_BACKEND.md`
-- 入库补强待办：`docs/FREIGHT_INBOUND_TODO.md`
-- 入库创建交互：`docs/FREIGHT_INBOUND_CREATE_FLOW_TODO.md`
-- MBL 实现记录：`docs/MBL_IMPLEMENTATION.md`
-- 员工分配实现记录：`docs/EMPLOYEE_ASSIGNMENTS_IMPLEMENTATION.md`
+以下文档是历史实现记录，不属于默认必读入口；只有追溯既有设计来源或迁移旧逻辑时才读取。
+
+- 数据关系：`docs/archive/RELATIONS.md`
+- 出货后端与 API：`docs/archive/FREIGHT_BACKEND.md`
+- 入库补强待办：`docs/archive/FREIGHT_INBOUND_TODO.md`
+- 入库创建交互：`docs/archive/FREIGHT_INBOUND_CREATE_FLOW_TODO.md`
+- MBL 实现记录：`docs/archive/MBL_IMPLEMENTATION.md`
+- 员工分配实现记录：`docs/archive/EMPLOYEE_ASSIGNMENTS_IMPLEMENTATION.md`

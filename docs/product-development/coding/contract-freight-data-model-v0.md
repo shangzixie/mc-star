@@ -2,7 +2,9 @@
 
 ## Purpose
 
-定义发货管理系统当前实现必须遵守的数据对象、状态边界和技术约束。
+定义发货管理系统当前实现必须遵守的数据对象、状态边界和跨模块技术契约。
+
+本文件不是实现索引，不记录 route 内部字段映射、组件细节、临时兼容分支或具体环境地址。需要确认代码事实时，直接读对应 schema、API、service、测试和迁移。
 
 ## Authoritative References
 
@@ -72,8 +74,7 @@
 - 联系资料区块需展示并编辑各合作方电话字段
 - 快递信息通过独立卡片+弹窗编辑，不并入费用表格行模型
 - HBL 前端移除 `placeOfReceipt` 输入；MBL 前端移除 `portOfDestinationAddress` 与 `placeOfReceipt` 输入
-- 组合框（combobox）中的本地缓存同步 effect 必须避免“每次 render 都 setState”，派生数组依赖需 `useMemo` 或做变更检测，防止 `Maximum update depth exceeded`
-- freight 详情页应优先复用模块级布局组件表达“信息轨道 + 主工作区”关系，避免在业务页直接堆叠一次性 `grid-cols-[...]` 导致编排难以维护
+- freight 详情页应使用稳定、可复用的信息区块表达业务关系，避免一次性布局造成维护成本
 
 ## Backend Implementation Constraints
 
@@ -82,13 +83,9 @@
 - 同一业务动作的写规则不能在多个 Route 中重复实现
 - `PATCH /api/freight/warehouse-receipts/:id` 必须接受 `receiptNo` 的合法更新，并沿用现有 `OUTBOUND` 编辑锁定规则
 - `POST /api/freight/warehouse-receipts/merge` 必须在服务端拒绝非 `SEA_LCL` 的 `transportType`
-- `warehouse_receipts` 新增字段必须同步更新：schema、zod schema、api types、api client、route select/update 映射
-- `warehouse_receipts` 新字段兼容降级判定必须同时识别 `warehouse_receipts.<column> does not exist` 与 `column "<column>" does not exist` 两种数据库错误文本
-- 缺列降级逻辑不得强依赖 SQLSTATE `42703`；若 error code 缺失但缺列文本匹配，仍必须触发降级分支
-- 缺列降级逻辑需检查错误包装链上的 `message/code`（包括 `cause`），避免驱动包装后漏掉 `warehouse_receipts` 新字段兼容分支
-- `warehouse_receipts` 兼容降级重试若涉及 `insert/update ... returning(...)`，必须同时剔除写入值与返回字段中的缺失列；只去掉 `values/set` 不足以避免 PostgreSQL 再次报缺列
-- Supabase 数据迁移脚本必须兼容 pooler 连接（`*.pooler.supabase.com:6543`）与直连（`db.<ref>.supabase.co:5432`），并优先允许通过完整 URL 配置连接参数
-- 当前默认 Supabase 目标环境（2026-04-25）为 `ofndvijutedbjpccnmqq`（`aws-1-ap-northeast-1.pooler.supabase.com:6543`）；旧环境 `aqokzwbthhaywigdnapb` 仅用于迁移源，不应继续作为应用默认写入库
+- freight schema 变化必须同步更新校验、类型、API client、服务写入逻辑和测试
+- 迁移与兼容逻辑必须以不破坏既有页面加载和写入为目标；具体缺列识别与重试细节以代码和测试为准
+- 数据库连接、目标环境和迁移参数属于配置或运维信息，不写入长期契约文档
 
 ## Documentation Rule
 

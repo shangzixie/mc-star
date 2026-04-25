@@ -67,8 +67,10 @@
 - 状态是否单向推进
 - 是否会引入重复事实源
 
-## Reference Documents
+## Historical References
 
-- 数据模型与流程说明：`docs/RELATIONS.md`
-- 后端与 API 现状：`docs/FREIGHT_BACKEND.md`
-- 入库交互补强：`docs/FREIGHT_INBOUND_CREATE_FLOW_TODO.md`
+以下文档只用于追溯历史上下文，不属于默认必读入口：
+
+- 数据模型与流程说明：`docs/archive/RELATIONS.md`
+- 后端与 API 现状：`docs/archive/FREIGHT_BACKEND.md`
+- 入库交互补强：`docs/archive/FREIGHT_INBOUND_CREATE_FLOW_TODO.md`

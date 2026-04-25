@@ -24,16 +24,16 @@
 
 ## 3) Documentation-First Rule
 
-开始编码前，agent 必须：
+开始编码前，agent 必须按 MOC（Mode of Context，任务上下文模式）读取文档：
 
 1. 阅读 `docs/plans/README.md`
 2. 阅读 `docs/plans/part-01-mission-and-scope.md`
 3. 阅读 `docs/product-development/README.md`
-4. 阅读相关 `docs/product-development/product/`
-5. 阅读相关 `docs/product-development/handoff/`
-6. 阅读相关 `docs/product-development/coding/`
-7. 先更新相关文档
-8. 再开始代码修改
+4. 根据当前任务所属 MOC，只补读相关 `product/`、`handoff/`、`coding/` 文档
+5. 先更新相关权威文档
+6. 再开始代码修改
+
+默认不做全量 docs 扫描。只有当任务改变业务对象、状态机、库存扣减时机、跨模块契约或用户必须学习的新流程时，才进入更重的 handoff/coding 文档读取。
 
 ## 4) Protected Docs
 
