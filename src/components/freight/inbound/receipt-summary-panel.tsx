@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FreightInventoryItem } from '@/lib/freight/api-types';
@@ -8,8 +13,10 @@ import {
   formatCeilFixed,
   formatScaledInt,
 } from '@/lib/freight/math';
+import { cn } from '@/lib/utils';
+import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -56,6 +63,8 @@ export function ReceiptSummaryPanel({
   onVolumeChange,
   onWeightConversionFactorChange,
   disabled,
+  embedded = false,
+  className,
 }: {
   items: FreightInventoryItem[];
   transportType?: string | null;
@@ -70,8 +79,11 @@ export function ReceiptSummaryPanel({
   onVolumeChange: (value: string) => void;
   onWeightConversionFactorChange: (value: string) => void;
   disabled?: boolean;
+  embedded?: boolean;
+  className?: string;
 }) {
   const t = useTranslations('Dashboard.freight.inbound.summaryPanel');
+  const [open, setOpen] = useState(false);
 
   const measured = useMemo(() => {
     let pieces = 0;
@@ -176,102 +188,171 @@ export function ReceiptSummaryPanel({
     ? weightConversionFactorInput
     : String(defaultWeightConversionFactor);
 
-  return (
-    <div className="rounded-md border text-sm">
-      {/* Row 1 */}
-      <div className="grid grid-cols-1 gap-3 border-b p-3 sm:grid-cols-3">
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.weightConversionFactor')}
-          </Label>
-          <Input
-            value={weightConversionFactorDisplayValue}
-            onChange={(e) => onWeightConversionFactorChange(e.target.value)}
-            inputMode="decimal"
-            placeholder={String(defaultWeightConversionFactor)}
-            className="h-8"
-            disabled={disabled}
-          />
-        </div>
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.billingTons')}
-          </Label>
-          <Input
-            value={formatCeilFixed(billingTons, 2)}
-            readOnly
-            className="h-8 shadow-inner bg-muted/50"
-            disabled={disabled}
-          />
-        </div>
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.bubbleSplitPercent')}
-          </Label>
-          <Input
-            value={bubbleSplitPercentInput}
-            onChange={(e) => onBubbleSplitPercentChange(e.target.value)}
-            inputMode="decimal"
-            placeholder="0"
-            className="h-8"
-            disabled={disabled}
-          />
-        </div>
-      </div>
+  const summaryItems = [
+    { label: t('fields.pieces'), value: piecesDisplayValue, unit: null },
+    { label: t('fields.weight'), value: weightDisplayValue, unit: 'kg' },
+    { label: t('fields.volume'), value: volumeDisplayValue, unit: 'm³' },
+    {
+      label: t('fields.settlementWeight'),
+      value: formatCeilFixed(settlementWeight, 2),
+      unit: 'm³',
+    },
+  ];
 
-      {/* Row 2 */}
-      <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-4">
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.pieces')}
-          </Label>
-          <Input
-            value={piecesDisplayValue}
-            onChange={(e) => onPiecesChange(e.target.value)}
-            inputMode="numeric"
-            placeholder={String(measured.pieces)}
-            className="h-8"
-            disabled={disabled}
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className={cn(
+        'text-sm',
+        embedded ? 'bg-transparent' : 'rounded-md border bg-card',
+        className
+      )}
+    >
+      {/* 折叠触发栏：始终显示紧凑摘要 */}
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-4 px-1 py-1 hover:bg-muted/40 rounded transition-colors"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-4 overflow-hidden">
+            {summaryItems.map((item) => (
+              <div
+                key={item.label}
+                className="flex min-w-0 shrink-0 items-baseline gap-1"
+              >
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {item.label}
+                </span>
+                <span className="tabular-nums font-medium text-sm">
+                  {item.value}
+                </span>
+                {item.unit ? (
+                  <span className="text-xs text-muted-foreground">
+                    {item.unit}
+                  </span>
+                ) : null}
+              </div>
+            ))}
+            {bubbleSplitPercentInput.trim() && bubbleSplitPercentInput !== '0' ? (
+              <div className="flex items-baseline gap-1 shrink-0">
+                <span className="text-xs text-muted-foreground">
+                  {t('fields.bubbleSplitPercent')}
+                </span>
+                <span className="tabular-nums font-medium text-sm">
+                  {bubbleSplitPercentInput}%
+                </span>
+              </div>
+            ) : null}
+          </div>
+          <ChevronDown
+            className={cn(
+              'size-3.5 shrink-0 text-muted-foreground transition-transform duration-200',
+              open && 'rotate-180'
+            )}
           />
+        </button>
+      </CollapsibleTrigger>
+
+      {/* 展开内容：可编辑的完整表单 */}
+      <CollapsibleContent>
+        <div className={cn('border-t pt-3', embedded ? 'px-0' : 'px-3 pb-3')}>
+          {/* Row 1 */}
+          <div className="grid grid-cols-3 gap-3 pb-3">
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.weightConversionFactor')}
+              </Label>
+              <Input
+                value={weightConversionFactorDisplayValue}
+                onChange={(e) => onWeightConversionFactorChange(e.target.value)}
+                inputMode="decimal"
+                placeholder={String(defaultWeightConversionFactor)}
+                className="h-7 text-xs"
+                disabled={disabled}
+              />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.billingTons')}
+              </Label>
+              <Input
+                value={formatCeilFixed(billingTons, 2)}
+                readOnly
+                className="h-7 text-xs shadow-inner bg-muted/50"
+                disabled={disabled}
+              />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.bubbleSplitPercent')}
+              </Label>
+              <Input
+                value={bubbleSplitPercentInput}
+                onChange={(e) => onBubbleSplitPercentChange(e.target.value)}
+                inputMode="decimal"
+                placeholder="0"
+                className="h-7 text-xs"
+                disabled={disabled}
+              />
+            </div>
+          </div>
+
+          {/* Row 2 */}
+          <div className="grid grid-cols-4 gap-3">
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.pieces')}
+              </Label>
+              <Input
+                value={piecesDisplayValue}
+                onChange={(e) => onPiecesChange(e.target.value)}
+                inputMode="numeric"
+                placeholder={String(measured.pieces)}
+                className="h-7 text-xs"
+                disabled={disabled}
+              />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.weight')}
+              </Label>
+              <Input
+                value={weightDisplayValue}
+                onChange={(e) => onWeightChange(e.target.value)}
+                inputMode="decimal"
+                placeholder={formatCeilFixed(measured.grossWeightKg, 2)}
+                className="h-7 text-xs"
+                disabled={disabled}
+              />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.volume')}
+              </Label>
+              <Input
+                value={volumeDisplayValue}
+                onChange={(e) => onVolumeChange(e.target.value)}
+                inputMode="decimal"
+                placeholder={formatScaledInt(measured.volumeM3Scaled, 2)}
+                className="h-7 text-xs"
+                disabled={disabled}
+              />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t('fields.settlementWeight')}
+              </Label>
+              <Input
+                value={formatCeilFixed(settlementWeight, 2)}
+                readOnly
+                className="h-7 text-xs shadow-inner bg-muted/50"
+                disabled={disabled}
+              />
+            </div>
+          </div>
         </div>
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.weight')}
-          </Label>
-          <Input
-            value={weightDisplayValue}
-            onChange={(e) => onWeightChange(e.target.value)}
-            inputMode="decimal"
-            placeholder={formatCeilFixed(measured.grossWeightKg, 2)}
-            className="h-8"
-            disabled={disabled}
-          />
-        </div>
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.volume')}
-          </Label>
-          <Input
-            value={volumeDisplayValue}
-            onChange={(e) => onVolumeChange(e.target.value)}
-            inputMode="decimal"
-            placeholder={formatScaledInt(measured.volumeM3Scaled, 2)}
-            className="h-8"
-            disabled={disabled}
-          />
-        </div>
-        <div className="min-w-0 space-y-1">
-          <Label className="text-xs text-muted-foreground">
-            {t('fields.settlementWeight')}
-          </Label>
-          <Input
-            value={formatCeilFixed(settlementWeight, 2)}
-            readOnly
-            className="h-8 shadow-inner bg-muted/50"
-            disabled={disabled}
-          />
-        </div>
-      </div>
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

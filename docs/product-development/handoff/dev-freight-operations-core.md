@@ -50,6 +50,11 @@
 7. 若环境未完成最新 `warehouse_receipts` 迁移，接口需降级读取/写入旧字段，避免页面直接加载失败
 8. `warehouse_receipts` 缺列降级逻辑需兼容两类 PostgreSQL 报错文本：`warehouse_receipts.<column> does not exist` 与 `column "<column>" does not exist`
 9. 缺列降级判定不能仅依赖 SQLSTATE `42703`；当驱动或错误包装层未透出 code 时，仍需基于报错文本触发降级
+10. 缺列降级判定需沿错误包装链（如 `cause`）继续识别底层 PostgreSQL 报错，覆盖 `GET` / `POST` / `PATCH` / `merge` 共用兼容逻辑
+11. 入库详情页需支持修改 `warehouse_receipts.receipt_no`；但当单据状态已进入 `OUTBOUND` 时，仍沿用现有锁定规则，禁止继续修改业务标识
+12. 当 `warehouse_receipts` 新字段因未迁移而缺列时，兼容重试必须同时去掉写入 payload 与 `returning(...)` 中的缺失列，避免创建/更新接口在第二次查询结果时再次触发 `42703`
+13. 集拼出库 sidebar 的“合并创建”运输类型必须固定为 `SEA_LCL`（海运拼箱）；同页“总操作”与常规入库创建入口不得再提供 `SEA_LCL` 选项，减少误建非集拼单据
+14. `POST /api/freight/warehouse-receipts/merge` 必须在服务端校验合并父单 `transportType = SEA_LCL`，不能仅依赖前端下拉限制
 
 ## UX Notes
 
@@ -63,6 +68,9 @@
 8. 快递信息以单票单条卡片展示，位置与重量/费用汇总并列
 9. 单套提单区块可编辑入仓时间
 10. HBL 移除“收货地”，MBL 移除“目的港地址”和“收货地”前端录入入口
+11. 入库详情页头部布局应使用固定编排：基础信息、船期、快递为等宽信息轨道；入库明细列表作为主内容区置于快递右侧，避免通过页面内临时 `grid-cols` 拼接关系
+12. 入库单号在详情页应作为可编辑基础信息提供，交互尽量复用现有行内编辑模式，不新增高学习成本流程
+13. 集拼场景下，侧边栏“合并创建”应让业务员无需判断运输类型，默认只能选择海运拼箱；普通“总操作”入口则不展示海运拼箱，避免和集拼流程混淆
 
 ## Acceptance
 

@@ -56,6 +56,7 @@
 - 详情页分区块编辑
 - 列表页优先支持搜索、筛选、状态查看
 - 避免依赖隐蔽入口和复杂操作手势
+- 入库详情页中的关键业务标识（如 `warehouse_receipts.receipt_no`）在单据未进入 `OUTBOUND` 前应支持直接修正，避免业务员因编号录入错误被迫删除重建
 
 ### 4. Database Design Has Higher Priority Than Decorative UI
 

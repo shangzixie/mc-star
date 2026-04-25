@@ -11,6 +11,7 @@ export function FreightTableSection({
   headerClassName,
   tableWrapperClassName,
   children,
+  footer,
 }: {
   title: ReactNode;
   icon?: LucideIcon;
@@ -19,19 +20,21 @@ export function FreightTableSection({
   headerClassName?: string;
   tableWrapperClassName?: string;
   children: ReactNode;
+  footer?: ReactNode;
 }) {
   return (
     <FreightSection
       title={title}
       icon={icon}
       actions={actions}
-      className={className}
+      className={cn('flex flex-col', className)}
       headerClassName={headerClassName}
-      contentClassName="p-0"
+      contentClassName="flex flex-col flex-1 p-0 min-h-0"
     >
-      <div className={cn('w-full overflow-auto', tableWrapperClassName)}>
+      <div className={cn('w-full flex-1 overflow-auto', tableWrapperClassName)}>
         {children}
       </div>
+      {footer ? footer : null}
     </FreightSection>
   );
 }

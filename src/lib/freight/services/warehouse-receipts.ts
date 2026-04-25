@@ -3,8 +3,10 @@ import { warehouseReceipts } from '@/db/schema';
 import {
   isMissingWarehouseReceiptColumnError,
   omitWarehouseReceiptNewColumns,
+  omitWarehouseReceiptNewColumnsFromColumnMap,
 } from '@/lib/freight/db-compat';
 import type { createWarehouseReceiptSchema } from '@/lib/freight/schemas';
+import { getTableColumns } from 'drizzle-orm';
 import type { z } from 'zod';
 
 type CreateWarehouseReceiptInput = z.infer<typeof createWarehouseReceiptSchema>;
@@ -86,10 +88,16 @@ export async function createWarehouseReceipt(
     if (!isMissingWarehouseReceiptColumnError(error)) {
       throw error;
     }
+    // Compat fallback: migration 0028 not yet applied — omit new columns from
+    // both the INSERT values and the RETURNING list so neither side references
+    // columns that don't exist in the database yet.
+    const safeColumns = omitWarehouseReceiptNewColumnsFromColumnMap(
+      getTableColumns(warehouseReceipts)
+    );
     [created] = await db
       .insert(warehouseReceipts)
       .values(omitWarehouseReceiptNewColumns(values))
-      .returning();
+      .returning(safeColumns);
   }
 
   return created;

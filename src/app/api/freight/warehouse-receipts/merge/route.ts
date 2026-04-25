@@ -10,9 +10,10 @@ import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
   isMissingWarehouseReceiptColumnError,
   omitWarehouseReceiptNewColumns,
+  omitWarehouseReceiptNewColumnsFromColumnMap,
 } from '@/lib/freight/db-compat';
 import { mergeWarehouseReceiptsSchema } from '@/lib/freight/schemas';
-import { inArray } from 'drizzle-orm';
+import { getTableColumns, inArray } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
@@ -133,10 +134,15 @@ export async function POST(request: Request) {
         if (!isMissingWarehouseReceiptColumnError(error)) {
           throw error;
         }
+        // Compat fallback: migration 0028 not yet applied — omit new columns
+        // from both INSERT values and RETURNING so neither references missing columns.
+        const safeColumns = omitWarehouseReceiptNewColumnsFromColumnMap(
+          getTableColumns(warehouseReceipts)
+        );
         [parentReceipt] = await tx
           .insert(warehouseReceipts)
           .values(omitWarehouseReceiptNewColumns(values))
-          .returning();
+          .returning(safeColumns);
       }
 
       if (items.length > 0 && totalQty > 0) {

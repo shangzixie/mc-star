@@ -29,6 +29,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 export type ReceiptEditableKey =
+  | 'receiptNo'
   | 'customerId'
   | 'status'
   | 'transportType'
@@ -58,6 +59,30 @@ export function ReceiptBasicInfoEditor({
 
   const rows = useMemo<EditableFieldRowConfig[]>(() => {
     return [
+      {
+        key: 'receiptNo',
+        label: t('receipt.fields.receiptNo'),
+        getDisplayValue: () => receipt.receiptNo || '-',
+        getInitialDraftValue: () => receipt.receiptNo ?? '',
+        renderEditor: ({ draft, setDraft, disabled }) => {
+          const value = typeof draft === 'string' ? draft : '';
+          return (
+            <Input
+              value={value}
+              onChange={(e) => setDraft(e.target.value)}
+              disabled={disabled}
+              maxLength={30}
+            />
+          );
+        },
+        toPayload: (draft) => {
+          if (typeof draft !== 'string') return {};
+          const next = draft.trim();
+          const prev = (receipt.receiptNo ?? '').trim();
+          if (!next || next === prev) return {};
+          return { receiptNo: next };
+        },
+      },
       {
         key: 'customerId',
         label: t('customer'),
@@ -233,8 +258,6 @@ export function ReceiptBasicInfoEditor({
   return (
     <FreightSection title={t('receipt.fields.receiptNo')}>
       <div className="space-y-4">
-        <div className="text-lg font-semibold">{receipt.receiptNo}</div>
-
         <EditableFieldList
           rows={rows}
           editRequest={editRequest}

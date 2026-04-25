@@ -12,8 +12,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
-import { WAREHOUSE_RECEIPT_TRANSPORT_TYPES } from '@/lib/freight/constants';
 import { createWarehouseReceiptSchema } from '@/lib/freight/schemas';
+import { STANDARD_RECEIPT_TRANSPORT_TYPES } from '@/lib/freight/transport-type-options';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
@@ -48,8 +48,8 @@ export function CreateReceiptDialog({
           .string()
           .refine(
             (v) =>
-              WAREHOUSE_RECEIPT_TRANSPORT_TYPES.includes(
-                v as (typeof WAREHOUSE_RECEIPT_TRANSPORT_TYPES)[number]
+              STANDARD_RECEIPT_TRANSPORT_TYPES.includes(
+                v as (typeof STANDARD_RECEIPT_TRANSPORT_TYPES)[number]
               ),
             { message: t('receiptWizard.validation.transportTypeRequired') }
           ),
@@ -118,7 +118,7 @@ export function CreateReceiptDialog({
               {...form.register('transportType')}
             >
               <option value="">{t('transportType.placeholder')}</option>
-              {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+              {STANDARD_RECEIPT_TRANSPORT_TYPES.map((tt) => (
                 <option key={tt} value={tt}>
                   {t(`transportType.options.${tt}` as any)}
                 </option>

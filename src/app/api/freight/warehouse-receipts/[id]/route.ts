@@ -14,22 +14,19 @@ import { ApiError, jsonError, jsonOk, parseJson } from '@/lib/api/http';
 import {
   isMissingWarehouseReceiptColumnError,
   omitWarehouseReceiptNewColumns,
+  omitWarehouseReceiptNewColumnsFromColumnMap,
 } from '@/lib/freight/db-compat';
 import {
-  createWarehouseReceiptSchema,
+  updateWarehouseReceiptSchema,
   uuidSchema,
 } from '@/lib/freight/schemas';
 import {
   getReceiptStats,
   updateReceiptStatus,
 } from '@/lib/freight/services/receipt-status';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
-
-const updateReceiptSchema = createWarehouseReceiptSchema.partial().omit({
-  receiptNo: true,
-});
 
 function getReceiptSelectFields(includeNewColumns: boolean) {
   return {
@@ -225,7 +222,7 @@ export async function PATCH(
     const user = await requireUser(request);
     const { id } = await context.params;
     const receiptId = uuidSchema.parse(id);
-    const body = await parseJson(request, updateReceiptSchema);
+    const body = await parseJson(request, updateWarehouseReceiptSchema);
 
     const db = await getDb();
     const updated = await db.transaction(async (tx) => {
@@ -247,7 +244,8 @@ export async function PATCH(
         }
       }
 
-      const updateValues = {
+        const updateValues = {
+        receiptNo: body.receiptNo,
         warehouseId: body.warehouseId,
         customerId: body.customerId,
         transportType: body.transportType,
@@ -329,11 +327,16 @@ export async function PATCH(
         if (!isMissingWarehouseReceiptColumnError(error)) {
           throw error;
         }
+        // Compat fallback: migration 0028 not yet applied — omit new columns
+        // from both SET and RETURNING so neither side references missing columns.
+        const safeColumns = omitWarehouseReceiptNewColumnsFromColumnMap(
+          getTableColumns(warehouseReceipts)
+        );
         [result] = await tx
           .update(warehouseReceipts)
           .set(omitWarehouseReceiptNewColumns(updateValues))
           .where(eq(warehouseReceipts.id, receiptId))
-          .returning();
+          .returning(safeColumns);
       }
 
       if (!result) {

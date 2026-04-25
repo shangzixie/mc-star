@@ -10,6 +10,7 @@ import {
   WAREHOUSE_RECEIPT_CUSTOMS_DECLARATION_TYPES,
   WAREHOUSE_RECEIPT_TRANSPORT_TYPES,
 } from './constants';
+import { MERGE_RECEIPT_TRANSPORT_TYPES } from './transport-type-options';
 
 export const uuidSchema = z.string().uuid();
 
@@ -121,8 +122,12 @@ export const createWarehouseReceiptSchema = z.object({
   courierReceivedAt: z.string().datetime().nullable().optional(),
 });
 
+export const updateWarehouseReceiptSchema =
+  createWarehouseReceiptSchema.partial();
+
 export const mergeWarehouseReceiptsSchema = createWarehouseReceiptSchema.extend(
   {
+    transportType: z.enum(MERGE_RECEIPT_TRANSPORT_TYPES),
     receiptIds: z.array(uuidSchema).min(1),
   }
 );

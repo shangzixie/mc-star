@@ -12,8 +12,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMergeFreightWarehouseReceipts } from '@/hooks/freight/use-freight-warehouse-receipts';
-import { WAREHOUSE_RECEIPT_TRANSPORT_TYPES } from '@/lib/freight/constants';
-import { createWarehouseReceiptSchema } from '@/lib/freight/schemas';
+import { mergeWarehouseReceiptsSchema } from '@/lib/freight/schemas';
+import { MERGE_RECEIPT_TRANSPORT_TYPES } from '@/lib/freight/transport-type-options';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
@@ -50,8 +50,8 @@ export function MergeReceiptsDialog({
           .string()
           .refine(
             (v) =>
-              WAREHOUSE_RECEIPT_TRANSPORT_TYPES.includes(
-                v as (typeof WAREHOUSE_RECEIPT_TRANSPORT_TYPES)[number]
+              MERGE_RECEIPT_TRANSPORT_TYPES.includes(
+                v as (typeof MERGE_RECEIPT_TRANSPORT_TYPES)[number]
               ),
             { message: t('merge.validation.transportTypeRequired') }
           ),
@@ -65,21 +65,19 @@ export function MergeReceiptsDialog({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
       receiptNo: '',
-      transportType: '',
+      transportType: MERGE_RECEIPT_TRANSPORT_TYPES[0] ?? '',
     },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const payload = createWarehouseReceiptSchema.parse({
+      const payload = mergeWarehouseReceiptsSchema.parse({
         receiptNo: values.receiptNo.trim(),
         transportType: values.transportType,
-      });
-
-      const created = await mergeMutation.mutateAsync({
-        ...payload,
         receiptIds,
       });
+
+      const created = await mergeMutation.mutateAsync(payload);
       toast.success(t('merge.success'));
       form.reset();
       onOpenChange(false);
@@ -125,7 +123,7 @@ export function MergeReceiptsDialog({
               <option value="">
                 {t('merge.fields.transportTypePlaceholder')}
               </option>
-              {WAREHOUSE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
+              {MERGE_RECEIPT_TRANSPORT_TYPES.map((tt) => (
                 <option key={tt} value={tt}>
                   {t(`merge.fields.transportTypeOptions.${tt}` as any)}
                 </option>

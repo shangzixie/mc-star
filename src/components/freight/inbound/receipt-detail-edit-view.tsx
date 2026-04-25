@@ -11,17 +11,10 @@ import { CustomsAgentCombobox } from '@/components/freight/shared/customs-agent-
 import { EmployeeCombobox } from '@/components/freight/shared/employee-combobox';
 import { PortCombobox } from '@/components/freight/shared/port-combobox';
 import { ShipperCombobox } from '@/components/freight/shared/shipper-combobox';
+import { FreightDetailHeaderLayout } from '@/components/freight/ui/freight-detail-header-layout';
 import { FreightSection } from '@/components/freight/ui/freight-section';
 import { FreightTableSection } from '@/components/freight/ui/freight-table-section';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +101,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const receiptFormSchema = z.object({
+  receiptNo: z.string().min(1).max(30).optional(),
   customerId: z.string().optional(),
   warehouseId: z.string().optional(),
   status: z.enum(RECEIPT_STATUSES).optional(),
@@ -222,9 +216,6 @@ export function ReceiptDetailEditView({
   onDeleteItem: (item: FreightInventoryItem) => void;
 }) {
   const t = useTranslations('Dashboard.freight.inbound');
-  const tSummaryPanel = useTranslations(
-    'Dashboard.freight.inbound.summaryPanel'
-  );
   const tMbl = useTranslations('Dashboard.freight.inbound.mbl');
   const tSingleBill = useTranslations('Dashboard.freight.inbound.singleBill');
   const tHbl = useTranslations('Dashboard.freight.inbound.hbl');
@@ -236,7 +227,6 @@ export function ReceiptDetailEditView({
     'Dashboard.freight.settings.customers.columns'
   );
   const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
-  const [courierDialogOpen, setCourierDialogOpen] = useState(false);
   const updateMutation = useUpdateFreightWarehouseReceipt(receipt.id);
 
   const mblQuery = useFreightMBL(receipt.id);
@@ -299,6 +289,7 @@ export function ReceiptDetailEditView({
   const form = useForm<ReceiptFormData>({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
+      receiptNo: receipt.receiptNo ?? '',
       customerId: receipt.customerId ?? '',
       warehouseId: receipt.warehouseId ?? '',
       status: (receipt.status as ReceiptFormData['status']) ?? undefined,
@@ -549,6 +540,11 @@ export function ReceiptDetailEditView({
       }> = {};
 
       if (allowDetailUpdates) {
+        const nextReceiptNo = (data.receiptNo ?? '').trim();
+        const prevReceiptNo = (receipt.receiptNo ?? '').trim();
+        if (nextReceiptNo && nextReceiptNo !== prevReceiptNo) {
+          payload.receiptNo = nextReceiptNo;
+        }
         if (data.customerId !== (receipt.customerId ?? '')) {
           payload.customerId = data.customerId || undefined;
         }
@@ -1079,7 +1075,7 @@ export function ReceiptDetailEditView({
 
       <div className="space-y-4 border-0 p-0">
         {/* 主要内容区域 */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] xl:grid-cols-[320px_320px_minmax(0,1fr)_minmax(0,1fr)]">
+        <FreightDetailHeaderLayout>
           {/* 左侧：基本信息表单 */}
           <FreightSection
             title={t('receipt.fields.receiptNo')}
@@ -1088,13 +1084,17 @@ export function ReceiptDetailEditView({
             <div className="space-y-4">
               {/* 入库单号（只读） */}
               <div className="space-y-2">
-                <Label className="text-base font-semibold">
+                <Label htmlFor="receiptNo" className="text-base font-semibold">
                   {t('receipt.fields.receiptNo')}
                 </Label>
-                <div className="flex min-w-0 items-baseline gap-2">
-                  <div className="min-w-0 truncate text-base font-semibold">
-                    {receipt.receiptNo}
-                  </div>
+                <div className="flex min-w-0 items-center gap-2">
+                  <Input
+                    id="receiptNo"
+                    className="min-w-0 font-semibold"
+                    {...form.register('receiptNo')}
+                    disabled={isOutbound}
+                    maxLength={30}
+                  />
                   {mblQuery.data?.soNo ? (
                     <div className="shrink-0 text-sm font-medium text-muted-foreground">
                       / SO {mblQuery.data.soNo}
@@ -1240,7 +1240,7 @@ export function ReceiptDetailEditView({
             </div>
           </FreightSection>
 
-          {/* 中间：航班/船期（随保存写入数据库） */}
+          {/* 右侧：船期 / 快递 / 商品明细表格 */}
           <FreightSection
             title={
               transportTypeValue === 'AIR_FREIGHT'
@@ -1256,16 +1256,58 @@ export function ReceiptDetailEditView({
             />
           </FreightSection>
 
-          {/* 右侧：汇总 + 商品明细表格 */}
-          <div className="grid min-w-0 gap-4 lg:col-span-2 xl:col-span-2">
-            <div className="grid gap-4 2xl:grid-cols-[380px_380px_minmax(0,1fr)]">
-              <FreightSection title={tSummaryPanel('title')}>
+          <FreightSection title={t('courier.title')} className="min-w-0">
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="courierTrackingNo">
+                  {t('courier.trackingNo')}
+                </Label>
+                <Input
+                  id="courierTrackingNo"
+                  {...form.register('courierTrackingNo')}
+                  placeholder={t('courier.trackingNoPlaceholder')}
+                  disabled={isOutbound}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="courierReceivedAt">
+                  {t('courier.receivedAt')}
+                </Label>
+                <Input
+                  id="courierReceivedAt"
+                  type="datetime-local"
+                  {...form.register('courierReceivedAt')}
+                  disabled={isOutbound}
+                />
+              </div>
+            </div>
+          </FreightSection>
+
+          <FreightTableSection
+            title={t('itemsList.title')}
+            className="w-full min-w-0 lg:col-span-2 xl:col-span-1"
+            icon={Package}
+            actions={
+              isMergedParent ? null : (
+                <Button
+                  onClick={onAddItem}
+                  size="sm"
+                  type="button"
+                  disabled={isOutbound}
+                >
+                  <Plus className="mr-2 size-4" />
+                  {t('items.create')}
+                </Button>
+              )
+            }
+            footer={
+              <div className="border-t bg-muted/20 px-4 py-4">
                 <ReceiptSummaryPanel
+                  embedded
+                  className="w-full"
                   items={items}
                   transportType={transportTypeValue}
-                  bubbleSplitPercentInput={
-                    summaryInputs.bubbleSplitPercentInput
-                  }
+                  bubbleSplitPercentInput={summaryInputs.bubbleSplitPercentInput}
                   piecesInput={summaryInputs.piecesInput}
                   weightInput={summaryInputs.weightInput}
                   volumeInput={summaryInputs.volumeInput}
@@ -1304,343 +1346,291 @@ export function ReceiptDetailEditView({
                   }
                   disabled={isOutbound}
                 />
-              </FreightSection>
-
-              <FreightSection title={t('courier.title')}>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground">
-                      {t('courier.trackingNo')}
-                    </div>
-                    <div className="text-sm">
-                      {form.watch('courierTrackingNo')?.trim() || '-'}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-xs text-muted-foreground">
-                      {t('courier.receivedAt')}
-                    </div>
-                    <div className="text-sm">
-                      {form.watch('courierReceivedAt')?.trim() || '-'}
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCourierDialogOpen(true)}
-                    disabled={isOutbound}
-                  >
-                    {t('courier.edit')}
-                  </Button>
-                </div>
-              </FreightSection>
-            </div>
-
-            <FreightTableSection
-              title={t('itemsList.title')}
-              className="w-full min-w-0"
-              icon={Package}
-              actions={
-                isMergedParent ? null : (
-                  <Button
-                    onClick={onAddItem}
-                    size="sm"
-                    type="button"
-                    disabled={isOutbound}
-                  >
-                    <Plus className="mr-2 size-4" />
-                    {t('items.create')}
-                  </Button>
-                )
-              }
-            >
-              <Table className="w-full min-w-0">
-                <TableHeader className="bg-muted">
+              </div>
+            }
+          >
+            <Table className="w-full min-w-0">
+              <TableHeader className="bg-muted">
+                <TableRow>
+                  <TableHead className="w-[200px]">
+                    {t('items.columns.commodity')}
+                  </TableHead>
+                  <TableHead className="w-[160px]">
+                    {t('items.columns.childReceiptNo')}
+                  </TableHead>
+                  <TableHead className="w-[80px] text-right pr-6">
+                    {t('items.columns.initialQty')}
+                  </TableHead>
+                  <TableHead className="w-[70px]">
+                    {t('items.columns.unit')}
+                  </TableHead>
+                  <TableHead className="w-[120px]">
+                    {t('items.columns.location')}
+                  </TableHead>
+                  <TableHead className="w-[120px] text-right">
+                    {t('items.fields.weightPerUnit')}
+                  </TableHead>
+                  <TableHead className="w-[120px] text-right">
+                    {t('items.columns.dimensions')}
+                  </TableHead>
+                  <TableHead className="w-[60px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {itemsQuery.isLoading ? (
+                  Array.from({ length: 3 }).map((_, idx) => (
+                    <TableRow key={`sk-${idx}`} className="h-14">
+                      {Array.from({ length: 8 }).map((__, cIdx) => (
+                        <TableCell key={`sk-${idx}-${cIdx}`}>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : itemsQuery.error ? (
                   <TableRow>
-                    <TableHead className="w-[200px]">
-                      {t('items.columns.commodity')}
-                    </TableHead>
-                    <TableHead className="w-[160px]">
-                      {t('items.columns.childReceiptNo')}
-                    </TableHead>
-                    <TableHead className="w-[80px] text-right pr-6">
-                      {t('items.columns.initialQty')}
-                    </TableHead>
-                    <TableHead className="w-[70px]">
-                      {t('items.columns.unit')}
-                    </TableHead>
-                    <TableHead className="w-[120px]">
-                      {t('items.columns.location')}
-                    </TableHead>
-                    <TableHead className="w-[120px] text-right">
-                      {t('items.fields.weightPerUnit')}
-                    </TableHead>
-                    <TableHead className="w-[120px] text-right">
-                      {t('items.columns.dimensions')}
-                    </TableHead>
-                    <TableHead className="w-[60px]" />
+                    <TableCell colSpan={8} className="h-32 text-center">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle>{t('items.error')}</EmptyTitle>
+                          <EmptyDescription>
+                            {getFreightApiErrorMessage(itemsQuery.error)}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {itemsQuery.isLoading ? (
-                    Array.from({ length: 3 }).map((_, idx) => (
-                      <TableRow key={`sk-${idx}`} className="h-14">
-                        {Array.from({ length: 8 }).map((__, cIdx) => (
-                          <TableCell key={`sk-${idx}-${cIdx}`}>
-                            <Skeleton className="h-4 w-24" />
-                          </TableCell>
-                        ))}
+                ) : isItemsEmpty ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-32 text-center">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle>{t('items.empty')}</EmptyTitle>
+                          <EmptyDescription>
+                            {t('items.emptyHint')}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
+                    </TableCell>
+                  </TableRow>
+                ) : isMergedParent ? (
+                  mergedChildRows.map((child) => {
+                    const aggregated = child.aggregated;
+
+                    return (
+                      <TableRow key={child.receiptId} className="h-14">
+                        <TableCell className="max-w-[200px] truncate font-medium">
+                          {aggregated?.commodityNames ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[160px] text-muted-foreground">
+                          <LocaleLink
+                            href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
+                            className="text-primary underline-offset-4 hover:underline"
+                          >
+                            {child.receiptNo}
+                          </LocaleLink>
+                        </TableCell>
+                        <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
+                          {aggregated?.totalInitialQty ?? '-'}
+                        </TableCell>
+                        <TableCell className="w-[70px] text-muted-foreground">
+                          {aggregated?.unit ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[120px] truncate text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-muted-foreground">-</span>
+                        </TableCell>
                       </TableRow>
-                    ))
-                  ) : itemsQuery.error ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="h-32 text-center">
-                        <Empty>
-                          <EmptyHeader>
-                            <EmptyTitle>{t('items.error')}</EmptyTitle>
-                            <EmptyDescription>
-                              {getFreightApiErrorMessage(itemsQuery.error)}
-                            </EmptyDescription>
-                          </EmptyHeader>
-                        </Empty>
-                      </TableCell>
-                    </TableRow>
-                  ) : isItemsEmpty ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="h-32 text-center">
-                        <Empty>
-                          <EmptyHeader>
-                            <EmptyTitle>{t('items.empty')}</EmptyTitle>
-                            <EmptyDescription>
-                              {t('items.emptyHint')}
-                            </EmptyDescription>
-                          </EmptyHeader>
-                        </Empty>
-                      </TableCell>
-                    </TableRow>
-                  ) : isMergedParent ? (
-                    mergedChildRows.map((child) => {
-                      const aggregated = child.aggregated;
+                    );
+                  })
+                ) : (
+                  renderedItems.map((item) => {
+                    const weightPerUnit =
+                      item.weightPerUnit != null
+                        ? Number(item.weightPerUnit)
+                        : undefined;
+                    const totalWeightKg =
+                      weightPerUnit != null && Number.isFinite(weightPerUnit)
+                        ? weightPerUnit * item.initialQty
+                        : undefined;
 
-                      return (
-                        <TableRow key={child.receiptId} className="h-14">
-                          <TableCell className="max-w-[200px] truncate font-medium">
-                            {aggregated?.commodityNames ?? '-'}
-                          </TableCell>
-                          <TableCell className="max-w-[160px] text-muted-foreground">
-                            <LocaleLink
-                              href={`${Routes.FreightInbound}/${child.receiptId}?parentId=${receipt.id}`}
-                              className="text-primary underline-offset-4 hover:underline"
-                            >
-                              {child.receiptNo}
-                            </LocaleLink>
-                          </TableCell>
-                          <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
-                            {aggregated?.totalInitialQty ?? '-'}
-                          </TableCell>
-                          <TableCell className="w-[70px] text-muted-foreground">
-                            {aggregated?.unit ?? '-'}
-                          </TableCell>
-                          <TableCell className="max-w-[120px] truncate text-muted-foreground">
-                            -
-                          </TableCell>
-                          <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                            -
-                          </TableCell>
-                          <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                            -
-                          </TableCell>
-                          <TableCell className="text-right">
+                    const lengthCm =
+                      item.lengthCm != null ? Number(item.lengthCm) : undefined;
+                    const widthCm =
+                      item.widthCm != null ? Number(item.widthCm) : undefined;
+                    const heightCm =
+                      item.heightCm != null ? Number(item.heightCm) : undefined;
+                    const volumePerUnitM3 =
+                      lengthCm != null &&
+                      widthCm != null &&
+                      heightCm != null &&
+                      Number.isFinite(lengthCm) &&
+                      Number.isFinite(widthCm) &&
+                      Number.isFinite(heightCm)
+                        ? (lengthCm * widthCm * heightCm) / 1_000_000
+                        : undefined;
+                    const volumePerUnitScaled =
+                      volumePerUnitM3 != null &&
+                      Number.isFinite(volumePerUnitM3)
+                        ? ceilToScaledInt(volumePerUnitM3, 2)
+                        : undefined;
+                    const totalVolumeScaled =
+                      volumePerUnitScaled != null
+                        ? volumePerUnitScaled * item.initialQty
+                        : undefined;
+
+                    return (
+                      <TableRow key={item.id} className="h-14">
+                        <TableCell className="max-w-[200px] truncate font-medium">
+                          {item.commodityName ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[160px] text-muted-foreground">
+                          -
+                        </TableCell>
+                        <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
+                          {item.initialQty}
+                        </TableCell>
+                        <TableCell className="w-[70px] text-muted-foreground">
+                          {item.unit ?? '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[120px] truncate text-muted-foreground">
+                          {item.binLocation ?? '-'}
+                        </TableCell>
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                          {weightPerUnit != null &&
+                          Number.isFinite(weightPerUnit) &&
+                          totalWeightKg != null ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block w-full cursor-help text-right tabular-nums">
+                                  {formatCeilFixed(weightPerUnit, 3)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                sideOffset={6}
+                                className="max-w-[320px]"
+                              >
+                                <div className="space-y-1">
+                                  <div className="font-medium">
+                                    {t('items.columns.totalWeight')}
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {t('items.columns.totalWeight')} ={' '}
+                                    {t('items.fields.weightPerUnit')} ×{' '}
+                                    {t('items.columns.initialQty')}
+                                  </div>
+                                  <div className="font-mono tabular-nums">
+                                    {formatCeilFixed(weightPerUnit, 3)} ×{' '}
+                                    {item.initialQty} ={' '}
+                                    {formatCeilFixed(totalWeightKg, 2)}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
+                          {volumePerUnitScaled != null &&
+                          totalVolumeScaled != null ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block w-full cursor-help text-right tabular-nums whitespace-nowrap">
+                                  {lengthCm} × {widthCm} × {heightCm}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                sideOffset={6}
+                                className="max-w-[360px]"
+                              >
+                                <div className="space-y-1">
+                                  <div className="font-medium">
+                                    {t('items.columns.totalVolume')}
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {t('items.fields.volumePerUnit')} = L × W ×
+                                    H ÷ 1,000,000
+                                  </div>
+                                  <div className="font-mono tabular-nums">
+                                    {formatCeilFixed(lengthCm ?? 0, 2)} ×{' '}
+                                    {formatCeilFixed(widthCm ?? 0, 2)} ×{' '}
+                                    {formatCeilFixed(heightCm ?? 0, 2)} ÷
+                                    1,000,000 =
+                                    {formatScaledInt(volumePerUnitScaled, 2)}
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {t('items.columns.totalVolume')} ={' '}
+                                    {t('items.fields.volumePerUnit')} ×{' '}
+                                    {t('items.columns.initialQty')}
+                                  </div>
+                                  <div className="font-mono tabular-nums">
+                                    {formatScaledInt(volumePerUnitScaled, 2)} ×{' '}
+                                    {item.initialQty} ={' '}
+                                    {formatScaledInt(totalVolumeScaled, 2)}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isMergedParent ? (
                             <span className="text-muted-foreground">-</span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  ) : (
-                    renderedItems.map((item) => {
-                      const weightPerUnit =
-                        item.weightPerUnit != null
-                          ? Number(item.weightPerUnit)
-                          : undefined;
-                      const totalWeightKg =
-                        weightPerUnit != null && Number.isFinite(weightPerUnit)
-                          ? weightPerUnit * item.initialQty
-                          : undefined;
-
-                      const lengthCm =
-                        item.lengthCm != null
-                          ? Number(item.lengthCm)
-                          : undefined;
-                      const widthCm =
-                        item.widthCm != null ? Number(item.widthCm) : undefined;
-                      const heightCm =
-                        item.heightCm != null
-                          ? Number(item.heightCm)
-                          : undefined;
-                      const volumePerUnitM3 =
-                        lengthCm != null &&
-                        widthCm != null &&
-                        heightCm != null &&
-                        Number.isFinite(lengthCm) &&
-                        Number.isFinite(widthCm) &&
-                        Number.isFinite(heightCm)
-                          ? (lengthCm * widthCm * heightCm) / 1_000_000
-                          : undefined;
-                      const volumePerUnitScaled =
-                        volumePerUnitM3 != null &&
-                        Number.isFinite(volumePerUnitM3)
-                          ? ceilToScaledInt(volumePerUnitM3, 2)
-                          : undefined;
-                      const totalVolumeScaled =
-                        volumePerUnitScaled != null
-                          ? volumePerUnitScaled * item.initialQty
-                          : undefined;
-
-                      return (
-                        <TableRow key={item.id} className="h-14">
-                          <TableCell className="max-w-[200px] truncate font-medium">
-                            {item.commodityName ?? '-'}
-                          </TableCell>
-                          <TableCell className="max-w-[160px] text-muted-foreground">
-                            -
-                          </TableCell>
-                          <TableCell className="w-[80px] text-right tabular-nums font-medium pr-6">
-                            {item.initialQty}
-                          </TableCell>
-                          <TableCell className="w-[70px] text-muted-foreground">
-                            {item.unit ?? '-'}
-                          </TableCell>
-                          <TableCell className="max-w-[120px] truncate text-muted-foreground">
-                            {item.binLocation ?? '-'}
-                          </TableCell>
-                          <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                            {weightPerUnit != null &&
-                            Number.isFinite(weightPerUnit) &&
-                            totalWeightKg != null ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block w-full cursor-help text-right tabular-nums">
-                                    {formatCeilFixed(weightPerUnit, 3)}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="top"
-                                  sideOffset={6}
-                                  className="max-w-[320px]"
+                          ) : (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="size-8"
+                                  type="button"
+                                  disabled={isOutbound}
                                 >
-                                  <div className="space-y-1">
-                                    <div className="font-medium">
-                                      {t('items.columns.totalWeight')}
-                                    </div>
-                                    <div className="text-muted-foreground">
-                                      {t('items.columns.totalWeight')} ={' '}
-                                      {t('items.fields.weightPerUnit')} ×{' '}
-                                      {t('items.columns.initialQty')}
-                                    </div>
-                                    <div className="font-mono tabular-nums">
-                                      {formatCeilFixed(weightPerUnit, 3)} ×{' '}
-                                      {item.initialQty} ={' '}
-                                      {formatCeilFixed(totalWeightKg, 2)}
-                                    </div>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell className="w-[120px] text-right tabular-nums text-muted-foreground">
-                            {volumePerUnitScaled != null &&
-                            totalVolumeScaled != null ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block w-full cursor-help text-right tabular-nums whitespace-nowrap">
-                                    {lengthCm} × {widthCm} × {heightCm}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="top"
-                                  sideOffset={6}
-                                  className="max-w-[360px]"
+                                  <MoreHorizontal className="size-4" />
+                                  <span className="sr-only">Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => onEditItem(item)}
+                                  disabled={isOutbound}
                                 >
-                                  <div className="space-y-1">
-                                    <div className="font-medium">
-                                      {t('items.columns.totalVolume')}
-                                    </div>
-                                    <div className="text-muted-foreground">
-                                      {t('items.fields.volumePerUnit')} = L × W
-                                      × H ÷ 1,000,000
-                                    </div>
-                                    <div className="font-mono tabular-nums">
-                                      {formatCeilFixed(lengthCm ?? 0, 2)} ×{' '}
-                                      {formatCeilFixed(widthCm ?? 0, 2)} ×{' '}
-                                      {formatCeilFixed(heightCm ?? 0, 2)} ÷
-                                      1,000,000 ={' '}
-                                      {formatScaledInt(volumePerUnitScaled, 2)}
-                                    </div>
-                                    <div className="text-muted-foreground">
-                                      {t('items.columns.totalVolume')} ={' '}
-                                      {t('items.fields.volumePerUnit')} ×{' '}
-                                      {t('items.columns.initialQty')}
-                                    </div>
-                                    <div className="font-mono tabular-nums">
-                                      {formatScaledInt(volumePerUnitScaled, 2)}{' '}
-                                      × {item.initialQty} ={' '}
-                                      {formatScaledInt(totalVolumeScaled, 2)}
-                                    </div>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {isMergedParent ? (
-                              <span className="text-muted-foreground">-</span>
-                            ) : (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="size-8"
-                                    type="button"
-                                    disabled={isOutbound}
-                                  >
-                                    <MoreHorizontal className="size-4" />
-                                    <span className="sr-only">Actions</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => onEditItem(item)}
-                                    disabled={isOutbound}
-                                  >
-                                    <Edit className="mr-2 size-4" />
-                                    {t('itemActions.edit')}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => onDeleteItem(item)}
-                                    className="text-destructive"
-                                    disabled={isOutbound}
-                                  >
-                                    <Trash2 className="mr-2 size-4" />
-                                    {t('itemActions.delete')}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </FreightTableSection>
-          </div>
-        </div>
+                                  <Edit className="mr-2 size-4" />
+                                  {t('itemActions.edit')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => onDeleteItem(item)}
+                                  className="text-destructive"
+                                  disabled={isOutbound}
+                                >
+                                  <Trash2 className="mr-2 size-4" />
+                                  {t('itemActions.delete')}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </FreightTableSection>
+        </FreightDetailHeaderLayout>
 
         {/* 备注区域 */}
         <div className="grid gap-4 lg:grid-cols-2">
@@ -2081,51 +2071,6 @@ export function ReceiptDetailEditView({
           {isSaving ? tCommon('saving') : tCommon('save')}
         </Button>
       </div>
-
-      <Dialog open={courierDialogOpen} onOpenChange={setCourierDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('courier.title')}</DialogTitle>
-            <DialogDescription>{t('courier.description')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="courierTrackingNo">
-                {t('courier.trackingNo')}
-              </Label>
-              <Input
-                id="courierTrackingNo"
-                {...form.register('courierTrackingNo')}
-                placeholder={t('courier.trackingNoPlaceholder')}
-                disabled={isOutbound}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="courierReceivedAt">
-                {t('courier.receivedAt')}
-              </Label>
-              <Input
-                id="courierReceivedAt"
-                type="datetime-local"
-                {...form.register('courierReceivedAt')}
-                disabled={isOutbound}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCourierDialogOpen(false)}
-            >
-              {tCommon('cancel')}
-            </Button>
-            <Button type="button" onClick={() => setCourierDialogOpen(false)}>
-              {t('courier.done')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Add Customer Dialog */}
       <AddCustomerDialog

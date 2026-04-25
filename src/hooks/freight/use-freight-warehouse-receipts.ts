@@ -156,6 +156,7 @@ export function useUpdateFreightWarehouseReceipt(receiptId: string) {
 
   return useMutation({
     mutationFn: async (input: {
+      receiptNo?: string;
       warehouseId?: string;
       customerId?: string;
       transportType?: string;

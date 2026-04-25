@@ -211,6 +211,7 @@ export async function getInventoryMovements(itemId: string) {
 export async function updateWarehouseReceipt(
   receiptId: string,
   data: {
+    receiptNo?: string;
     warehouseId?: string;
     customerId?: string;
     transportType?: string;
