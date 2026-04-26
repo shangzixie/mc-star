@@ -11,6 +11,10 @@ import {
   omitWarehouseReceiptNewColumns,
   omitWarehouseReceiptNewColumnsFromColumnMap,
 } from '@/lib/freight/db-compat';
+import {
+  findReceiptNoSequenceGap,
+  getReceiptNoSequenceCandidate,
+} from '@/lib/freight/receipt-no-sequence';
 import type {
   batchUpdateWarehouseReceiptsSchema,
   createWarehouseReceiptSchema,
@@ -20,7 +24,7 @@ import {
   getReceiptStats,
   updateReceiptStatus,
 } from '@/lib/freight/services/receipt-status';
-import { eq, getTableColumns, inArray } from 'drizzle-orm';
+import { eq, getTableColumns, ilike, inArray } from 'drizzle-orm';
 import type { z } from 'zod';
 
 type CreateWarehouseReceiptInput = z.infer<typeof createWarehouseReceiptSchema>;
@@ -361,6 +365,16 @@ export async function createWarehouseReceipt(
   input: CreateWarehouseReceiptInput
 ) {
   const db = await getDb();
+  const gap = await getWarehouseReceiptSequenceGap(input.receiptNo, db);
+  if (gap) {
+    throw new ApiError({
+      status: 400,
+      code: 'RECEIPT_NO_SEQUENCE_GAP',
+      message: `Receipt number must be sequential. Expected ${gap.expectedReceiptNo} after ${gap.previousReceiptNo}.`,
+      details: gap,
+    });
+  }
+
   const values = toWarehouseReceiptCreateValues(input);
   let created: Record<string, unknown> | undefined;
 
@@ -383,4 +397,22 @@ export async function createWarehouseReceipt(
   }
 
   return created;
+}
+
+export async function getWarehouseReceiptSequenceGap(
+  receiptNo: string,
+  dbClient?: DbClient
+) {
+  const candidate = getReceiptNoSequenceCandidate(receiptNo);
+  if (!candidate) return null;
+  const db = dbClient ?? (await getDb());
+  const rows = await db
+    .select({ receiptNo: warehouseReceipts.receiptNo })
+    .from(warehouseReceipts)
+    .where(ilike(warehouseReceipts.receiptNo, `${candidate.prefix}%`));
+
+  return findReceiptNoSequenceGap({
+    receiptNo,
+    existingReceiptNos: rows.map((row) => row.receiptNo),
+  });
 }

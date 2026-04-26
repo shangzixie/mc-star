@@ -643,7 +643,8 @@
         "receiptWizard": {
           "validation": {
             "receiptNoRequired": "Please enter receipt number",
-            "transportTypeRequired": "Please select transport type"
+            "transportTypeRequired": "Please select transport type",
+            "receiptNoSequenceGap": "Receipt numbers must stay sequential. The previous receipt is {previous}, so the next one should be {expected}"
           }
         },
         "transportType": {

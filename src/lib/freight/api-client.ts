@@ -284,6 +284,25 @@ export async function batchUpdateWarehouseReceipts(data: unknown) {
   });
 }
 
+export async function checkWarehouseReceiptSequence(receiptNo: string) {
+  const receiptNoSequenceCheckSchema = z.object({
+    hasGap: z.boolean(),
+    gap: z
+      .object({
+        previousReceiptNo: z.string(),
+        expectedReceiptNo: z.string(),
+      })
+      .nullable(),
+  });
+
+  return freightFetch(
+    `/api/freight/warehouse-receipts/sequence-check${freightQueryString({
+      receiptNo: receiptNo.trim(),
+    })}`,
+    { schema: receiptNoSequenceCheckSchema }
+  );
+}
+
 /**
  * Delete a warehouse receipt
  */

@@ -11,12 +11,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCreateFreightWarehouseReceipt } from '@/hooks/freight/use-freight-warehouse-receipts';
+import {
+  useCreateFreightWarehouseReceipt,
+  useFreightWarehouseReceiptSequenceCheck,
+} from '@/hooks/freight/use-freight-warehouse-receipts';
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
+import { checkWarehouseReceiptSequence } from '@/lib/freight/api-client';
 import { createWarehouseReceiptSchema } from '@/lib/freight/schemas';
 import { STANDARD_RECEIPT_TRANSPORT_TYPES } from '@/lib/freight/transport-type-options';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -58,6 +63,7 @@ export function CreateReceiptDialog({
   );
 
   const receiptMutation = useCreateFreightWarehouseReceipt();
+  const [debouncedReceiptNo, setDebouncedReceiptNo] = useState('');
 
   const form = useForm<ReceiptFormValues>({
     resolver: zodResolver(receiptFormSchema),
@@ -66,9 +72,55 @@ export function CreateReceiptDialog({
       transportType: '',
     },
   });
+  const receiptNoValue = form.watch('receiptNo');
+  const debounceReceiptNo = useDebouncedCallback((nextValue: string) => {
+    setDebouncedReceiptNo(nextValue);
+  }, 300);
+  const sequenceCheckQuery =
+    useFreightWarehouseReceiptSequenceCheck(debouncedReceiptNo);
+
+  useEffect(() => {
+    if (!open) {
+      setDebouncedReceiptNo('');
+      return;
+    }
+
+    debounceReceiptNo(receiptNoValue.trim());
+  }, [debounceReceiptNo, open, receiptNoValue]);
+
+  const sequenceGap = sequenceCheckQuery.data?.gap ?? null;
+  const sequenceErrorMessage = sequenceGap
+    ? t('receiptWizard.validation.receiptNoSequenceGap', {
+        previous: sequenceGap.previousReceiptNo,
+        expected: sequenceGap.expectedReceiptNo,
+      })
+    : null;
+
+  useEffect(() => {
+    if (
+      form.formState.errors.receiptNo?.type === 'manual' &&
+      !sequenceErrorMessage
+    ) {
+      form.clearErrors('receiptNo');
+    }
+  }, [form, form.formState.errors.receiptNo?.type, sequenceErrorMessage]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
+      const sequenceCheck = await checkWarehouseReceiptSequence(
+        values.receiptNo.trim()
+      );
+      if (sequenceCheck.gap) {
+        form.setError('receiptNo', {
+          type: 'manual',
+          message: t('receiptWizard.validation.receiptNoSequenceGap', {
+            previous: sequenceCheck.gap.previousReceiptNo,
+            expected: sequenceCheck.gap.expectedReceiptNo,
+          }),
+        });
+        return;
+      }
+
       const payload = createWarehouseReceiptSchema.parse({
         receiptNo: values.receiptNo.trim(),
         transportType: values.transportType,
@@ -77,6 +129,7 @@ export function CreateReceiptDialog({
       const created = await receiptMutation.mutateAsync(payload);
       toast.success(t('receipt.created'));
       form.reset();
+      setDebouncedReceiptNo('');
       onOpenChange(false);
       onSuccess(created.id);
     } catch (err) {
@@ -103,6 +156,10 @@ export function CreateReceiptDialog({
               placeholder={t('receipt.fields.receiptNoPlaceholder')}
               {...form.register('receiptNo')}
             />
+            {!form.formState.errors.receiptNo?.message &&
+            sequenceErrorMessage ? (
+              <p className="text-sm text-destructive">{sequenceErrorMessage}</p>
+            ) : null}
             {form.formState.errors.receiptNo?.message && (
               <p className="text-sm text-destructive">
                 {form.formState.errors.receiptNo.message}
@@ -139,7 +196,14 @@ export function CreateReceiptDialog({
             >
               {t('receipt.cancel')}
             </Button>
-            <Button type="submit" disabled={receiptMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={
+                receiptMutation.isPending ||
+                sequenceCheckQuery.isFetching ||
+                Boolean(sequenceErrorMessage)
+              }
+            >
               {receiptMutation.isPending
                 ? t('receipt.creating')
                 : t('receipt.create')}

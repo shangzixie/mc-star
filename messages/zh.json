@@ -643,7 +643,8 @@
         "receiptWizard": {
           "validation": {
             "receiptNoRequired": "请输入入库单号",
-            "transportTypeRequired": "请选择运输类型"
+            "transportTypeRequired": "请选择运输类型",
+            "receiptNoSequenceGap": "入库单号需要连续，上一张是 {previous}，下一张应为 {expected}"
           }
         },
         "transportType": {

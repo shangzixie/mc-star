@@ -1,6 +1,10 @@
 'use client';
 
-import { freightFetch, freightQueryString } from '@/lib/freight/api-client';
+import {
+  checkWarehouseReceiptSequence,
+  freightFetch,
+  freightQueryString,
+} from '@/lib/freight/api-client';
 import {
   type FreightInventoryItem,
   type FreightWarehouseReceipt,
@@ -20,7 +24,6 @@ import { z } from 'zod';
 import { freightKeys } from './query-keys';
 
 const receiptsArraySchema = z.array(freightWarehouseReceiptWithRelationsSchema);
-
 export function useFreightWarehouseReceipts(params: {
   warehouseId?: string;
   customerId?: string;
@@ -56,6 +59,21 @@ export function useFreightWarehouseReceipt(id: string) {
         schema: freightWarehouseReceiptWithRelationsSchema,
       }),
     staleTime: 60000, // 1 minute
+  });
+}
+
+export function useFreightWarehouseReceiptSequenceCheck(receiptNo: string) {
+  const trimmedReceiptNo = receiptNo.trim();
+
+  return useQuery({
+    queryKey: [
+      ...freightKeys.warehouseReceipts(),
+      'sequence-check',
+      trimmedReceiptNo,
+    ],
+    enabled: trimmedReceiptNo.length > 0,
+    queryFn: async () => checkWarehouseReceiptSequence(trimmedReceiptNo),
+    staleTime: 30000,
   });
 }
 
